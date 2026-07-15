@@ -43,7 +43,7 @@ ok(!/stroke="#/.test(buildSVG(Object.assign({}, base, { conviction: 0.3 }))), "c
 ok(!/<polyline/.test(buildSVG(Object.assign({}, base, { history: [{ v: .4 }, { v: .6 }] }))), "history is ignored — no strip");
 
 console.log("easter-egg flags are animated-only, don't break the static fallback");
-["awe", "tender", "melancholy", "unease", "mirth"].forEach(function (fl) {
+["awe", "tender", "melancholy", "unease", "mirth", "laugh"].forEach(function (fl) {
   var o = {}; o[fl] = true;
   var s = buildSVG(Object.assign({}, base, o));
   ok(s.startsWith("<svg") && s.endsWith("</svg>"), fl + " → valid static svg");

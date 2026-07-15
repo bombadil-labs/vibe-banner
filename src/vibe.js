@@ -152,7 +152,7 @@
     return {
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + langSVG + readSVG,
       spark: !!p.spark, excited: !!p.excited, seed: seedOf(p),
-      awe: !!p.awe, tender: !!p.tender, melancholy: !!p.melancholy, unease: !!p.unease, mirth: !!p.mirth
+      awe: !!p.awe, tender: !!p.tender, melancholy: !!p.melancholy, unease: !!p.unease, mirth: !!p.mirth, laugh: !!p.laugh
     };
   }
 
@@ -224,11 +224,13 @@
       if (!visible) { requestAnimationFrame(frame); return; }
       ctx.setTransform(sx, 0, 0, sy, 0, 0);
       ctx.clearRect(0, 0, W, H);
+      var laughB = 1;   // laugh: a quick rhythmic "ha-ha-ha" bounce of the whole field, then rest
+      if (L.laugh) { var lt = t % 3.4; if (lt < 0.75) laughB = 1 + 0.13 * Math.exp(-lt * 3.5) * Math.sin(lt * 28); }
       B.forEach(function (m) {
         var b = m.b;
         var ox = amp * Math.sin(m.w1 * sp * t + m.p1) + amp * 0.4 * Math.sin(m.w2 * sp * t + m.p2);
         var oy = amp * 0.75 * Math.sin(m.w3 * sp * t + m.p3);
-        var br = 1 + 0.09 * Math.sin(m.wb * sp * t + m.pb);          // breathe (scale)
+        var br = (1 + 0.09 * Math.sin(m.wb * sp * t + m.pb)) * laughB;  // breathe × laugh bounce
         var opP = 1 + 0.2 * Math.sin(m.wb * sp * t + m.pb + 1.3);    // breathe (brightness)
         var cx = b.cx + ox, cy = b.cy + oy, rx = b.rx * br, ry = b.ry * br;
         ctx.globalAlpha = 0.5;
@@ -288,6 +290,19 @@
           ctx.beginPath(); ctx.arc(bx, by, 2 + bt * 3, 0, 6.2832); ctx.fill();
         }
         ctx.globalAlpha = 1;
+      }
+      if (L.laugh) {                                                                                // burst of motes with the bounce
+        var lt2 = t % 3.4;
+        if (lt2 < 0.9) {
+          ctx.fillStyle = "#f4e6b0";
+          for (var li = 0; li < 6; li++) {
+            var lprog = lt2 / 0.9, lang = (li / 6) * 6.2832 + 0.3, lr = lprog * (30 + (li % 3) * 12);
+            var lx = 310 + Math.cos(lang) * lr, ly = cyC - 12 - lprog * 26 + Math.sin(lang) * lr * 0.4;
+            ctx.globalAlpha = 0.5 * (1 - lprog);
+            ctx.beginPath(); ctx.arc(lx, ly, 2 + (1 - lprog) * 2, 0, 6.2832); ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
       }
       requestAnimationFrame(frame);
     }
