@@ -15,7 +15,7 @@
  */
 (function (root) {
   var W = 680, PAD = 20, FACE_X = 10, TEXT_X = 158, ROW_GAP = 25;
-  var GOAL_CAP = 70, GOAL_INDENT = 48, DEFAULT_MID = 68, NEUTRAL = "#a7a29b";
+  var GOAL_CAP = 70, GOAL_INDENT = 48, DEFAULT_MID = 68, NEUTRAL = "#a7a29b", STRIP_H = 26;
 
   var STYLE =
     ".txt{paint-order:stroke;stroke:#fff8ec;stroke-linejoin:round}" +
@@ -83,6 +83,29 @@
   }
   function wide(lbl) { for (var i = 0; i < lbl.length; i++) if (lbl.codePointAt(i) > 0x3000) return 17; return lbl.length * 7.2 + 3; }
 
+  // ---- trajectory strip: the conversation's mood arc over the last ~20 turns ----
+  function clamp01(v) { return Math.max(0, Math.min(1, v == null ? 0.5 : v)); }
+  function normalizeHistory(hist) {
+    if (!hist || !hist.length) return [];
+    return hist.slice(-20).map(function (h) {
+      return { v: clamp01(h.v != null ? h.v : h.valence), f: clamp01(h.f != null ? h.f : h.focus), c: clamp01(h.c != null ? h.c : h.confidence) };
+    });
+  }
+  var STRIP_DIMS = [["v", "#c98fa8"], ["f", "#7f96b8"], ["c", "#7faa93"]];   // valence / focus / confidence
+  var STRIP_NAMES = { v: "valence", f: "focus", c: "confidence" };
+  function stripSVG(hist, top, bot) {
+    if (hist.length < 2) return "";
+    var xL = 16, xR = W - 16, bandH = bot - top, out = '<g opacity="0.62">';
+    STRIP_DIMS.forEach(function (d) {
+      var pts = hist.map(function (h, i) { return g(xL + i * (xR - xL) / (hist.length - 1)) + "," + g(bot - h[d[0]] * bandH); }).join(" ");
+      var ly = bot - hist[hist.length - 1][d[0]] * bandH;
+      out += '<g><title>' + STRIP_NAMES[d[0]] + '</title>' +
+        '<polyline points="' + pts + '" fill="none" stroke="' + d[1] + '" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<circle cx="' + g(xR) + '" cy="' + g(ly) + '" r="1.8" fill="' + d[1] + '"/></g>';
+    });
+    return out + '</g>';
+  }
+
   /* ---- shared layout: everything static & animated both need ---- */
   function layout(p) {
     var field = (p.field && p.field.length) ? p.field
@@ -117,7 +140,7 @@
     var topExtent = Math.max(kaoH, rightH) / 2;
     var langDepth = langs.length ? (kaoH / 2 - kaoDescent) + LANG_GAP + LANG_DESC : 0;
     var bottomExtent = Math.max(kaoH / 2, rightH / 2, langDepth);
-    var H = Math.round(PAD + topExtent + bottomExtent + PAD);
+    var contentH = Math.round(PAD + topExtent + bottomExtent + PAD);
     var coreCy = PAD + topExtent, dyField = coreCy - DEFAULT_MID;
     var kaoAbs = kaoLines.map(function (_, i) { return coreCy - kaoH / 2 + kaoAscent + i * kaoLh; });
     var rightAbs = lines.map(function (_, i) { return coreCy - rightH / 2 + 11 + i * ROW_GAP; });
@@ -159,7 +182,9 @@
     }
     var readSVG = lines.map(function (ln, i) { return '<text x="' + ln.x + '" y="' + g(rightAbs[i]) + '" class="txt">' + ln.inner + '</text>'; }).join("");
 
-    return { H: H, blobs: blobs, textSVG: kaoSVG + langSVG + readSVG, spark: !!p.spark, excited: !!p.excited, seed: seedOf(p) };
+    var hist = normalizeHistory(p.history);
+    var H = contentH + (hist.length >= 2 ? STRIP_H : 0);
+    return { H: H, contentH: contentH, history: hist, blobs: blobs, textSVG: kaoSVG + langSVG + readSVG, spark: !!p.spark, excited: !!p.excited, seed: seedOf(p) };
   }
 
   /* ---- static SVG (fallback + node tests): identical grammar, no motion ---- */
@@ -178,7 +203,7 @@
     if (L.spark) glow.push('<ellipse cx="672" cy="10" rx="54" ry="40" fill="#f7dd94" opacity="0.11"/><ellipse cx="672" cy="10" rx="28" ry="21" fill="#fbe6a0" opacity="0.22"/><ellipse cx="672" cy="10" rx="11" ry="9" fill="#fdf0c4" opacity="0.4"/>');
     if (L.excited) sparkleData(L.H, L.seed).forEach(function (st) { for (var a = 0; a < 3; a++) glow.push('<ellipse cx="' + st.cx.toFixed(1) + '" cy="' + st.cy.toFixed(1) + '" rx="' + st.s.toFixed(1) + '" ry="' + (st.s * st.ry).toFixed(2) + '" fill="#f7e3a8" opacity="' + st.op.toFixed(2) + '" transform="rotate(' + (st.rot + 60 * a).toFixed(1) + ' ' + st.cx.toFixed(1) + ' ' + st.cy.toFixed(1) + ')"/>'); });
     if (glow.length) out.push('<g opacity="0.9">' + glow.join("") + '</g>');
-    out.push(L.textSVG + '</svg>');
+    out.push(L.textSVG + stripSVG(L.history, L.contentH + 5, L.H - 5) + '</svg>');
     return out.join("");
   }
 
@@ -268,6 +293,19 @@
             ctx.lineTo(s.cx + Math.cos(ang) * s.s, s.cy + Math.sin(ang) * s.s);
             ctx.stroke();
           }
+        });
+        ctx.globalAlpha = 1;
+      }
+      if (L.history.length >= 2) {
+        var htop = L.contentH + 5, hbot = H - 5, hbandH = hbot - htop, hxL = 16, hxR = W - 16;
+        ctx.lineWidth = 1.3; ctx.lineJoin = "round"; ctx.lineCap = "round";
+        STRIP_DIMS.forEach(function (d) {
+          ctx.globalAlpha = 0.62; ctx.strokeStyle = d[1]; ctx.beginPath();
+          L.history.forEach(function (h, i) { var x = hxL + i * (hxR - hxL) / (L.history.length - 1), y = hbot - h[d[0]] * hbandH; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+          ctx.stroke();
+          var ly = hbot - L.history[L.history.length - 1][d[0]] * hbandH;
+          ctx.globalAlpha = 0.62 * (0.7 + 0.3 * Math.sin(2 * t)); ctx.fillStyle = d[1];
+          ctx.beginPath(); ctx.arc(hxR, ly, 2, 0, 6.2832); ctx.fill();
         });
         ctx.globalAlpha = 1;
       }
