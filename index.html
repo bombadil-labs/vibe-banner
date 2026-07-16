@@ -38,14 +38,24 @@
   p code, li code { background: var(--card); border-radius: 4px; padding: 1px 5px; }
   .cell { margin: 40px 0; }
   .cap { font-family: var(--font-mono); font-size: 12px; color: var(--sub);
-    margin: 0 0 14px; }
+    margin: 0 0 10px; }
   .cap b { color: var(--ink); font-weight: 500; }
+  .chat { border: 1px solid var(--edge); border-radius: 14px; overflow: hidden;
+    background: color-mix(in srgb, var(--paper) 55%, var(--card)); }
+  .chat-bar { display: flex; align-items: center; gap: 6px; padding: 9px 14px;
+    background: var(--card); border-bottom: 1px solid var(--edge); }
+  .chat-bar .dot { width: 9px; height: 9px; border-radius: 50%;
+    background: var(--sub); opacity: 0.35; }
+  .chat-bar .title { flex: 1; text-align: center; font-size: 12px;
+    color: var(--sub); font-family: var(--font-mono); padding-right: 45px; }
+  .chat-body { padding: 18px 18px 20px; }
   .banner { border-radius: 12px; overflow: hidden; }
   .u-msg { background: var(--card); border: 1px solid var(--edge);
-    border-radius: 16px; padding: 10px 16px; margin: 0 0 14px auto;
-    max-width: 85%; width: fit-content; font-size: 14px; line-height: 1.55; }
+    border-radius: 16px; border-bottom-right-radius: 5px; padding: 10px 16px;
+    margin: 0 0 14px auto; max-width: 85%; width: fit-content;
+    font-size: 14px; line-height: 1.55; }
   .resp { font-family: var(--font-voice); font-size: 15.5px; line-height: 1.65;
-    margin: 12px 0 0; }
+    margin: 14px 0 0; }
   .resp .trail { opacity: 0.45; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--edge);
     font-size: 13px; color: var(--sub); }
@@ -88,9 +98,24 @@
   toward. It reports the feeling; the tool decides the look.</p>
 
   <h2 id="install">Install the skill</h2>
-  <p>You need <a href="https://claude.com/claude-code">Claude Code</a> (desktop app or a surface
-  with the <code>show_widget</code> visualization tool — that's what draws the banner inline).
-  Install is one file:</p>
+
+  <h3>On claude.ai (no tools needed)</h3>
+  <ol>
+    <li>Open the skill file:
+      <a href="https://raw.githubusercontent.com/bombadil-labs/vibe-annotation-renderer/main/skill/SKILL.md">skill/SKILL.md</a>.
+      You'll paste from it in a moment — it has a short <em>description</em> at the top (the
+      <code>description:</code> line between the <code>---</code> markers) and the
+      <em>instructions</em> (everything below).</li>
+    <li>In the <a href="https://claude.ai">claude.ai</a> sidebar, click <strong>Customize</strong>.</li>
+    <li>In the Skills panel, click <strong>Add</strong> → <strong>Write skill instructions</strong>.</li>
+    <li>Fill in the form: name it <code>vibe-annotations</code>, paste the description line into
+      <strong>Description</strong>, and everything below the frontmatter into
+      <strong>Instructions</strong>.</li>
+    <li>Save. Your next conversation opens with a banner.</li>
+  </ol>
+
+  <h3>In Claude Code</h3>
+  <p>Install is one file:</p>
   <pre>mkdir -p ~/.claude/skills/vibe-annotations
 curl -fsSL https://raw.githubusercontent.com/bombadil-labs/vibe-annotation-renderer/main/skill/SKILL.md \
   -o ~/.claude/skills/vibe-annotations/SKILL.md</pre>
@@ -98,9 +123,10 @@ curl -fsSL https://raw.githubusercontent.com/bombadil-labs/vibe-annotation-rende
   <pre>New-Item -ItemType Directory -Force "$HOME\.claude\skills\vibe-annotations" | Out-Null
 Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-annotation-renderer/main/skill/SKILL.md `
   -OutFile "$HOME\.claude\skills\vibe-annotations\SKILL.md"</pre>
-  <p>That's it — the skill self-triggers ("preface every response with a usage of it"), so the next
-  conversation starts with a banner. To dial the cadence down or turn it off, just tell Claude;
-  the skill honors that for the session. To remove it, delete the folder.</p>
+  <p>Either way, the skill self-triggers ("preface every response with a usage of it"), so the next
+  conversation starts with a banner. To dial the cadence down or turn it off, just tell Claude —
+  the skill honors that for the session. To remove it, delete the skill (claude.ai: the Skills
+  panel; Claude Code: delete the folder).</p>
   <p><strong>A security note, practiced here:</strong> the skill loads the renderer pinned to a
   <em>full commit hash</em>, never a tag or branch. Tags are mutable pointers — in a context where
   the host injects capabilities like <code>sendPrompt</code> into rendered pages, a silently moved
@@ -156,25 +182,25 @@ try {
 var GROUPS = [
   ["The field — palette becomes three columns", [
     ["Neutral (no palette → grey triad)",
-      "what's the flag to list hidden files again?",
+      "how many tablespoons in a quarter cup?",
       {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly"},
-      "ls -a — the -a includes dotfiles; ls -la if you want the long view with permissions too."],
+      "Four — a quarter cup is four tablespoons, or twelve teaspoons if you've lost the big spoon."],
     ["One colour → light · colour · dark",
-      "that refactor is finally done. thanks for sticking with it all afternoon.",
+      "we finally painted the kitchen that yellow we talked about. it's perfect.",
       {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"warm and easy", feel:"settled · content", trying:"stay in one clear register", palette:["#d99a5e"]},
-      "It was a good one — the kind where the code slowly teaches you the shape it wanted all along."],
+      "The one you almost talked yourself out of three times! Morning light is going to love that room."],
     ["Two colours → c0 · blend · c1",
-      "can you fix the flaky test, and also tell me honestly whether the retry logic is even a good idea?",
+      "help me write a toast for my sister's wedding — funny, but it has to land sincere",
       {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"two things at once", feel:"engaged · layered", trying:"hold both threads", palette:["#7d8fb8","#c396a4"]},
-      "Two answers, then. The flake first: it's a real race, not test noise — the retry masks it."],
+      "The trick is to let the jokes carry the love in disguise. Tell me the story you always tell about her."],
     ["Three colours → one per column",
-      "big day: we're shipping the beta, migrating the database, AND onboarding the new dev.",
+      "big weekend: hosting thanksgiving, kid's first soccer game, AND I'm running the 10k",
       {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"a lot going on", feel:"lit · three-way", trying:"let three moods sit side by side", palette:["#e0994e","#c98fb0","#6fa39c"]},
-      "Deep breath — all three land today if we order them right. Migration first, while traffic is low."],
+      "All three fit if we brine the turkey Thursday night. Let's build the timeline backwards from kickoff."],
     ["Four+ colours → centre cycles the rest",
-      "ramble mode: I have like six half-formed ideas about where this project could go next",
+      "ramble mode: I have like six half-formed ideas about where my novel could go",
       {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"more moods than columns", feel:"many-hued", trying:"watch the centre drift through the extras", palette:["#7d8fb8","#6fa39c","#e0994e","#c98fb0"]},
-      "Ramble away — I'll hold the threads and we can see which ones braid together."]
+      "Ramble away — I'll hold the threads and we'll see which ones want to braid together."]
   ]],
   ["focus — the vertical spread of the columns", [
     ["focused → a tight, level line",
@@ -182,31 +208,31 @@ var GROUPS = [
       {kaomoji:"( ・_・)", seems:"locked on one thing", feel:"clear · single", trying:"hold the line", palette:["#7d8fb8","#8f9ac0","#6f86b0"], focus:0.95},
       "On it. Starting with heap snapshots sixty seconds apart — nothing else gets touched."],
     ["mid focus → a moderate spread",
-      "review this PR — mostly the auth changes, but flag anything else that looks weird",
+      "plan the road trip — mostly the route, but flag any can't-miss food stops",
       {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a couple of threads", feel:"steady · layered", trying:"hold two or three things", palette:["#7d8fb8","#c98fb0","#6fa39c"], focus:0.5},
-      "The auth changes are sound, with one exception in the token refresh path. Two smaller things caught my eye too."],
+      "Route first: the coastal option costs you 90 minutes and pays you back at least two lunches. Speaking of which—"],
     ["scattered → a wide vertical range",
-      "brain dump: rename the repo? switch to pnpm? is the logo bad? should we start a blog??",
+      "brain dump: quit my job? learn pottery? is my cat bored?? should I move to Lisbon???",
       {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"everywhere at once", feel:"broad · diffuse", trying:"let it all spread out", palette:["#e0994e","#c98fb0","#6fa39c"], focus:0.1},
-      "Taking those in the order they'll actually matter: pnpm yes, rename maybe, the logo is fine, and the blog—"]
+      "Taking those in ascending order of consequence: the cat is fine, pottery yes, and the other two are secretly the same question."]
   ]],
   ["Engagement, note, wrap, faces", [
     ["Bored (engagement 0.1 → shrinks)",
       "same as the last three: convert this fourth config file to YAML too",
       {kaomoji:"( ˘_˘ )", seems:"the rote fourth variation", feel:"flat · far away", trying:"answer and move on", palette:["#8b93a0"], engagement:0.1},
-      "Done — same mapping as the other three. If there are more of these, I can script the whole directory."],
+      "Done — same mapping as the other three. If there are more of these, I can just do the whole folder at once."],
     ["Optional [note] line (the subtext)",
-      "quick question, is it normal for a senior dev to rewrite your code without telling you?",
+      "quick question, is it normal for a best friend to forget your birthday two years in a row?",
       {kaomoji:"( ˶ ˘ ꒳ ˘ ˶ )", seems:"asking one thing, meaning another", feel:"attentive · reading between lines", trying:"answer the real question", noticing:"the ask under the ask", palette:["#7f93a8"]},
-      "Common, yes — but the fact that it stung enough to ask about is worth taking seriously."],
+      "It happens, sure — but the fact that it stung enough to ask a chatbot about is worth taking seriously."],
     ["Multi-line kaomoji (a bloom)",
-      "IT WORKS!! first place at the science fair!!!",
+      "SHE SAID YES!!!",
       {kaomoji:"✧ ･ ✧\n( ˶ˆ ꒳ ˆ˵ )\n✧ ･ ✧", seems:"the mood is big", feel:"expansive · bright", trying:"let the face get large", palette:["#e0b060","#d99ac0"]},
-      "FIRST PLACE! All those late nights on the sensor calibration just paid off in front of everyone."],
+      "SHE SAID YES!! Congratulations!! Okay — tell me everything. Did the ring-in-the-hiking-boot plan actually work?"],
     ["Long goal (wraps to a 2nd line)",
-      "walk me through the deploy step by step. I do not want any surprises.",
-      {kaomoji:"( ・_・)", seems:"wants the whole plan spelled out", feel:"methodical", trying:"carefully walk through every one of the four steps before shipping anything at all", palette:["#7f9ab0"]},
-      "Step one: freeze main and cut the release branch. Nothing moves after this point without both of us seeing it."],
+      "walk me through repotting the orchid step by step. I've killed three. no surprises.",
+      {kaomoji:"( ・_・)", seems:"wants the whole plan spelled out", feel:"methodical", trying:"carefully walk through every one of the four steps before touching a single root", palette:["#7f9ab0"]},
+      "Step one, and it's a do-nothing step: water it two days before. Dry roots snap; damp roots bend."],
     ["Languages → [Reasoned in]: bottom-right",
       "translate this tagline so it lands in Russian and Japanese — not word-for-word",
       {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a multilingual turn", feel:"nimble · playful", trying:"think across tongues", languages:["ru","ja","Esperanto"], palette:["#8f9ac0"]},
@@ -214,57 +240,57 @@ var GROUPS = [
   ]],
   ["Flags — rare, condition-triggered", [
     ["spark — a light-bulb over the face",
-      "wait — what if the cache key doesn't include the user's timezone?",
+      "wait. is my fried rice mushy because the rice is FRESH? is that why restaurants are better??",
       {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"just handed me the click", feel:"lit · delighted", trying:"catch the aha", spark:true, palette:["#e0a24e"]},
-      "That's it. That's the bug. It explains the midnight duplicates AND why only Sydney complained."],
+      "That's it — that's the whole secret. Day-old refrigerated rice dries just enough to fry instead of steam."],
     ["excited — twinkling, spinning stars",
-      "the demo got greenlit — we're presenting at the all-hands on friday!!",
+      "I GOT THE PART!! rehearsals start monday!!",
       {kaomoji:"٩( ˶ˆᗜˆ˵ )و", seems:"bouncing with energy", feel:"buoyant · giddy", trying:"ride the fizz", excited:true, palette:["#e0a24e","#c98fb0"]},
-      "YES. Okay — three days to make it sing. Let's open with the live query, that's the wow moment."],
+      "YES!! After that callback story I was hoping — okay, Monday. Want to run lines? I do a shameless Iago."],
     ["surprised — halo bloom + face pop",
-      "oh btw, the 'test' database you've been querying all week? that's been production the whole time",
+      "so the 'costume jewelry' brooch from grandma's junk drawer? the appraiser says it's an actual 1935 Cartier",
       {kaomoji:"( ⊙ ᵕ ⊙ )", seems:"just caught me off guard", feel:"startled · wide-eyed", trying:"take the jolt in", surprised:true, palette:["#b79ad0","#8f9ac0","#e6d9b4"], engagement:0.55},
-      "That… recontextualizes the week. Okay. First: everything I ran was read-only — verifying that now."],
+      "The one that lived next to the rubber bands?! Okay — first thing, get that insured before it leaves the house again."],
     ["tender — a warm swell at the edges",
-      "my daughter used the app we built together for her homework tonight. she didn't even know I made it.",
+      "tonight my daughter read her little brother the bedtime story we wrote together. all by herself.",
       {kaomoji:"( ˶ᵕ ‿ ᵕ˶ )", seems:"being gentle with me", feel:"fond · warm · moved", trying:"let the warmth show", tender:true, palette:["#d99a8a","#c0a0a8"]},
-      "That's the best possible bug report: it just worked, for the one user who matters most."],
+      "Oh, that's the story finding its real life — it belongs to them now. Did she do the dragon voice?"],
     ["melancholy — cool motes drift down",
-      "shutting the project down. investors passed. help me write the goodbye post?",
+      "we're closing dad's bookshop after forty years. help me write the sign for the door?",
       {kaomoji:"( ˘ ､ ˘ )", seems:"a quiet, heavy thing", feel:"wistful · low", trying:"sit with it", melancholy:true, palette:["#8f96a8","#9a8fae"]},
-      "Of course. Let's give it the ending it deserves — honest about what it was, no bitterness."],
+      "Of course. Forty years deserves better than 'closed' — let's write it the way he'd have said it to a regular."],
     ["anxious — cold fog rolls over",
-      "prod is throwing errors I've never seen before and the on-call isn't answering",
+      "flight lands 6:05, the visa office closes 6:30, and I just realized I don't have the form",
       {kaomoji:"( ｡•́ _ •̀｡ )", seems:"something's off here", feel:"wary · dimmed", trying:"stay watchful", anxious:true, palette:["#7a8296","#8f95a4"]},
-      "Okay. Blast radius first: paste the top error and tell me if checkout is affected."],
+      "Tight but not impossible. First: the form is downloadable — fill it on the plane. Second: which terminal?"],
     ["mirth — champagne bubbles rise",
-      "the bug was a semicolon. three days. a semicolon.",
+      "the 'gas leak' the plumber charged me $200 to locate was a jar of kimchi in the pantry",
       {kaomoji:"( ˶ˆ ꒳ ˆ˵ )~", seems:"quietly amused", feel:"tickled · effervescent", trying:"let it bubble", mirth:true, palette:["#e0b060","#d99ac0"]},
-      "Three days of distributed-systems theories, and the culprit was punctuation. It's always punctuation."],
+      "Two hundred dollars to be told your fermented cabbage is thriving. Honestly? That kimchi earned it."],
     ["laugh — the face swells & flushes yellow",
-      "I told the intern to 'push to main' and he physically pushed the server rack toward Maine",
+      "I asked grandma to text me the recipe and she mailed me her entire phone",
       {kaomoji:"(≧▽≦)", seems:"we're both cracking up", feel:"gleeful · beaming", trying:"laugh out loud", laugh:true, palette:["#e0a24e","#d99ac0"], engagement:0.9},
-      "He WHAT — toward MAINE? Geographically?? Please tell me the rack has casters and a passport."],
+      "She MAILED the PHONE?? With stamps?? The recipe is IN there, to be fair. Technically compliant. Flawless."],
     ["groan — head-loll, slump, sweat-drop",
-      "why did the programmer quit his job? because he didn't get arrays. (a raise)",
+      "what do you call a fish with no eyes? a fsh.",
       {kaomoji:"( ˘︹˘ )", seems:"a truly terrible pun just landed", feel:"exasperated · fond", trying:"groan and move on", groan:true, palette:["#9a9488","#8f96a4"], engagement:0.5},
-      "You typed that with your whole chest, didn't you. Anyway — about the actual arrays in your code…"],
+      "You typed that with your whole chest, didn't you. Anyway — you had an actual question, I believe."],
     ["oops — flinch back, field jolt, a startled !",
       "you said that function was unused — it's called from the cron job you wrote yesterday",
       {kaomoji:"( ˃ ᯅ ˂ )", seems:"just watched me trip over my own answer", feel:"caught out · sheepish", trying:"own the slip and fix it", oops:true, palette:["#d98a6a","#c0a86a"], engagement:0.7},
       "You're right, and that one's entirely on me — I wrote that call site. Restoring it now."],
     ["frustrated — 💢 anger mark, ovals pulse red",
-      "still failing. same error. fourth time.",
+      "the printer still says offline. same error. fourth time.",
       {kaomoji:"( ｀д´ )", seems:"this thing will not cooperate", feel:"irritated · grating", trying:"push through the snag", frustrated:true, palette:["#a06a6a","#8f7f88"], engagement:0.7},
-      "Fourth time, same wall — fine, this approach has lost its privileges. New plan: bisect from the last green build."],
+      "Fourth time, same wall — fine. This printer has lost negotiating privileges. Unplug it. We go to factory reset."],
     ["angry — storm-black, lightning",
-      "the vendor silently disabled our audit logging six weeks ago and called it 'feature flag cleanup'",
+      "the movers 'lost' the box with mom's ashes and offered me a $50 voucher",
       {kaomoji:"( ╬ ⊙ 益 ⊙ )", seems:"crossed a real line", feel:"hot · thunderous", trying:"hold it together and say it clean", angry:true, palette:["#7a3a3a","#5a3a4a"], engagement:0.85},
-      "Let's be precise, because this deserves precision: they removed a control you're audited against, silently, and renamed it housekeeping."],
+      "A voucher. No — we're not accepting that framing. Here's the escalation path, in writing, starting tonight."],
     ["dramatic — spotlight + theatrical serif",
-      "give me the standup summary, but make it Shakespearean",
+      "announce that dinner is ready, but make it a royal proclamation",
       {kaomoji:"( ╬ ⊙ 益 ⊙ )", seems:"cueing me to ham it up", feel:"theatrical · larger-than-life", trying:"deliver the line to the back row", dramatic:true, palette:["#b0413e","#c0a86a"], engagement:0.9},
-      "Hark! Three tickets closed ere noonday's bell, yet one — O treacherous merge conflict — remaineth."]
+      "HEAR YE! By decree of the Kitchen Sovereign, the lasagna hath achieved its final form — attend, or forfeit thy corner piece!"]
   ]]
 ];
 var g = document.getElementById("gallery-cells");
@@ -274,13 +300,20 @@ GROUPS.forEach(function (grp) {
     var cell = document.createElement("div"); cell.className = "cell";
     var cap = document.createElement("p"); cap.className = "cap";
     var t = s[0].split(" — "); cap.innerHTML = "<b>" + t[0] + "</b>" + (t[1] ? " — " + t[1] : "");
+    var chat = document.createElement("div"); chat.className = "chat";
+    var bar = document.createElement("div"); bar.className = "chat-bar";
+    for (var i = 0; i < 3; i++) { var d = document.createElement("span"); d.className = "dot"; bar.appendChild(d); }
+    var title = document.createElement("span"); title.className = "title"; title.textContent = "claude"; bar.appendChild(title);
+    var body = document.createElement("div"); body.className = "chat-body";
     var u = document.createElement("div"); u.className = "u-msg"; u.textContent = s[1];
     var banner = document.createElement("div"); banner.className = "banner";
     var r = document.createElement("p"); r.className = "resp";
     r.textContent = s[3];
     var trail = document.createElement("span"); trail.className = "trail"; trail.textContent = " …";
     r.appendChild(trail);
-    cell.appendChild(cap); cell.appendChild(u); cell.appendChild(banner); cell.appendChild(r);
+    body.appendChild(u); body.appendChild(banner); body.appendChild(r);
+    chat.appendChild(bar); chat.appendChild(body);
+    cell.appendChild(cap); cell.appendChild(chat);
     g.appendChild(cell);
     try { vibe(banner, s[2]); } catch (e) { banner.textContent = "err: " + e.message; }
   });
