@@ -29,14 +29,23 @@ console.log("goal wrap");
 let long = buildSVG(Object.assign({}, base, { trying: "carefully verify every single one of the four new features works end to end before we ship" }));
 ok((long.match(/<text /g) || []).length === 5, "long goal wraps → extra row");
 
-console.log("face-packs: image faces render in place of the kaomoji");
+console.log("face is one union: kaomoji string | url | sprite slice | known set");
+let fk = buildSVG({ face: "( ˘ ᵕ ˘ )", seems: "a", feel: "b", trying: "c", palette: ["#7d8fb8"] });
+ok(/class="txt fk vk"/.test(fk) && /˘ ᵕ ˘/.test(fk), "face: non-URL string → kaomoji text (no kaomoji key needed)");
 let fp1 = buildSVG(Object.assign({}, base, { face: "https://cdn.jsdelivr.net/gh/u/r@abc/moogle.png" }));
-ok(/<image class="vk"[^>]*href="https:\/\/cdn\.jsdelivr\.net\/gh\/u\/r@abc\/moogle\.png"/.test(fp1), "face URL → <image> face");
+ok(/<image class="vk"[^>]*href="https:\/\/cdn\.jsdelivr\.net\/gh\/u\/r@abc\/moogle\.png"/.test(fp1), "face URL string → <image> face");
 ok(!/class="txt fk vk"/.test(fp1), "image face replaces the kaomoji glyphs");
 let fp2 = buildSVG(Object.assign({}, base, { face: { url: "https://cdn.jsdelivr.net/gh/u/r@abc/sheet.png", cellW: 64, cellH: 64, cols: 4, rows: 2, index: 5 } }));
 ok(/<svg class="vk"[^>]*viewBox="64 64 64 64"/.test(fp2), "sprite index 5 of 4-col sheet → viewBox crops row 1, col 1");
 ok(/width="256" height="128"/.test(fp2), "sheet dims derive from cell size × grid");
+let kf1 = buildSVG(Object.assign({}, base, { face: { set: "noto-animated", item: "1f60a" } }));
+ok(/fonts\.gstatic\.com\/s\/e\/notoemoji\/latest\/1f60a\/512\.gif/.test(kf1), "KnownFace noto-animated resolves the gstatic URL");
+let kf2 = buildSVG(Object.assign({}, base, { face: { set: "kip", item: "puzzled" } }));
+ok(/kip-sheet\.png/.test(kf2) && /viewBox="128 0 64 64"/.test(kf2), "KnownFace kip:puzzled → sheet cell 2");
+ok(/class="txt fk vk"/.test(buildSVG(Object.assign({}, base, { face: { set: "unknown-set", item: "x" } }))), "unknown set → falls back to kaomoji");
 ok(buildSVG(Object.assign({}, base, { face: { nope: true } })).indexOf("vk") > 0, "malformed face → falls back to kaomoji, no crash");
+let ctr = +/(?:<image class="vk" x=")([0-9.]+)/.exec(fp1)[1];
+ok(ctr > 40, "image faces centre in the face column (x=" + ctr + ", not hugging the left edge)");
 
 console.log("readout rows carry full-text tooltips");
 let tt = buildSVG(Object.assign({}, base, { seems: "an overlong read that will clip", noticing: "the full subtext" }));

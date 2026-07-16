@@ -41,8 +41,8 @@ also exported (Node too) — it's the static fallback and the basis for the test
 
 | input | shows as | notes |
 |---|---|---|
-| `kaomoji` | the face | left-aligned, vertically centred; `\n` → multi-line bloom |
-| `face` | an image face (face-pack) | optional override: `"https://…png"` or `{ url, cellW, cellH, cols, rows, index }` for one spritesheet cell. Loads browser-side (payload carries only the URL, never base64); must be hosted on a widget-allowlisted CDN — in practice `cdn.jsdelivr.net/gh/<user>/<repo>@<commit>/…`, hash-pinnable like the renderer itself. Keep `kaomoji` as fallback |
+| `face` | the face | **one union, four forms**: a kaomoji string (non-URL text; `\n` → multi-line bloom, left-aligned) · an image URL string · a spritesheet slice `{ url, cellW, cellH, cols, rows, index }` · a KnownFace `{ set, item }` from the built-in registry (`kip` with mood-name items, `noto-animated`, `noto`, `twemoji` with codepoint items). Images centre in the face column, load browser-side (URL-only payload, never base64), and must live on a widget-allowlisted CDN — in practice `cdn.jsdelivr.net/gh/…`, hash-pinnable like the renderer itself |
+| `kaomoji` | legacy alias / fallback | still accepted; also the fallback text + seed material when `face` is an image |
 | `seems` | `[user]` | your immediate read of the user |
 | `feel` | `[mood]` | your activated emotions |
 | `trying` | `[goal]` | last line; wraps to a second line past ~70 chars |

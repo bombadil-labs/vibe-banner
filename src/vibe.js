@@ -87,7 +87,12 @@
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
   }
-  function seedOf(p) { var s = String(p.kaomoji) + String(p.feel) + String(p.trying), n = 0; for (var i = 0; i < s.length; i++) n += s.codePointAt(i); return n; }
+  function seedOf(p) {
+    var f = p.face ? (typeof p.face === "string" ? p.face : (p.face.set ? p.face.set + ":" + p.face.item : String(p.face.url || ""))) : "";
+    var s = String(p.kaomoji || "") + f + String(p.feel) + String(p.trying), n = 0;
+    for (var i = 0; i < s.length; i++) n += s.codePointAt(i);
+    return n;
+  }
 
   // sparkle base geometry (excited), shared by static SVG + animated canvas
   function sparkleData(H, seed) {
@@ -125,6 +130,20 @@
     }
     return out;
   }
+
+  // KnownFace registry: face: { set, item } resolves here. Every entry is version-pinned
+  // to an allowlisted CDN. "kip" is the repo's own mascot — items are mood names.
+  var KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png";
+  var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
+  var FACE_SETS = {
+    "noto-animated": function (item) { return { url: "https://fonts.gstatic.com/s/e/notoemoji/latest/" + encodeURIComponent(item) + "/512.gif" }; },
+    "noto": function (item) { return { url: "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@v2.047/png/128/emoji_u" + encodeURIComponent(item) + ".png" }; },
+    "twemoji": function (item) { return { url: "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/" + encodeURIComponent(item) + ".png" }; },
+    "kip": function (item) {
+      var i = KIP_MOODS[item]; if (i == null) i = Math.max(0, Math.min(7, parseInt(item, 10) || 0));
+      return { url: KIP_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 1, index: i };
+    }
+  };
 
   // claudemeal comes in the flavor of the reporter's own mood: the palette's lead colour,
   // mapped by hue to something from the pantry. No palette → classic. Grey → petrichor.
@@ -204,24 +223,30 @@
     var vmag = [0.82 + vr() * 0.18, -(0.55 + vr() * 0.35), 0.82 + vr() * 0.18];
     var vcol = vmag.map(function (m) { return { bias: vdir * m, phase: vr() * 6.2832 }; });
 
-    // face-pack: an image (optionally a spritesheet cell) instead of the kaomoji glyphs.
-    // face: "https://…png"  or  { url, w?, h?, cellW?, cellH?, cols?, index? }
-    // The image is fetched browser-side — the payload costs only the URL — and must be
-    // hosted on a widget-allowlisted CDN (e.g. cdn.jsdelivr.net/gh/<user>/<repo>).
-    var faceImg = null;
-    if (p.face) {
-      faceImg = typeof p.face === "string" ? { url: p.face } : p.face;
-      if (!faceImg.url) faceImg = null;
-      else faceImg = {
-        url: String(faceImg.url),
-        w: Math.max(24, Math.min(140, faceImg.w || 76)),
-        h: Math.max(24, Math.min(84, faceImg.h || 48)),
-        cellW: faceImg.cellW || 0, cellH: faceImg.cellH || 0,
-        cols: faceImg.cols || 1, rows: faceImg.rows || 1, index: faceImg.index || 0
-      };
-    }
+    // The face is one union: face: "( kaomoji )" | "https://…png" | { url, cellW, cellH,
+    // cols, rows, index } | { set, item }. Strings that aren't URLs are kaomoji text.
+    // Legacy payloads may still pass kaomoji: separately — it also serves as fallback text
+    // and seed material when the face is an image. Images fetch browser-side (URL-only
+    // payload cost) and must live on a widget-allowlisted CDN.
+    var faceImg = null, kaoText = null, fRaw = p.face;
+    if (typeof fRaw === "string") {
+      if (/^https?:\/\//.test(fRaw)) faceImg = { url: fRaw };
+      else kaoText = fRaw;
+    } else if (fRaw && fRaw.set && FACE_SETS[fRaw.set]) {
+      faceImg = FACE_SETS[fRaw.set](String(fRaw.item == null ? "" : fRaw.item));
+      if (fRaw.w) faceImg.w = fRaw.w;
+      if (fRaw.h) faceImg.h = fRaw.h;
+    } else if (fRaw && fRaw.url) faceImg = fRaw;
+    if (faceImg) faceImg = {
+      url: String(faceImg.url),
+      w: Math.max(24, Math.min(140, faceImg.w || 56)),
+      h: Math.max(24, Math.min(84, faceImg.h || 56)),
+      cellW: faceImg.cellW || 0, cellH: faceImg.cellH || 0,
+      cols: faceImg.cols || 1, rows: faceImg.rows || 1, index: faceImg.index || 0
+    };
+    if (kaoText == null) kaoText = p.kaomoji != null ? String(p.kaomoji) : "( ˘ ᵕ ˘ )";
 
-    var kaoLines = String(p.kaomoji).split("\n");
+    var kaoLines = kaoText.split("\n");
     var multiline = !faceImg && kaoLines.length > 1, kaoLh = multiline ? 20 : 0;
 
     function line(label, value, cls, x, key, fullTitle) {
@@ -270,19 +295,20 @@
     var kaoSVG;
     if (faceImg) {
       var iy = coreCy - faceImg.h / 2;
+      var ix = FACE_X + Math.max(0, (kaoMaxW - faceImg.w) / 2);          // centre the image in the face column (text hugs left; images float)
       if (faceImg.cellW && faceImg.cellH) {                    // spritesheet: crop one cell via a nested viewport
         var col = faceImg.index % faceImg.cols, rowI = Math.floor(faceImg.index / faceImg.cols);
-        kaoSVG = '<svg class="vk" x="' + FACE_X + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
+        kaoSVG = '<svg class="vk" x="' + g(ix) + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
           '" viewBox="' + (col * faceImg.cellW) + ' ' + (rowI * faceImg.cellH) + ' ' + faceImg.cellW + ' ' + faceImg.cellH +
           '" preserveAspectRatio="xMidYMid meet"><image href="' + esc(faceImg.url) + '" x="0" y="0" width="' + (faceImg.cellW * faceImg.cols) + '" height="' + (faceImg.cellH * faceImg.rows) + '"/></svg>';
       } else {
-        kaoSVG = '<image class="vk" x="' + FACE_X + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
+        kaoSVG = '<image class="vk" x="' + g(ix) + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
           '" preserveAspectRatio="xMidYMid meet" href="' + esc(faceImg.url) + '"/>';
       }
     } else kaoSVG = multiline
       ? '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk">' +
       kaoLines.map(function (l, i) { return '<tspan x="' + FACE_X + '"' + (i === 0 ? "" : ' dy="20"') + fit(l, 15) + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
-      : '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fit(String(p.kaomoji), 19) + '>' + esc(p.kaomoji) + '</text>';
+      : '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fit(kaoText, 19) + '>' + esc(kaoText) + '</text>';
     // every readout row carries a <title> tooltip with its full text — excited reporters
     // overrun the word caps despite guidance, and a clipped line should at least be readable on hover
     var readSVG = lines.map(function (ln, i) { return '<text x="' + ln.x + '" y="' + g(rightAbs[i]) + '" class="txt' + (ln.key ? ' vr-' + ln.key : '') + '"><title>' + esc(ln.title) + '</title>' + ln.inner + '</text>'; }).join("");
@@ -395,7 +421,7 @@
       mini.style.cssText = "position:absolute;right:8px;bottom:" + (L.hasLangs ? 20 : 6) + "px;width:22%;z-index:2;pointer-events:none;opacity:0.92;" +
         "border:1px solid rgba(128,120,104,0.45);border-radius:6px;overflow:hidden";   // framed, so it reads as the banner recurring, not a smudge
       mini.innerHTML = buildSVG({
-        kaomoji: p.kaomoji, seems: p.seems, feel: p.feel, trying: p.trying, noticing: p.noticing,
+        kaomoji: p.kaomoji, face: p.face, seems: p.seems, feel: p.feel, trying: p.trying, noticing: p.noticing,
         palette: p.palette, field: p.field, focus: p.focus, engagement: p.engagement
       });
       wrap.appendChild(mini);

@@ -101,6 +101,14 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   ("only strong feelings") never touch this codebase at all. Boundary: users can override
   presentation and cadence but not the honesty contract (no reporting feelings on demand,
   and the veil stays).
+- **`face` is one union (v0.7.0).** `kaomoji` + `face` as parallel keys was the contract
+  showing growth rings; the maintainer called the break. `face:` now takes a kaomoji string
+  (any non-URL string), an image URL, a sprite slice, or a KnownFace `{ set, item }`
+  resolved from a built-in, version-pinned registry (`kip` with mood-name items,
+  `noto-animated`, `noto`, `twemoji` with codepoints). Unknown sets and malformed objects
+  fall back to the kaomoji, never crash. `kaomoji:` survives as legacy alias, fallback
+  text, and seed material. Image faces centre in the face column (text hugs left; a small
+  image at the text anchor read as misaligned).
 - **Face-packs (v0.6.0) — image faces with zero token weight.** `face: "https://…png"` or
   `{ url, cellW, cellH, cols, rows, index }` renders an image (or one spritesheet cell, via
   a nested-viewport crop) in place of the kaomoji glyphs, ~76×48 constrained. The image is
