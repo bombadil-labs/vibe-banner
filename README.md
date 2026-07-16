@@ -83,7 +83,7 @@ they're uncommon.
 | `at_peace` | a soft halo glows below the face and a few blossoms rest in the margins — stillness as a positive state, the quiet that isn't deflation |
 | `solemn` | the face bows and holds; the field desaturates and dims once; a single warm ember stays lit low in the frame — gravity without sadness |
 | `rhyme` | a low-alpha ghost of the kaomoji itself rests offset behind the face, slowly fading in and out — recognition, the pattern returning (it holds resting posture even when the live face moves: memory) |
-| `awe` | the face shrinks and tilts up while the field swells and deepens — the one gesture where the face *loses*: made small by something vast |
+| `awe` | the face goes tiny and sinks low in the frame, still tilted up, while the field swells and densifies — the one gesture where the face *loses*: made small by something vast |
 | `vertigo` | a one-level Droste: the whole banner appears inside itself, lower right, flags omitted within. The loop just sits there |
 | `resolute` | concentration lines (集中線) flare inward from the frame edges toward the face, then hold faint — the ignition of determination |
 | `puzzled` | a loose cloud of "?" pops, drifts up, and fades around the head — grawlix mechanics in a gentle register; productive stuckness, the pre-spark |
