@@ -480,13 +480,13 @@
           }
           ctx.globalAlpha = 1;
         }
-        if (L.frustrated) {                                                          // a tilted red hash mark by the head
-          var hxc = faceRight + 2, hyc = faceTop + 2;
-          ctx.globalAlpha = 0.5 + 0.5 * frP; ctx.strokeStyle = "#dd3322"; ctx.lineWidth = 2.4; ctx.lineCap = "round";
-          ctx.save(); ctx.translate(hxc, hyc); ctx.rotate(0.18);
-          [-3, 3].forEach(function (d) { ctx.beginPath(); ctx.moveTo(d, -7); ctx.lineTo(d, 7); ctx.stroke(); });
-          [-3, 3].forEach(function (d) { ctx.beginPath(); ctx.moveTo(-7, d); ctx.lineTo(7, d); ctx.stroke(); });
-          ctx.restore(); ctx.globalAlpha = 1;
+        if (L.frustrated) {                                                          // the anime anger-vein mark, throbbing by the head
+          var mkx = faceRight + 5, mky = faceTop + 5, msz = 15 + frP * 4;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.globalAlpha = 0.7 + 0.3 * frP;
+          ctx.font = msz.toFixed(1) + "px ui-sans-serif, \"Segoe UI Emoji\", \"Apple Color Emoji\", sans-serif";
+          ctx.fillText("💢", mkx, mky);
+          ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
         }
         if (L.groan && groanGr > 0.05) {
           var sdx = faceRight - 8, sdy = faceTop + 4 + groanGr * 7;
