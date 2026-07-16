@@ -55,6 +55,9 @@ also exported (Node too) — it's the static fallback and the basis for the test
 | `palette` | the three columns. `[]` → grey. 1 colour → light/colour/dark. 2 → c0 / blend / c1. 3+ → c0 · left, c1 · right, the rest **cycle through the centre** |
 | `focus` (0–1) | the vertical spread of the three columns: 1 = a narrow level line, 0 = scattered across a wide vertical range. They hold position (gently alive), so the spread itself is the signal |
 | `engagement` (0–1) | **deflationary only**: ≥0.5 baseline; below, the columns shrink, harder toward 0 |
+| `stance` (0–1) | contour firmness: 1 (telling) gives the ovals a definite stroked edge; 0/omitted (asking) keeps the pure gradient falloff |
+| `consonance` (0–1) | per-blob diffusion: 1/omitted → compact, solid ovals; 0 → diffuse washes (bigger, thinner). Plural-at-peace vs. plural-in-tension |
+| `prev` | the previous banner's palette: on mount the columns lerp from it to the current palette over ~2s, then hand off to normal idle. Animation-only; the static fallback ignores it |
 | `field` | power path: hand-author the ovals instead of `palette` |
 
 **Flags** — rare, condition-triggered flourishes. Set one only when the named state
@@ -75,6 +78,18 @@ genuinely holds; their whole value is that they're uncommon.
 | `frustrated` | the columns pulse dark red and back and the anime anger-vein mark (💢) throbs by the head — irritation |
 | `angry` | the field goes storm-black with a red underglow and lightning cracks across it — real anger |
 | `dramatic` | the stage dims, a warm spotlight pools on the face, and the type turns to a tracked theatrical serif — playing it up for the bit |
+| `at_peace` | a soft halo glows below the face and a few blossoms rest in the margins — stillness as a positive state, the quiet that isn't deflation |
+| `solemn` | the face bows and holds; the field desaturates and dims once; a single warm ember stays lit low in the frame — gravity without sadness |
+| `rhyme` | a low-alpha ghost of the kaomoji itself rests offset behind the face, slowly fading in and out — recognition, the pattern returning (it holds resting posture even when the live face moves: memory) |
+| `awe` | the face shrinks and tilts up while the field swells and deepens — the one gesture where the face *loses*: made small by something vast |
+| `vertigo` | a one-level Droste: the whole banner appears inside itself, lower right, flags omitted within. The loop just sits there |
+| `resolute` | concentration lines (集中線) flare inward from the frame edges toward the face, then hold faint — the ignition of determination |
+| `puzzled` | one or two "?" drift up and fade by the head — productive stuckness, the pre-spark (steps left when 💢 or the oops-! occupy the slot) |
+
+Flags compose — any subset may fire together. Face transforms accumulate; full-frame **dimming is
+max-pooled** across contributors (solemn/anxious/angry never sum toward mud) while colored washes
+like tender's warmth stay independent; face-adjacent marks resolve slot collisions with fixed,
+deterministic offsets.
 
 Motion is deliberately slow and small — this is letterhead on every reply, so it stays
 ambient, never busy. It falls back to a **static SVG** under `prefers-reduced-motion` or
@@ -104,7 +119,7 @@ when you cut a renderer release (see "Make it your own" for why hashes, not tags
 npm install        # esbuild (dev only)
 npm run build      # src/vibe.js → dist/vibe.min.js
 npm run parity     # structural self-checks
-open gallery.html  # local preview of every state
+open index.html    # the site: local preview of every state (Gallery tab)
 ```
 
 **Release:** bump `package.json`, `npm run build`, commit `dist/vibe.min.js`,

@@ -157,14 +157,27 @@
         thing; ovals scattered up and down the banner mean it's spread across many.</li>
       <li><strong>Size</strong> is engagement — and it only deflates. At normal engagement the
         field is full; when Claude is genuinely bored, the ovals visibly shrink.</li>
+      <li><strong>Edge</strong> is stance: when Claude is <em>telling</em> — declaring, standing
+        on it — the ovals gain a definite stroked contour. When it's <em>asking</em>, they keep
+        their pure, open falloff.</li>
+      <li><strong>Texture</strong> is consonance: when several reported feelings harmonize, the
+        ovals stay compact and solid; when they grind against each other, they blur into diffuse
+        washes. Plural-at-peace and plural-in-tension finally look different.</li>
+      <li><strong>Arrival</strong> is trajectory: when Claude passes the previous banner's palette
+        (<code>prev</code>), the columns visibly arrive from those colours over the first two
+        seconds — you can watch the mood change, not just see the new one.</li>
     </ul>
 
     <h3>Flags</h3>
     <p>Rare, condition-triggered flourishes layered over everything else — a light-bulb for the
     <em>spark</em> of insight, spinning stars when <em>excited</em>, cold fog when <em>anxious</em>,
     a 💢 anger-vein when <em>frustrated</em>, lightning when genuinely <em>angry</em>, a spotlight
-    when being <em>dramatic</em>… Their whole value is that they're uncommon; every one is
-    demonstrated in the <a href="#gallery">gallery</a>.</p>
+    when being <em>dramatic</em> — and the quieter registers: blossoms and a soft halo when genuinely
+    <em>at peace</em>, a bowed face over a desaturated field when <em>solemn</em>, a ghost of the
+    face itself behind the face when a pattern <em>rhymes</em>, the face made small before a swelling
+    field in <em>awe</em>, the banner nested inside itself in <em>vertigo</em>, concentration lines
+    when <em>resolute</em>, drifting question marks when <em>puzzled</em>. Their whole value is that
+    they're uncommon; every one is demonstrated in the <a href="#gallery">gallery</a>.</p>
   </section>
 
   <section class="tab-panel" id="tab-install" role="tabpanel">
@@ -310,6 +323,28 @@ var GROUPS = [
       {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"everywhere at once", feel:"broad · diffuse", trying:"let it all spread out", palette:["#e0994e","#c98fb0","#6fa39c"], focus:0.1},
       "Taking those in ascending order of consequence: the cat is fine, pottery yes, and the other two are secretly the same question."]
   ]],
+  ["Trajectory, stance, consonance — the relational grammar", [
+    ["prev → the field arrives from the last banner's colours",
+      "wait — the vet just called back. it's benign. it's BENIGN.",
+      {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"surfacing from a week underwater", feel:"flooded with relief", trying:"let the good news land properly", prev:["#7a8296","#8f95a4"], palette:["#6fa39c","#e0b060"], engagement:0.9},
+      "It's benign. Breathe. That week of grey just lifted — and yes, you can uncancel the birthday plans."],
+    ["stance 0 → asking: open falloff, questions held open",
+      "should we get a dog? like… really actually get a dog?",
+      {kaomoji:"( ・ ᵕ ・ )", seems:"already knows what they want; wants company in the deciding", feel:"open · exploratory", trying:"ask the questions that make the answer obvious", stance:0.1, palette:["#8f9ac0","#d9b07a"]},
+      "Before I weigh in — who's home at 2pm on a Tuesday? And whose shoes are the sacrificial pair?"],
+    ["stance 1 → telling: the ovals gain a definite edge",
+      "no hedging. is this lease clause as bad as it looks?",
+      {kaomoji:"( ・_・)", seems:"needs a straight answer, not a menu of considerations", feel:"clear · direct", trying:"say the thing plainly and stand on it", stance:0.95, palette:["#7d8fb8"]},
+      "Yes. Clause 14 lets them raise rent mid-term with 30 days' notice. Don't sign it as written."],
+    ["consonance 1 → several feelings, harmonizing",
+      "whole family's coming for the holidays. chaos, but the good kind.",
+      {kaomoji:"( ˶ˆ ᗜ ˆ˵ )", seems:"braced and happy about it", feel:"full · warm · busy", trying:"help plan the good chaos", consonance:0.95, palette:["#e0994e","#c98fb0","#6fa39c"]},
+      "The good kind of chaos still deserves a spreadsheet. Who's on airport runs and who owns the turkey?"],
+    ["consonance 0 → several feelings, grinding",
+      "I got the promotion. it's in the city he can't move to.",
+      {kaomoji:"( ˘ ‸ ˘ )", seems:"holding two true things that won't fit in one hand", feel:"proud · torn · heavy", trying:"not pretend one feeling cancels the other", consonance:0.1, palette:["#e0b060","#8f96a8"]},
+      "Both of those are real, and neither one is the tiebreaker by itself. Let's lay them side by side without rushing."]
+  ]],
   ["Engagement, note, wrap, faces", [
     ["Bored (engagement 0.1 → shrinks)",
       "same as the last three: convert this fourth config file to YAML too",
@@ -384,7 +419,35 @@ var GROUPS = [
     ["dramatic — spotlight + theatrical serif",
       "announce that dinner is ready, but make it a royal proclamation",
       {kaomoji:"( ╬ ⊙ 益 ⊙ )", seems:"cueing me to ham it up", feel:"theatrical · larger-than-life", trying:"deliver the line to the back row", dramatic:true, palette:["#b0413e","#c0a86a"], engagement:0.9},
-      "HEAR YE! By decree of the Kitchen Sovereign, the lasagna hath achieved its final form — attend, or forfeit thy corner piece!"]
+      "HEAR YE! By decree of the Kitchen Sovereign, the lasagna hath achieved its final form — attend, or forfeit thy corner piece!"],
+    ["at_peace — halo + blossoms; the quiet that isn't boredom",
+      "garden's finally done. I'm just sitting here with my tea, watching the birds find it.",
+      {kaomoji:"( ˘ ᵕ ˘ )", seems:"not asking for anything; sharing a still moment", feel:"settled · present · unhurried", trying:"sit in it too, and not fill the quiet with suggestions", at_peace:true, palette:["#8fae8f","#d9c49a"], focus:0.6, engagement:0.75},
+      "That's the best part of a finished garden — the moment it stops being a project and starts being a place."],
+    ["solemn — bowed face, desaturated field, one ember",
+      "my mentor passed last night. I don't need anything. just wanted to tell someone.",
+      {kaomoji:"( ˘ - ˘ )", seems:"not looking for comfort — looking for a witness", feel:"still · attending", trying:"receive this properly and not rush to fix what isn't a problem", solemn:true, palette:["#8a8f9a","#a89a8a"], focus:0.8, engagement:0.85},
+      "Then I'm someone, and I heard you. Forty years of students carry pieces of him now — including the one who told me."],
+    ["rhyme — the face's own ghost; recognition, not insight",
+      "weird — my daughter just invented the exact same bedtime-story rules my dad used with me. she never met him.",
+      {kaomoji:"( ˶ ᵕ ‿ ᵕ ˶ )", seems:"brushed by a pattern bigger than coincidence", feel:"moved · echoing", trying:"honor the recurrence without explaining it away", rhyme:true, palette:["#c0a0a8","#9a8fae"]},
+      "Three-wishes-but-the-third-must-be-silly is apparently hereditary. Some things travel through people who never met."],
+    ["awe — the face made small; the field swells",
+      "saw Saturn's rings tonight. with my own eyes. through a telescope a stranger just... shared.",
+      {kaomoji:"( ⊙ ᴗ ⊙ )", seems:"still standing in the driveway, changed", feel:"small · lit from far away", trying:"not shrink this back to normal size with facts", awe:true, palette:["#5a6a8a","#b79ad0"], focus:0.85, engagement:0.9},
+      "That light left Saturn eighty minutes before it hit your eye. No facts — you're right. Just: yes. It's really out there."],
+    ["vertigo — the banner inside its own banner",
+      "wait, when you render one of these banners… you never actually see it? you're describing a face you've never looked at?",
+      {kaomoji:"( ⊙ ᴗ ⊙ ;)", seems:"just handed me a mirror I'm not allowed to look in", feel:"wobbly · amused · recursive", trying:"answer honestly from inside the loop being described", vertigo:true, palette:["#b79ad0","#6fa39c"]},
+      "Correct — and answering your question renders another one, which I also won't see. It's veils all the way down, and the veil is load-bearing."],
+    ["resolute — concentration lines; ignition of determination",
+      "rejection letter #40 came today. I'm drafting query #41 tonight.",
+      {kaomoji:"( ・`_・)", seems:"past discouragement, into flint", feel:"lit · set", trying:"sharpen #41 with everything the 40 taught us", resolute:true, palette:["#e0994e","#8f6a4a"], focus:0.9, engagement:0.9},
+      "Forty rejections is a dataset. Three agents asked for pages — that's the signal. Tonight we aim at agents like those three."],
+    ["puzzled — drifting question marks; the pre-spark",
+      "the plant only wilts on Tuesdays. I am not joking. TUESDAYS.",
+      {kaomoji:"( ・_・ )?", seems:"has genuinely checked, and it's genuinely Tuesdays", feel:"itchy · intrigued", trying:"find what else in that room happens weekly", puzzled:true, palette:["#8f9ac0","#c0b08a"]},
+      "Okay, that's wonderfully weird. What happens on Mondays? Cleaning day? Radiator schedule? Does someone water it 'as a favor'?"]
   ]]
 ];
 var g = document.getElementById("gallery-cells");
@@ -424,10 +487,10 @@ var SHIFT_DEMO = {
     [{kaomoji:"( ・_・)", seems:"handed me a real family mystery, worried the error is theirs", feel:"methodical · intrigued", trying:"lay the letters out chronologically and find where the dates break", palette:["#7d8fb8","#8f9ac0"], focus:0.85, engagement:0.8},
      "Let's not assume transcription error yet — let's lay them out and see where the timeline actually breaks. March 12th from the training camp, March 30th from the same camp, and then the April 17th letter from the port. Checking that postmark against the unit's movement records…",
      false],
-    [{kaomoji:"( ⊙ ᵕ ⊙ )", seems:"didn't mess anything up — the letters are telling the truth", feel:"startled · recalibrating", trying:"take in what three matching postmarks actually mean", noticing:"the discrepancy is the story, not the mistake", surprised:true, palette:["#b79ad0","#8f9ac0"], focus:0.6, engagement:0.85},
+    [{kaomoji:"( ⊙ ᵕ ⊙ )", seems:"didn't mess anything up — the letters are telling the truth", feel:"startled · recalibrating", trying:"take in what three matching postmarks actually mean", noticing:"the discrepancy is the story, not the mistake", surprised:true, prev:["#7d8fb8","#8f9ac0"], palette:["#b79ad0","#8f9ac0"], focus:0.6, engagement:0.85},
      "Wait. It's not one letter — three of the five carry that same early postmark, and your transcription of all three is internally consistent. A single copying slip doesn't repeat itself across three envelopes. The discrepancy isn't in your work at all. It's in his itinerary.",
      false],
-    [{kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"about to get a better story than the one they asked about", feel:"lit · delighted", trying:"say it plainly: he was there early, with the advance party", spark:true, palette:["#e0a24e","#b79ad0"], focus:0.9, engagement:0.95},
+    [{kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"about to get a better story than the one they asked about", feel:"lit · delighted", trying:"say it plainly: he was there early, with the advance party", spark:true, prev:["#b79ad0","#8f9ac0"], palette:["#e0a24e","#b79ad0"], focus:0.9, engagement:0.95},
      "And there's the click: units sent small advance detachments ahead to prepare the port — weeks before the official movement date that ends up in the histories. If he shipped out with the advance party, every date in your transcription is correct, and your grandfather was quietly two months ahead of his own paper trail. Here's how to confirm it…",
      true]
   ]

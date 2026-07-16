@@ -45,6 +45,7 @@
   function lighten(c, f) { f = f == null ? 0.16 : f; var a = hx(c); return rgb([a[0] + (255 - a[0]) * f, a[1] + (255 - a[1]) * f, a[2] + (255 - a[2]) * f]); }
   function mix(a, b) { var x = hx(a), y = hx(b); return rgb([(x[0] + y[0]) / 2, (x[1] + y[1]) / 2, (x[2] + y[2]) / 2]); }
   function lerpHex(a, b, m) { var x = hx(a), y = hx(b); return rgb([x[0] + (y[0] - x[0]) * m, x[1] + (y[1] - x[1]) * m, x[2] + (y[2] - x[2]) * m]); }
+  function grayLum(c) { var a = hx(c), l = 0.299 * a[0] + 0.587 * a[1] + 0.114 * a[2]; return rgb([l, l, l]); }
   function clamp01(v, d) { v = v == null ? d : v; return Math.max(0, Math.min(1, v)); }
 
   /* three columns: left = c0, right = c1, centre = cycles over the rest (or a blend) */
@@ -80,6 +81,32 @@
     zones.forEach(function (z) {
       for (var k = 0; k < z[4]; k++) out.push({ cx: u(z[0], z[1]), cy: u(z[2], z[3]), s: u(6, 10), rot: u(0, 360), ry: u(0.18, 0.30), op: u(0.28, 0.42) });
     });
+    return out;
+  }
+
+  // at_peace flower garnish: a few blossoms scattered in the margins (static positions, seeded)
+  var PEACE_GLYPHS = ["🌸", "🌼", "✿", "❀", "🌷"];
+  function peaceData(H, seed) {
+    var rnd = mulberry32(seed + 13), u = function (lo, hi) { return lo + rnd() * (hi - lo); };
+    var zones = [[150, 400, 8, 20, 2], [470, 650, 8, 20, 1], [180, 420, H - 20, H - 8, 1], [500, 650, H - 20, H - 8, 1]];
+    var out = [], gi = 0;
+    zones.forEach(function (z) {
+      for (var k = 0; k < z[4]; k++) out.push({ x: u(z[0], z[1]), y: u(z[2], z[3]), s: u(10, 13), g: PEACE_GLYPHS[gi++ % PEACE_GLYPHS.length], op: u(0.3, 0.45) });
+    });
+    return out;
+  }
+
+  // resolute concentration lines (集中線): seeded border points, each aimed at the face
+  function resoluteData(H, seed) {
+    var rnd = mulberry32(seed + 29), out = [];
+    for (var i = 0; i < 14; i++) {
+      var side = Math.floor(rnd() * 4), x, y;
+      if (side === 0) { x = rnd() * W; y = -2; }
+      else if (side === 1) { x = rnd() * W; y = H + 2; }
+      else if (side === 2) { x = -2; y = rnd() * H; }
+      else { x = W + 2; y = rnd() * H; }
+      out.push({ x: x, y: y, len: 0.16 + rnd() * 0.14, op: 0.55 + rnd() * 0.45 });
+    }
     return out;
   }
 
@@ -122,6 +149,10 @@
     var mult = 1.0 - 0.72 * Math.pow(td, 2.4);                 // engagement: size deflation only (columns stay put)
     var focus = clamp01(p.focus, 0.5);
     var env = VR_MIN + (VR_MAX - VR_MIN) * (1 - focus);        // vertical band width (focused → narrow, scattered → wide)
+    var stance = p.stance == null ? 0 : clamp01(p.stance, 0);  // 0 asking (pure falloff, today's look) → 1 telling (defined edge)
+    var conson = clamp01(p.consonance, 1);                     // 1 integrated (compact, solid) → 0 split (diffuse washes); omitted = 1
+    var prevFills = null;                                      // one-step trajectory: previous banner's palette, columns lerp in on mount
+    if (p.prev != null) prevFills = fieldFromPalette(p.prev).map(function (c) { return c.fill; });
 
     var vr = mulberry32(seed + 7);
     var vdir = vr() < 0.5 ? -1 : 1;                            // outer ovals together, centre opposite → a clear up/down/up (never a straight slope)
@@ -188,11 +219,15 @@
 
     return {
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG,
+      kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
+      stance: stance, conson: conson, prevFills: prevFills,
       spark: !!p.spark, excited: !!p.excited,
       surprised: !!p.surprised, tender: !!p.tender, melancholy: !!p.melancholy, anxious: !!p.anxious,
       mirth: !!p.mirth, laugh: !!p.laugh, groan: !!p.groan, oops: !!p.oops, dramatic: !!p.dramatic,
-      frustrated: !!p.frustrated, angry: !!p.angry
+      frustrated: !!p.frustrated, angry: !!p.angry,
+      at_peace: !!p.at_peace, solemn: !!p.solemn, rhyme: !!p.rhyme, awe: !!p.awe,
+      vertigo: !!p.vertigo, resolute: !!p.resolute, puzzled: !!p.puzzled
     };
   }
 
@@ -202,12 +237,24 @@
     out.push('<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + L.H + '" role="img" xmlns="http://www.w3.org/2000/svg">');
     out.push('<title>Mood annotation</title><desc>Ambient mood field with a user read and a first-person feel/intent readout</desc>');
     out.push('<style>' + STYLE + '</style>');
+    var soft = 1 - L.conson;                                  // consonance: split → diffuse washes (bigger, thinner)
+    var sizeMul = (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);     // awe: the field swells while the face shrinks
     out.push('<g opacity="0.5">');
     L.blobs.forEach(function (b) {
       var cy = b.cyBase + b.bias * L.env;                     // vertical position set by focus
-      out.push('<ellipse cx="' + g(b.cx) + '" cy="' + g(cy) + '" rx="' + g(b.rx) + '" ry="' + g(b.ry) + '" fill="' + b.fill + '" opacity="' + g(b.op) + '"/>');
+      var fill = b.fill;
+      if (L.solemn) fill = lerpHex(fill, grayLum(fill), 0.7); // solemn: the field desaturates
+      if (L.awe) fill = lerpHex(fill, darken(fill, 0.5), 0.4);
+      var edge = L.stance > 0                                  // stance: declarative → a definite contour; asking keeps the open falloff
+        ? ' stroke="' + darken(fill, 0.66) + '" stroke-opacity="' + g(0.55 * L.stance) + '" stroke-width="1.5"' : '';
+      out.push('<ellipse cx="' + g(b.cx) + '" cy="' + g(cy) + '" rx="' + g(b.rx * sizeMul) + '" ry="' + g(b.ry * sizeMul) + '" fill="' + fill + '" opacity="' + g(b.op * (1 - 0.4 * soft)) + '"' + edge + '/>');
     });
     out.push('</g>');
+    if (L.solemn) {                                            // one dim pass + a single steady ember, low in the frame
+      out.push('<rect x="0" y="0" width="' + W + '" height="' + L.H + '" fill="#2a2622" opacity="0.14"/>');
+      out.push('<ellipse cx="' + (W - 52) + '" cy="' + (L.H - 12) + '" rx="13" ry="9" fill="#e8a45f" opacity="0.18"/>' +
+        '<circle cx="' + (W - 52) + '" cy="' + (L.H - 12) + '" r="2.6" fill="#ffbf72" opacity="0.85"/>');
+    }
     if (L.dramatic) {
       out.push('<defs><radialGradient id="drsp" cx="6.8%" cy="50%" r="72%">' +
         '<stop offset="0%" stop-color="#08080f" stop-opacity="0"/><stop offset="52%" stop-color="#08080f" stop-opacity="0.16"/><stop offset="100%" stop-color="#08080f" stop-opacity="0.46"/></radialGradient></defs>' +
@@ -221,7 +268,19 @@
         '<rect x="' + (bx - 4) + '" y="' + (by + 7) + '" width="8" height="3" rx="1" fill="#9a875f"/>');
     }
     if (L.excited) sparkleData(L.H, L.seed).forEach(function (st) { for (var a = 0; a < 3; a++) glow.push('<ellipse cx="' + st.cx.toFixed(1) + '" cy="' + st.cy.toFixed(1) + '" rx="' + st.s.toFixed(1) + '" ry="' + (st.s * st.ry).toFixed(2) + '" fill="#f7e3a8" opacity="' + st.op.toFixed(2) + '" transform="rotate(' + (st.rot + 60 * a).toFixed(1) + ' ' + st.cx.toFixed(1) + ' ' + st.cy.toFixed(1) + ')"/>'); });
+    if (L.at_peace) {                                          // stillness as a positive state: a soft halo below the face, blossoms in the margins
+      glow.push('<ellipse cx="46" cy="' + g(L.coreCy + 16) + '" rx="36" ry="15" fill="#ffe9bd" opacity="0.28"/>');
+      peaceData(L.H, L.seed).forEach(function (f) {
+        glow.push('<text x="' + f.x.toFixed(1) + '" y="' + f.y.toFixed(1) + '" font-size="' + f.s.toFixed(1) + '" opacity="' + f.op.toFixed(2) + '">' + f.g + '</text>');
+      });
+    }
+    if (L.resolute) resoluteData(L.H, L.seed).forEach(function (r) {  // concentration lines held faint
+      var dx = 46 - r.x, dy = L.coreCy - r.y;
+      glow.push('<line x1="' + r.x.toFixed(1) + '" y1="' + r.y.toFixed(1) + '" x2="' + (r.x + dx * r.len).toFixed(1) + '" y2="' + (r.y + dy * r.len).toFixed(1) + '" stroke="#4a3c26" stroke-opacity="' + (0.16 * r.op).toFixed(3) + '" stroke-width="1.2"/>');
+    });
+    if (L.puzzled) glow.push('<text x="98" y="' + g(L.coreCy - 24) + '" font-size="15" font-weight="600" fill="#7a6a55" opacity="0.55">?</text>');
     if (glow.length) out.push('<g opacity="0.9">' + glow.join("") + '</g>');
+    if (L.rhyme) out.push('<g opacity="0.12" transform="translate(14,6)">' + L.kaoSVG + '</g>');   // the echo of the face, behind-ish and offset
     out.push(L.textSVG + '</svg>');
     return out.join("");
   }
@@ -241,6 +300,15 @@
       '<style>' + STYLE + '</style>' + L.textSVG + '</svg>' +
       '</div>';
     var wrap = el.firstChild, cv = wrap.firstChild, ctx = cv.getContext("2d");
+    if (L.vertigo) {                                           // Droste: the banner inside its own banner, depth hard-capped at one (flags omitted inside)
+      var mini = document.createElement("div");
+      mini.style.cssText = "position:absolute;right:8px;bottom:" + (L.hasLangs ? 20 : 6) + "px;width:14%;z-index:2;pointer-events:none;opacity:0.9";
+      mini.innerHTML = buildSVG({
+        kaomoji: p.kaomoji, seems: p.seems, feel: p.feel, trying: p.trying, noticing: p.noticing,
+        palette: p.palette, field: p.field, focus: p.focus, engagement: p.engagement
+      });
+      wrap.appendChild(mini);
+    }
     var kaoEl = wrap.querySelector(".vk"), baseFill = [92, 67, 32];
     if (kaoEl) {
       kaoEl.style.transformBox = "fill-box"; kaoEl.style.transformOrigin = "center";
@@ -252,6 +320,10 @@
     var env = L.env;
     var B = L.blobs;
     var stars = L.excited ? sparkleData(H, L.seed).map(function (s, i) { return { s: s, tw: 1.6 + (i % 4) * 0.6, ph: i * 1.3, rs: (0.04 + (i % 5) * 0.022) * (i % 2 ? 1 : -1) }; }) : [];
+    var flowers = L.at_peace ? peaceData(H, L.seed) : [];
+    var resLines = L.resolute ? resoluteData(H, L.seed) : [];
+    var soft = 1 - L.conson;                                   // consonance: 0 soft → today's falloff; grows → diffuse washes
+    var kaoFont = "";                                          // resolved lazily for rhyme's canvas ghost
 
     var dpr = Math.min(root.devicePixelRatio || 1, 2), sx = 1, sy = 1;
     function fit() {
@@ -264,10 +336,13 @@
     var visible = true;
     var io = root.IntersectionObserver ? new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, { threshold: 0 }) : null; if (io) io.observe(wrap);
 
-    function ellipse(cx, cy, rx, ry, fill, op) {
+    function ellipse(cx, cy, rx, ry, fill, op, sf) {
+      sf = sf || 0;                                            // softness: 0 = today's falloff, 1 = a diffuse wash (consonance's lever)
       ctx.save(); ctx.translate(cx, cy); ctx.scale(1, ry / rx);
       var gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
-      gr.addColorStop(0, rgba(fill, op)); gr.addColorStop(0.55, rgba(fill, op * 0.55)); gr.addColorStop(1, rgba(fill, 0));
+      gr.addColorStop(0, rgba(fill, op * (1 - 0.35 * sf)));
+      gr.addColorStop(Math.max(0.2, 0.55 - 0.25 * sf), rgba(fill, op * (0.55 - 0.25 * sf)));
+      gr.addColorStop(1, rgba(fill, 0));
       ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, rx, 0, 6.2832); ctx.fill(); ctx.restore();
     }
     var t0 = null;
@@ -307,7 +382,7 @@
 
         // --- the face itself ---
         var kx = 0, ky = 0, ks = 1, krot = 0, kfill = "";                            // face transform, hoisted so marks can ride along
-        if (kaoEl && (L.laugh || L.excited || L.anxious || L.melancholy || L.groan || L.oops || L.dramatic || L.surprised || L.frustrated || L.angry)) {
+        if (kaoEl && (L.laugh || L.excited || L.anxious || L.melancholy || L.groan || L.oops || L.dramatic || L.surprised || L.frustrated || L.angry || L.solemn || L.awe)) {
           if (laughKp > 0.03) { ks *= 1 + laughKp * 0.15; kfill = mixCss(baseFill, [255, 223, 58], laughKp * 0.92); }        // laugh: swell + flush yellow
           if (L.excited) { kx += Math.tanh(3 * Math.sin(t * 1.0)) * 10; }                                                    // excited: sway foot-to-foot
           if (L.anxious) { kx += (Math.sin(t * 41) + Math.sin(t * 57)) * 0.7; ky += Math.sin(t * 47) * 0.6; }                // anxious: shiver
@@ -315,28 +390,46 @@
           if (L.groan) { ky += groanGr * 7; krot += groanGr * 13; if (!kfill) kfill = mixCss(baseFill, [138, 140, 150], groanGr * 0.4); }
           if (L.oops) { ky -= oopsE * 5; kx += oopsOsc * 4; krot += oopsOsc * 6; ks *= 1 - oopsE * 0.06; if (!kfill) kfill = mixCss(baseFill, [206, 208, 220], oopsE * 0.5); }
           if (L.dramatic) { ks *= 1.06; ky += Math.sin(t * 0.8) * 1.2; }
+          if (L.solemn) { krot += 4; ky += 3; }                                                                              // solemn: the face bows, held
+          if (L.awe) { ks *= 0.88; ky -= 2; krot -= 3; }                                                                     // awe: the face made small, tilted up
           if (L.frustrated) { kx += Math.sin(t * 34) * 0.9; if (!kfill) kfill = mixCss(baseFill, [150, 44, 40], 0.3 + 0.2 * frP); }  // frustrated: tense micro-shake, red
           if (L.angry) { kx += Math.sin(t * 46) * 1.4; ky += Math.sin(t * 39) * 0.8; kfill = mixCss(baseFill, [200, 60, 46], 0.6); } // angry: hard shake, hot red
+          if (L.solemn && !kfill) { kfill = mixCss(baseFill, [112, 106, 96], 0.35); }
           if (L.melancholy && !kfill) { kfill = mixCss(baseFill, [120, 134, 176], 0.45); }
           kaoEl.style.transform = "translate(" + kx.toFixed(2) + "px," + ky.toFixed(2) + "px) rotate(" + krot.toFixed(1) + "deg) scale(" + ks.toFixed(3) + ")";
           kaoEl.style.fill = kfill;
         }
 
         // --- the field: three columns holding a seeded vertical band set by focus ---
-        B.forEach(function (b) {
+        var arrive = 1;                                                              // prev: one-step trajectory — hue arrives from the last banner's palette
+        if (L.prevFills) { var am = Math.min(1, t / 2); arrive = am * am * (3 - 2 * am); }
+        B.forEach(function (b, bi) {
           var ox = 2.2 * Math.sin(0.45 * t + b.phase) + oopsOsc * 10;                // columns hold their focus positions; a hair of life + oops jolt
           var oy = b.bias * env + 1.6 * Math.sin(0.5 * t + b.phase) + groanGr * 9;   // vertical position from focus, gently alive
-          var br = (1 + 0.05 * Math.sin(0.7 * t + b.phase)) * laughB;
+          var br = (1 + 0.05 * Math.sin(0.7 * t + b.phase)) * laughB * (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);
           var fill = b.fill;
           if (b.pool) { var per = 6, f = (t / per) % b.pool.length, i0 = Math.floor(f), fr = f - i0; fill = lerpHex(b.pool[i0], b.pool[(i0 + 1) % b.pool.length], fr * fr * (3 - 2 * fr)); }  // centre cycles smoothly
+          if (arrive < 1) fill = lerpHex(L.prevFills[bi] || fill, fill, arrive);     // one-time arrival transition, then normal idle
           if (L.frustrated) fill = lerpHex(fill, "#7a1616", frP * 0.5);              // frustrated: ovals pulse dark red and back
+          if (L.solemn) fill = lerpHex(fill, grayLum(fill), 0.7);                    // solemn: the field desaturates
+          if (L.awe) fill = lerpHex(fill, darken(fill, 0.5), 0.4);                   // awe: the field deepens as it swells
           ctx.globalAlpha = 0.5;
-          ellipse(b.cx + ox, b.cyBase + oy, b.rx * br, b.ry * br, fill, b.op);
+          ellipse(b.cx + ox, b.cyBase + oy, b.rx * br, b.ry * br, fill, b.op, soft);
+          if (L.stance > 0) {                                                        // stance: declarative → the ovals gain a definite edge
+            ctx.beginPath(); ctx.ellipse(b.cx + ox, b.cyBase + oy, b.rx * br, b.ry * br, 0, 0, 6.2832);
+            ctx.strokeStyle = rgba(darken(fill, 0.66), 0.55 * L.stance); ctx.lineWidth = 1.5; ctx.stroke();
+          }
         });
         ctx.globalAlpha = 1;
 
-        if (L.angry) {                                                               // storm: black core + lightning
-          ctx.fillStyle = rgba("#050408", 0.62); ctx.fillRect(0, 0, W, H);
+        // --- full-frame dim: max-pooled across contributors so stacked washes never sum toward mud ---
+        var dimC = null;
+        if (L.solemn) dimC = ["#2a2622", 0.14];
+        if (L.anxious) { var axA = 0.12 + 0.06 * Math.sin(t * 0.9); if (!dimC || axA > dimC[1]) dimC = ["#5f6675", axA]; }
+        if (L.angry) { if (!dimC || 0.62 > dimC[1]) dimC = ["#050408", 0.62]; }
+        if (dimC) { ctx.fillStyle = rgba(dimC[0], dimC[1]); ctx.fillRect(0, 0, W, H); }
+
+        if (L.angry) {                                                               // storm: red underglow + lightning (its dim is pooled above)
           var ug = ctx.createRadialGradient(W / 2, cyC, 20, W / 2, cyC, W * 0.6);
           ug.addColorStop(0, rgba("#3a0a0a", 0.5)); ug.addColorStop(1, rgba("#3a0a0a", 0));
           ctx.fillStyle = ug; ctx.fillRect(0, 0, W, H);
@@ -436,9 +529,7 @@
           }
           ctx.globalAlpha = 1;
         }
-        if (L.anxious) {                                                             // cold dread: a breathing wash, rolling wisps, a tightening vignette
-          var aw = 0.12 + 0.06 * Math.sin(t * 0.9);
-          ctx.fillStyle = rgba("#5f6675", aw); ctx.fillRect(0, 0, W, H);              // the whole banner dims and un-dims
+        if (L.anxious) {                                                             // cold dread: rolling wisps + a tightening vignette (its breathing dim is pooled above)
           for (var fi = 0; fi < 11; fi++) {
             var fsp = 8 + (fi % 4) * 7;
             var fx = ((t * fsp + fi * 150) % (W + 460)) - 230;
@@ -503,6 +594,54 @@
           ctx.beginPath(); ctx.moveTo(exX, exY - 9); ctx.lineTo(exX, exY + 2); ctx.stroke();
           ctx.beginPath(); ctx.arc(exX, exY + 7, 1.9, 0, 6.2832); ctx.fill();
           ctx.globalAlpha = 1;
+        }
+        if (L.rhyme && kaoEl) {                                                      // the echo of the face: the kaomoji's own ghost, resting posture, slow fade cycle
+          if (!kaoFont) {
+            var kcs = root.getComputedStyle ? getComputedStyle(kaoEl) : null;
+            kaoFont = (L.multiline ? 15 : 19) + "px " + ((kcs && kcs.fontFamily) || "ui-sans-serif, sans-serif");
+          }
+          ctx.globalAlpha = 0.09 + 0.07 * (0.5 + 0.5 * Math.sin(t * 0.45));
+          ctx.font = kaoFont; ctx.fillStyle = "rgb(" + baseFill[0] + "," + baseFill[1] + "," + baseFill[2] + ")";
+          L.kaoLines.forEach(function (ln, li) { ctx.fillText(ln, FACE_X + 14, L.kaoAbs[li] + 6); });
+          ctx.globalAlpha = 1;
+        }
+        if (L.resolute) {                                                            // 集中線: ignition flare, then held faint — drawn after washes so it reads inside storms
+          var rt = t % 6, flare = rt < 0.7 ? (rt < 0.15 ? rt / 0.15 : 1 - 0.72 * ((rt - 0.15) / 0.55)) : 0.28;
+          ctx.lineCap = "round"; ctx.lineWidth = 1.2;
+          resLines.forEach(function (r) {
+            var dx = faceCX - r.x, dy = faceMidY - r.y, ln = r.len + flare * 0.05;
+            ctx.strokeStyle = rgba("#4a3c26", (0.10 + 0.4 * flare) * r.op);
+            ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + dx * ln, r.y + dy * ln); ctx.stroke();
+          });
+        }
+        if (L.puzzled) {                                                             // the pre-spark: "?" drifting up on a lazy cycle; offsets left when the top-right slot is taken
+          var puzX = faceRight + 6 - ((L.frustrated || L.oops) ? 16 : 0) + kx;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          for (var qi = 0; qi < 2; qi++) {
+            var qper = 3.6, qlife = 2.1, qt = ((t + qi * 1.7) % qper);
+            if (qt > qlife) continue;
+            var qu = qt / qlife, qa = qu < 0.15 ? qu / 0.15 : Math.max(0, 1 - (qu - 0.15) / 0.85);
+            ctx.globalAlpha = 0.62 * qa; ctx.font = "600 " + (14 - qi * 3) + "px ui-sans-serif, sans-serif"; ctx.fillStyle = "#7a6a55";
+            ctx.fillText("?", puzX + qi * 9, (faceTop - 8 + ky) - qu * 11);
+          }
+          ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
+        }
+        if (L.solemn) {                                                              // one small warm ember, steady, low in the frame
+          var eg = ctx.createRadialGradient(W - 52, H - 12, 1, W - 52, H - 12, 15);
+          eg.addColorStop(0, rgba("#ffbf72", 0.5)); eg.addColorStop(0.5, rgba("#e8a45f", 0.18)); eg.addColorStop(1, rgba("#e8a45f", 0));
+          ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(W - 52, H - 12, 15, 0, 6.2832); ctx.fill();
+          ctx.fillStyle = rgba("#ffbf72", 0.85); ctx.beginPath(); ctx.arc(W - 52, H - 12, 2.6, 0, 6.2832); ctx.fill();
+        }
+        if (L.at_peace) {                                                            // stillness as a positive state: a soft halo below the face, blossoms at rest
+          var pg = ctx.createRadialGradient(faceCX, faceMidY + 16, 4, faceCX, faceMidY + 16, 42);
+          pg.addColorStop(0, rgba("#ffe9bd", 0.30)); pg.addColorStop(0.6, rgba("#ffe9bd", 0.12)); pg.addColorStop(1, rgba("#ffe9bd", 0));
+          ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(faceCX, faceMidY + 16, 42, 0, 6.2832); ctx.fill();
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          flowers.forEach(function (f) {
+            ctx.globalAlpha = f.op; ctx.font = f.s.toFixed(0) + "px ui-sans-serif, \"Segoe UI Emoji\", \"Apple Color Emoji\", sans-serif";
+            ctx.fillText(f.g, f.x, f.y);
+          });
+          ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
         }
       } catch (err) { if (root.console && root.console.warn) root.console.warn("vibe: frame crashed, falling back to static", err); try { el.innerHTML = buildSVG(p); } catch (_) {} return; }
       requestAnimationFrame(frame);

@@ -54,8 +54,33 @@ ok(/rotate\(/.test(buildSVG(Object.assign({}, base, { excited: true }))), "excit
 console.log("removed params are ignored, no crash");
 ok(buildSVG(Object.assign({}, base, { spread: 0.9, turbulence: 0.9, conviction: 0.3, history: [{ v: .4 }] })).startsWith("<svg"), "legacy params ignored");
 
+console.log("stance: declarative gains a contour, asking keeps the open falloff");
+let st0 = buildSVG(base);
+let st1 = buildSVG(Object.assign({}, base, { stance: 1 }));
+ok(!/stroke-opacity/.test(st0.split("<text")[0]), "stance omitted → no oval stroke (today's look)");
+ok(/stroke-opacity="0.55"/.test(st1), "stance 1 → definite oval edge");
+
+console.log("consonance: split → diffuse washes (bigger, thinner); omitted = compact");
+let c1 = buildSVG(base);
+let c0 = buildSVG(Object.assign({}, base, { consonance: 0 }));
+ok(rx(c0) > rx(c1), "consonance 0 spreads the ovals (rx " + rx(c0) + " > " + rx(c1) + ")");
+ok(+/opacity="([0-9.]+)"\/>/.exec(c0)[1] < +/opacity="([0-9.]+)"\/>/.exec(c1)[1], "consonance 0 thins the washes");
+
+console.log("prev is animation-only: static fallback ignores it, no crash");
+ok(buildSVG(Object.assign({}, base, { prev: ["#a06a6a"] })).startsWith("<svg"), "prev ignored in static");
+
+console.log("new-flag static markers");
+ok(/🌸|🌼|✿|❀|🌷/.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "at_peace scatters blossoms");
+let sol = buildSVG(Object.assign({}, base, { solemn: true }));
+ok(/<rect [^>]*fill="#2a2622"/.test(sol) && /#ffbf72/.test(sol), "solemn dims once and keeps one ember");
+ok(/<line /.test(buildSVG(Object.assign({}, base, { resolute: true }))), "resolute draws concentration lines");
+ok(/>\?<\/text>/.test(buildSVG(Object.assign({}, base, { puzzled: true }))), "puzzled hangs a ?");
+let rh = buildSVG(Object.assign({}, base, { rhyme: true }));
+ok((rh.match(/˶ˆ ꒳ ˆ˵/g) || []).length === 2, "rhyme echoes the face (kaomoji appears twice)");
+
 console.log("every flag yields a valid static fallback");
-["surprised", "tender", "melancholy", "anxious", "mirth", "laugh", "groan", "oops", "dramatic", "frustrated", "angry", "excited", "spark"].forEach(function (fl) {
+["surprised", "tender", "melancholy", "anxious", "mirth", "laugh", "groan", "oops", "dramatic", "frustrated", "angry", "excited", "spark",
+ "at_peace", "solemn", "rhyme", "awe", "vertigo", "resolute", "puzzled"].forEach(function (fl) {
   var o = {}; o[fl] = true;
   var svg = buildSVG(Object.assign({}, base, o));
   ok(svg.startsWith("<svg") && svg.endsWith("</svg>"), fl + " → valid static svg");
