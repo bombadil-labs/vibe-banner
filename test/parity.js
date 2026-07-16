@@ -19,6 +19,12 @@ let n = buildSVG(Object.assign({}, base, { noticing: "peripheral" }));
 ok(/viewBox="0 0 680 132"/.test(n), "4-row banner is H=132");
 ok(/\[note\]/.test(n) && (n.match(/<text /g) || []).length === 5, "[note] present, 5 <text>");
 
+console.log("oversized kaomoji squeeze into the face column");
+ok(!/textLength/.test(buildSVG(base)), "compact face → no squeeze");
+ok(/textLength="138" lengthAdjust="spacingAndGlyphs"/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/" }))), "wide single-line face → squeezed to the column");
+let wideML = buildSVG(Object.assign({}, base, { kaomoji: "✧\n( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/\n✧" }));
+ok((wideML.match(/textLength/g) || []).length === 1, "multi-line bloom: only the wide line squeezes");
+
 console.log("goal wrap");
 let long = buildSVG(Object.assign({}, base, { trying: "carefully verify every single one of the four new features works end to end before we ship" }));
 ok((long.match(/<text /g) || []).length === 5, "long goal wraps → extra row");

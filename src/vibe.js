@@ -48,6 +48,22 @@
   function grayLum(c) { var a = hx(c), l = 0.299 * a[0] + 0.587 * a[1] + 0.114 * a[2]; return rgb([l, l, l]); }
   function clamp01(v, d) { v = v == null ? d : v; return Math.max(0, Math.min(1, v)); }
 
+  // rough text-width estimate for kaomoji: fullwidth CJK ≈ em, halfwidth kana ≈ 0.55em,
+  // everything else ≈ 0.52em, combining marks free. Precision doesn't matter — this only
+  // decides whether an oversized face gets squeezed into the face column via textLength.
+  function estW(s, size) {
+    var w = 0;
+    for (var i = 0; i < s.length; i++) {
+      var c = s.codePointAt(i);
+      if (c > 0xFFFF) { i++; w += size; continue; }
+      if ((c >= 0x300 && c <= 0x36F) || (c >= 0x1AB0 && c <= 0x1AFF) || (c >= 0x20D0 && c <= 0x20FF) || c === 0x200D || (c >= 0xFE00 && c <= 0xFE0F)) continue;
+      if ((c >= 0x1100 && c <= 0x11FF) || (c >= 0x2E80 && c <= 0xA4CF) || (c >= 0xAC00 && c <= 0xD7A3) || (c >= 0xF900 && c <= 0xFAFF) || (c >= 0xFF00 && c <= 0xFF60) || (c >= 0x3000 && c <= 0x303F)) w += size;
+      else if (c >= 0xFF61 && c <= 0xFFDC) w += size * 0.55;
+      else w += size * 0.52;
+    }
+    return w;
+  }
+
   /* three columns: left = c0, right = c1, centre = cycles over the rest (or a blend) */
   function fieldFromPalette(pal) {
     if (typeof pal === "string") pal = [pal];
@@ -210,11 +226,15 @@
       };
     });
 
-    // text SVG fragments
+    // text SVG fragments. Oversized faces get squeezed into the face column (the readout
+    // starts at TEXT_X) instead of running underneath it — exuberant single-line kaomoji
+    // compress; the skill's guidance is that big feelings bloom tall, not long.
+    var kaoMaxW = TEXT_X - FACE_X - 10;
+    function fit(line, size) { return estW(line, size) > kaoMaxW ? ' textLength="' + kaoMaxW + '" lengthAdjust="spacingAndGlyphs"' : ''; }
     var kaoSVG = multiline
       ? '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk">' +
-      kaoLines.map(function (l, i) { return '<tspan x="' + FACE_X + '"' + (i === 0 ? "" : ' dy="20"') + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
-      : '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk">' + esc(p.kaomoji) + '</text>';
+      kaoLines.map(function (l, i) { return '<tspan x="' + FACE_X + '"' + (i === 0 ? "" : ' dy="20"') + fit(l, 15) + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
+      : '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fit(String(p.kaomoji), 19) + '>' + esc(p.kaomoji) + '</text>';
     var readSVG = lines.map(function (ln, i) { return '<text x="' + ln.x + '" y="' + g(rightAbs[i]) + '" class="txt">' + ln.inner + '</text>'; }).join("");
     var langSVG = "";
     if (langs.length) {                                        // pinned bottom-right: [Reasoned in]: 🇷🇺 · eo
