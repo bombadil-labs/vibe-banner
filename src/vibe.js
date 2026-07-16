@@ -160,6 +160,8 @@
     var conson = clamp01(p.consonance, 1);                     // 1 integrated (compact, solid) → 0 split (diffuse washes); omitted = 1
     var prevFills = null;                                      // one-step trajectory: previous banner's palette, columns lerp in on mount
     if (p.prev != null) prevFills = fieldFromPalette(p.prev).map(function (c) { return c.fill; });
+    var activeFlag = null;                                     // the contract: one flag; highest priority wins, the rest are dropped
+    for (var fi = 0; fi < FLAG_PRIORITY.length; fi++) { if (p[FLAG_PRIORITY[fi]]) { activeFlag = FLAG_PRIORITY[fi]; break; } }
 
     var vr = mulberry32(seed + 7);
     var vdir = vr() < 0.5 ? -1 : 1;                            // outer ovals together, centre opposite → a clear up/down/up (never a straight slope)
@@ -190,7 +192,7 @@
     var langs = normalizeLangs(p.languages);
     var topExtent = Math.max(kaoH, rightH) / 2;
     var bottomExtent = Math.max(kaoH / 2, rightH / 2);
-    var langPad = langs.length ? 12 : 0;                       // a little breathing room for the bottom-right trace
+    var langPad = (langs.length || activeFlag) ? 12 : 0;       // breathing room for the bottom traces ([flag] left, [Reasoned in] right)
     var H = Math.round(PAD + topExtent + bottomExtent + PAD) + langPad;
     var coreCy = PAD + topExtent, dyField = coreCy - DEFAULT_MID;
     var kaoAbs = kaoLines.map(function (_, i) { return coreCy - kaoH / 2 + kaoAscent + i * kaoLh; });
@@ -223,11 +225,12 @@
       });
       langSVG = '<text x="' + (W - 12) + '" y="' + g(H - 7) + '" text-anchor="end" class="txt fl">' + parts + '</text>';
     }
+    var flagSVG = activeFlag                                   // pinned bottom-left: with twenty registers, the gesture gets a caption
+      ? '<text x="12" y="' + g(H - 7) + '" class="txt fl"><tspan opacity="0.7">[flag]:</tspan> ' + esc(activeFlag.replace("_", " ")) + '</text>'
+      : "";
 
-    var activeFlag = null;
-    for (var fi = 0; fi < FLAG_PRIORITY.length; fi++) { if (p[FLAG_PRIORITY[fi]]) { activeFlag = FLAG_PRIORITY[fi]; break; } }
     var L = {
-      H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG,
+      H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG + flagSVG,
       kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson, prevFills: prevFills

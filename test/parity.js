@@ -79,6 +79,14 @@ ok(FLOWERS.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "at_peac
 let pz = buildSVG(Object.assign({}, base, { puzzled: true }));
 ok((pz.match(/>\?<\/text>/g) || []).length >= 3, "puzzled alone renders a cloud of ?s, not a single mark");
 
+console.log("[flag] trace: bottom-left caption whenever a flag fires");
+ok(!/\[flag\]:/.test(buildSVG(base)), "no flag → no [flag] trace");
+let ft = buildSVG(Object.assign({}, base, { solemn: true }));
+ok(/\[flag\]:<\/tspan> solemn</.test(ft), "solemn → '[flag]: solemn' bottom-left");
+ok(/\[flag\]:<\/tspan> at peace</.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "at_peace displays as 'at peace'");
+ok(/\[flag\]:[\s\S]*angry/.test(buildSVG(Object.assign({}, base, { angry: true, puzzled: true }))), "multi-flag payload captions the winner");
+ok(/viewBox="0 0 680 119"/.test(ft), "flag trace adds bottom padding (H=119)");
+
 console.log("new-flag static markers");
 ok(/🌸|🌼|✿|❀|🌷/.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "at_peace scatters blossoms");
 let sol = buildSVG(Object.assign({}, base, { solemn: true }));
