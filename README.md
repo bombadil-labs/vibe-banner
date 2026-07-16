@@ -116,6 +116,27 @@ Motion is deliberately slow and small — this is letterhead on every reply, so 
 ambient, never busy. It falls back to a **static SVG** under `prefers-reduced-motion` or
 on any error, pauses when scrolled off-screen, and stops when detached.
 
+## Kip — the reference face-pack
+
+The repo ships its own mascot: **Kip**, a small round creature with stubby wings and a
+star-tipped antenna. Original pixel art (CC0 — fork it, reskin it), eight moods on one
+512×64 sheet at [assets/kip-sheet.png](assets/kip-sheet.png), regenerable from
+[assets/kip-gen.html](assets/kip-gen.html) where every mood is a deterministic pixel map.
+
+| index | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| mood | content | delighted | puzzled | surprised | solemn | excited | sheepish | at_peace |
+
+Payload (pin the commit that contains the sheet):
+
+```js
+face: {
+  url: "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@<commit>/assets/kip-sheet.png",
+  cellW: 64, cellH: 64, cols: 8, rows: 1,
+  index: 1  // delighted
+}
+```
+
 ## The skill
 
 This repo also ships the **`vibe-annotations` skill** — [`skill/SKILL.md`](skill/SKILL.md) — the

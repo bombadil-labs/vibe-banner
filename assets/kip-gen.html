@@ -1,0 +1,66 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>kip generator</title></head>
+<body style="background:#2a2622;image-rendering:pixelated">
+<p style="color:#d8c5a0;font-family:monospace">kip-sheet.png generator — 8 moods × 64px cells.
+Open, then save the canvas (or use window.SHEET() for the dataURL).</p>
+<canvas id="sheet" width="512" height="64" style="width:1024px;height:128px;image-rendering:pixelated;background:transparent"></canvas>
+<script>
+// Kip: the reference face-pack creature. Original pixel art, CC0 — draw on it, fork it, reskin it.
+var COLORS = {
+  o: "#52402e", b: "#f5e9d4", w: "#c3d3ea", s: "#ffd76a", a: "#52402e",
+  e: "#3a2c20", m: "#3a2c20", c: "#f0b0a0", d: "#9ec7e8", q: "#8a7aa4",
+  x: "#ffd76a", f: "#eaa8c4"
+};
+var BASE = [
+  "........s.......",
+  ".......sss......",
+  "........s.......",
+  "........a.......",
+  "....oooooooo....",
+  "...obbbbbbbbo...",
+  "..obbbbbbbbbbo..",
+  ".wobbbbbbbbbbow.",
+  "wwobbbbbbbbbboww",
+  ".wobbbbbbbbbbow.",
+  "..obbbbbbbbbbo..",
+  "...obbbbbbbbo...",
+  "....oooooooo....",
+  ".....o....o.....",
+  "....oo....oo....",
+  "................"
+];
+// per-mood face overlays: [x, y, colorKey]
+var MOODS = {
+  content:   [[5,7,"e"],[10,7,"e"],[7,10,"m"],[8,10,"m"],[4,9,"c"],[11,9,"c"]],
+  delighted: [[4,7,"e"],[5,6,"e"],[6,7,"e"],[9,7,"e"],[10,6,"e"],[11,7,"e"],
+              [5,9,"m"],[6,10,"m"],[7,10,"m"],[8,10,"m"],[9,10,"m"],[10,9,"m"],[4,8,"c"],[11,8,"c"]],
+  puzzled:   [[5,6,"e"],[10,7,"e"],[7,10,"m"],
+              [13,1,"q"],[14,1,"q"],[14,2,"q"],[13,3,"q"],[13,5,"q"]],
+  surprised: [[5,6,"e"],[5,7,"e"],[10,6,"e"],[10,7,"e"],
+              [7,9,"m"],[8,9,"m"],[7,10,"m"],[8,10,"m"],
+              [13,2,"q"],[13,3,"q"],[13,4,"q"],[13,6,"q"]],
+  solemn:    [[4,7,"e"],[5,7,"e"],[10,7,"e"],[11,7,"e"],
+              [6,10,"m"],[7,10,"m"],[8,10,"m"],[9,10,"m"]],
+  excited:   [[4,7,"e"],[5,6,"e"],[6,7,"e"],[9,7,"e"],[10,6,"e"],[11,7,"e"],
+              [7,9,"m"],[8,9,"m"],[7,10,"m"],[8,10,"m"],
+              [2,2,"x"],[14,4,"x"],[1,10,"x"]],
+  sheepish:  [[5,7,"e"],[10,7,"e"],[6,10,"m"],[7,10,"m"],[9,10,"m"],
+              [13,5,"d"],[13,6,"d"],[4,9,"c"],[11,9,"c"]],
+  at_peace:  [[4,7,"e"],[5,7,"e"],[10,7,"e"],[11,7,"e"],[7,10,"m"],[8,10,"m"],
+              [2,3,"f"],[1,4,"f"],[3,4,"f"],[2,5,"f"],[2,4,"s"]]
+};
+var ORDER = ["content", "delighted", "puzzled", "surprised", "solemn", "excited", "sheepish", "at_peace"];
+var SCALE = 4, CELL = 64;
+var ctx = document.getElementById("sheet").getContext("2d");
+ORDER.forEach(function (mood, ci) {
+  var grid = BASE.map(function (r) { return r.split(""); });
+  MOODS[mood].forEach(function (px) { grid[px[1]][px[0]] = px[2]; });
+  for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) {
+    var k = grid[y][x];
+    if (k === ".") continue;
+    ctx.fillStyle = COLORS[k];
+    ctx.fillRect(ci * CELL + x * SCALE, y * SCALE, SCALE, SCALE);
+  }
+});
+window.SHEET = function () { return document.getElementById("sheet").toDataURL("image/png"); };
+</script></body></html>
