@@ -57,6 +57,7 @@
   .resp { font-family: var(--font-voice); font-size: 15.5px; line-height: 1.65;
     margin: 14px 0 0; }
   .resp .trail { opacity: 0.45; }
+  .resp + .banner { margin-top: 16px; }
   footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--edge);
     font-size: 13px; color: var(--sub); }
 </style>
@@ -376,6 +377,47 @@ GROUPS.forEach(function (grp) {
     try { vibe(banner, s[2]); } catch (e) { banner.textContent = "err: " + e.message; }
   });
 });
+
+var SHIFT_DEMO = {
+  label: "Mid-response shifts — the face changes as the reasoning turns",
+  prompt: "I transcribed my grandfather's letters from the war, but the dates make no sense — the April one is postmarked from a port he shouldn't have reached until June. Did I mess up the transcription?",
+  segments: [
+    [{kaomoji:"( ・_・)", seems:"handed me a real family mystery, worried the error is theirs", feel:"methodical · intrigued", trying:"lay the letters out chronologically and find where the dates break", palette:["#7d8fb8","#8f9ac0"], focus:0.85, engagement:0.8},
+     "Let's not assume transcription error yet — let's lay them out and see where the timeline actually breaks. March 12th from the training camp, March 30th from the same camp, and then the April 17th letter from the port. Checking that postmark against the unit's movement records…",
+     false],
+    [{kaomoji:"( ⊙ ᵕ ⊙ )", seems:"didn't mess anything up — the letters are telling the truth", feel:"startled · recalibrating", trying:"take in what three matching postmarks actually mean", noticing:"the discrepancy is the story, not the mistake", surprised:true, palette:["#b79ad0","#8f9ac0"], focus:0.6, engagement:0.85},
+     "Wait. It's not one letter — three of the five carry that same early postmark, and your transcription of all three is internally consistent. A single copying slip doesn't repeat itself across three envelopes. The discrepancy isn't in your work at all. It's in his itinerary.",
+     false],
+    [{kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"about to get a better story than the one they asked about", feel:"lit · delighted", trying:"say it plainly: he was there early, with the advance party", spark:true, palette:["#e0a24e","#b79ad0"], focus:0.9, engagement:0.95},
+     "And there's the click: units sent small advance detachments ahead to prepare the port — weeks before the official movement date that ends up in the histories. If he shipped out with the advance party, every date in your transcription is correct, and your grandfather was quietly two months ahead of his own paper trail. Here's how to confirm it…",
+     true]
+  ]
+};
+(function () {
+  var h = document.createElement("h3"); h.textContent = "Mid-response shifts"; g.appendChild(h);
+  var cell = document.createElement("div"); cell.className = "cell";
+  var cap = document.createElement("p"); cap.className = "cap";
+  cap.innerHTML = "<b>Mid-response shifts</b> — a long reply re-faces when the state genuinely turns: methodical → surprised → spark";
+  var chat = document.createElement("div"); chat.className = "chat";
+  var bar = document.createElement("div"); bar.className = "chat-bar";
+  for (var i = 0; i < 3; i++) { var d = document.createElement("span"); d.className = "dot"; bar.appendChild(d); }
+  var title = document.createElement("span"); title.className = "title"; title.textContent = "claude"; bar.appendChild(title);
+  var body = document.createElement("div"); body.className = "chat-body";
+  var u = document.createElement("div"); u.className = "u-msg"; u.textContent = SHIFT_DEMO.prompt;
+  body.appendChild(u);
+  SHIFT_DEMO.segments.forEach(function (seg) {
+    var banner = document.createElement("div"); banner.className = "banner";
+    body.appendChild(banner);
+    try { vibe(banner, seg[0]); } catch (e) { banner.textContent = "err: " + e.message; }
+    var r = document.createElement("p"); r.className = "resp";
+    r.textContent = seg[1];
+    if (seg[2]) { var trail = document.createElement("span"); trail.className = "trail"; trail.textContent = " …"; r.appendChild(trail); }
+    body.appendChild(r);
+  });
+  chat.appendChild(bar); chat.appendChild(body);
+  cell.appendChild(cap); cell.appendChild(chat);
+  g.appendChild(cell);
+})();
 </script>
 </body>
 </html>
