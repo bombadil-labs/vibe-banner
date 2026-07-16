@@ -47,7 +47,7 @@ also exported (Node too) — it's the static fallback and the basis for the test
 | `trying` | `[goal]` | last line; wraps to a second line past ~70 chars |
 | `noticing` | `[note]` | optional — the subtext (latent, not on the surface) |
 | `languages` | `[Reasoned in]:` trace, bottom-right | 2-letter codes or names; flag where known, text otherwise; full name on hover |
-| (active flag) | `[flag]:` trace, bottom-left | added automatically whenever a flag fires — with twenty registers, the gesture alone can be ambiguous, so it's captioned |
+| (active flag) | `[awe]`-style caption, bottom-left | added automatically whenever a flag fires — with twenty registers, the gesture alone can be ambiguous, so it's named |
 
 **Field** — three fixed columns behind the text (left, a colour-cycling centre, right):
 

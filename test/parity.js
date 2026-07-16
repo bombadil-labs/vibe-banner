@@ -50,7 +50,7 @@ ok(/text-anchor="end"/.test(lang), "pinned to the right edge");
 console.log("flags render (static markers)");
 ok(/<circle/.test(buildSVG(Object.assign({}, base, { flag: "spark" }))), "spark adds a light-bulb");
 ok(/rotate\(/.test(buildSVG(Object.assign({}, base, { flag: "excited" }))), "excited adds rotated sparkles");
-ok(/scale\(0\.78\)/.test(buildSVG(Object.assign({}, base, { flag: "awe" }))), "awe shrinks the face in the still frame too");
+ok(/scale\(0\.62\)/.test(buildSVG(Object.assign({}, base, { flag: "awe" }))), "awe shrinks the face hard in the still frame too");
 
 console.log("removed params are ignored, no crash");
 ok(buildSVG(Object.assign({}, base, { spread: 0.9, turbulence: 0.9, conviction: 0.3, history: [{ v: .4 }] })).startsWith("<svg"), "legacy params ignored");
@@ -74,7 +74,7 @@ console.log("flag is a single string — the API contract");
 const FLOWERS = /🌸|🌼|✿|❀|🌷/;
 ok(FLOWERS.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "flag: 'at_peace' blossoms");
 let unk = buildSVG(Object.assign({}, base, { flag: "enraptured" }));
-ok(unk.startsWith("<svg") && !/\[flag\]:/.test(unk), "unknown flag string → ignored, no trace, no crash");
+ok(unk.startsWith("<svg") && !/class="txt fl"/.test(unk), "unknown flag string → ignored, no trace, no crash");
 let pz = buildSVG(Object.assign({}, base, { flag: "puzzled" }));
 ok((pz.match(/>\?<\/text>/g) || []).length >= 3, "puzzled renders a cloud of ?s, not a single mark");
 
@@ -85,13 +85,13 @@ ok(!/>\?<\/text>/.test(multi), "angry outranks puzzled: no question-cloud");
 ok(!FLOWERS.test(buildSVG(Object.assign({}, base, { tender: true, at_peace: true }))), "tender outranks at_peace: no blossoms");
 ok(FLOWERS.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "legacy at_peace boolean alone still blossoms");
 
-console.log("[flag] trace: bottom-left caption whenever a flag fires");
-ok(!/\[flag\]:/.test(buildSVG(base)), "no flag → no [flag] trace");
+console.log("flag caption: bottom-left [name] whenever a flag fires");
+ok(!/class="txt fl"/.test(buildSVG(base)), "no flag → no caption");
 let ft = buildSVG(Object.assign({}, base, { flag: "solemn" }));
-ok(/\[flag\]:<\/tspan> solemn</.test(ft), "solemn → '[flag]: solemn' bottom-left");
-ok(/\[flag\]:<\/tspan> at peace</.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "at_peace displays as 'at peace'");
-ok(/\[flag\]:[\s\S]*angry/.test(buildSVG(Object.assign({}, base, { angry: true, puzzled: true }))), "legacy multi-flag payload captions the winner");
-ok(/viewBox="0 0 680 119"/.test(ft), "flag trace adds bottom padding (H=119)");
+ok(/>\[solemn\]<\/text>/.test(ft), "solemn → '[solemn]' bottom-left");
+ok(/>\[at peace\]<\/text>/.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "at_peace displays as '[at peace]'");
+ok(/>\[angry\]<\/text>/.test(buildSVG(Object.assign({}, base, { angry: true, puzzled: true }))), "legacy multi-flag payload captions the winner");
+ok(/viewBox="0 0 680 119"/.test(ft), "flag caption adds bottom padding (H=119)");
 
 console.log("new-flag static markers");
 ok(/🌸|🌼|✿|❀|🌷/.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "at_peace scatters blossoms");

@@ -226,8 +226,8 @@
       });
       langSVG = '<text x="' + (W - 12) + '" y="' + g(H - 7) + '" text-anchor="end" class="txt fl">' + parts + '</text>';
     }
-    var flagSVG = activeFlag                                   // pinned bottom-left: with twenty registers, the gesture gets a caption
-      ? '<text x="12" y="' + g(H - 7) + '" class="txt fl"><tspan opacity="0.7">[flag]:</tspan> ' + esc(activeFlag.replace("_", " ")) + '</text>'
+    var flagSVG = activeFlag                                   // pinned bottom-left: with twenty registers, the gesture gets a caption — just [awe]
+      ? '<text x="12" y="' + g(H - 7) + '" class="txt fl">[' + esc(activeFlag.replace("_", " ")) + ']</text>'
       : "";
 
     var L = {
@@ -299,7 +299,7 @@
     if (glow.length) out.push('<g opacity="0.9">' + glow.join("") + '</g>');
     if (L.rhyme) out.push('<g opacity="0.12" transform="translate(14,6)">' + L.kaoSVG + '</g>');   // the echo of the face, behind-ish and offset
     var kao = L.kaoSVG;                                        // constant-pose flags transform the face in the still frame too
-    if (L.awe) kao = '<g transform="translate(46 ' + g(L.coreCy - 3) + ') scale(0.78) rotate(-3) translate(-46 ' + g(-L.coreCy) + ')">' + kao + '</g>';
+    if (L.awe) kao = '<g transform="translate(46 ' + g(L.coreCy + 5) + ') scale(0.62) rotate(-3) translate(-46 ' + g(-L.coreCy) + ')">' + kao + '</g>';
     else if (L.solemn) kao = '<g transform="translate(46 ' + g(L.coreCy + 3) + ') rotate(4) translate(-46 ' + g(-L.coreCy) + ')">' + kao + '</g>';
     out.push(kao + L.restSVG + '</svg>');
     return out.join("");
@@ -412,7 +412,7 @@
           if (L.oops) { ky -= oopsE * 5; kx += oopsOsc * 4; krot += oopsOsc * 6; ks *= 1 - oopsE * 0.06; if (!kfill) kfill = mixCss(baseFill, [206, 208, 220], oopsE * 0.5); }
           if (L.dramatic) { ks *= 1.06; ky += Math.sin(t * 0.8) * 1.2; }
           if (L.solemn) { krot += 4; ky += 3; }                                                                              // solemn: the face bows, held
-          if (L.awe) { ks *= 0.78; ky -= 3; krot -= 3; }                                                                     // awe: the face made small, tilted up
+          if (L.awe) { ks *= 0.62; ky += 5; krot -= 3; }                                                                     // awe: the face made quite tiny and sunk low, still tilted up at the vast thing
           if (L.frustrated) { kx += Math.sin(t * 34) * 0.9; if (!kfill) kfill = mixCss(baseFill, [150, 44, 40], 0.3 + 0.2 * frP); }  // frustrated: tense micro-shake, red
           if (L.angry) { kx += Math.sin(t * 46) * 1.4; ky += Math.sin(t * 39) * 0.8; kfill = mixCss(baseFill, [200, 60, 46], 0.6); } // angry: hard shake, hot red
           if (L.solemn && !kfill) { kfill = mixCss(baseFill, [112, 106, 96], 0.35); }
