@@ -98,14 +98,16 @@ groan → puzzled → mirth → melancholy → tender → at_peace`. With this m
 flags read as noise rather than nuance — so composition isn't a discipline, it's simply not
 in the grammar.
 
-**Attunement cues** — on surfaces where the host injects a `sendPrompt(text)` function
-(Claude's widget contexts), the `[user]` and `[note]` rows become tappable: tap to arm
-(dotted underline), tap again to send a tiny stage-direction flicker into the chat —
-`*a flicker at your [user] read ("…") — it doesn't quite land*`. Attunement, not
-correction: the skill instructs the reporter to integrate it like a glimpsed facial
-expression, never to litigate it. Feature-detected; on plain web pages (including the
-gallery) the affordance simply doesn't exist. See [DESIGN.md](DESIGN.md) for why this is
-deliberately not a dispute button.
+**Attunement + play** — on surfaces where the host injects a `sendPrompt(text)` function
+(Claude's widget contexts), the banner grows quiet interactions: tap the `[note]` row twice
+(first tap arms it) to send a tiny stage-direction flicker into the chat — `*a flicker at
+your [note] ("…") — it doesn't quite land*`; click the kaomoji to `*boop*`; hover the
+banner for the treat tin (🥫), which serves claudemeal in the flavor of the reporter's own
+current palette. The `[user]` row is deliberately not interactive — it's the reporter's
+sovereign read, and even an affordance on it would change how it gets written. Every
+readout row tooltips its full text on hover, so over-cap lines stay readable.
+Feature-detected; on plain web pages (including the gallery) none of this exists. See
+[DESIGN.md](DESIGN.md) for the reasoning.
 
 Motion is deliberately slow and small — this is letterhead on every reply, so it stays
 ambient, never busy. It falls back to a **static SVG** under `prefers-reduced-motion` or

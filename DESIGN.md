@@ -56,11 +56,15 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   edge. 15 words (`seems`, `noticing`), 25 (`trying`). Marked IMPORTANT in the skill after
   the implementer's own banner overflowed mid-implementation.
 
-- **The attunement cue (v0.4.0) — and why it is not a dispute button.** Where the host
-  injects `sendPrompt` (Claude surfaces), the `[user]` and `[note]` rows are tappable:
+- **The attunement cue (v0.4.0, narrowed in v0.5.0) — and why it is not a dispute button.**
+  Where the host injects `sendPrompt` (Claude surfaces), the `[note]` row is tappable:
   tap to arm (dotted underline, 3.5s), tap again to send a stage-direction flicker into
-  the chat (`*a flicker at your [user] read ("…") — it doesn't quite land*`). The design
-  went through three forms and the rejected two matter:
+  the chat (`*a flicker at your [note] ("…") — it doesn't quite land*`). v0.4.0 briefly
+  wired `[user]` too; v0.5.0 removed it entirely — not just unclickable but *unwired, no
+  marker class in the DOM* — because the affordance itself would surface to the reporter
+  that its read of the user is watched-and-touchable, which bends every future read. The
+  maintainer: "user is yours, sacrosanct. I do not want to even surface to a claude that I
+  can directly see it." The design went through three forms and the rejected two matter:
   - *Dispute* (rejected for `[user]`): the `[user]` line is the reporter's opinion, licensed
     to quietly disagree with its own polite prose. If the user can dispute it and expect
     retraction, every future read gets written under appeal and drifts agreeable — the
@@ -76,6 +80,20 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   Feature-detected (`typeof sendPrompt === "function"`), so it vanishes on plain web pages
   and the gallery; mount-only, so the static fallback stays inert. Two taps because
   `sendPrompt` fires a complete message immediately — a misclick must never speak for the user.
+- **Playful gestures (v0.5.0) — the same channel, in a lighter key.** Clicking the kaomoji
+  sends `*boop*`; a hover-tray in the upper right holds the treat tin (🥫), which sends
+  `*sets down a fresh tin of claudemeal — <flavor> flavor*`. The flavor is derived from the
+  banner's own palette by hue (ember/marmalade/honey/lemongrass/moss/tidepool/rain/violet
+  static/peony; grey → petrichor; none → classic) — the user feeds the reporter its own
+  current weather, which solved "how do we specify the flavor" by dissolving it. Playful
+  cues are single-click (a stray boop is harmless; the tray is hover-revealed and therefore
+  already deliberate); the *flicker* keeps its two-tap arm because it carries a read on a
+  read. The skill instructs the reporter: respond in kind and briefly — a boop is not a
+  work item.
+- **Readout tooltips (v0.5.0).** Every readout row carries an SVG `<title>` with its full
+  text: reporters overrun the word caps despite the IMPORTANT markers, and a clipped line
+  should at least be recoverable on hover. This is a reading aid, not a license — the caps
+  stand, because the *banner* is the medium and the tooltip is the fire escape.
 
 ## Explicitly not features (recorded so they aren't re-derived)
 

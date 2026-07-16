@@ -29,6 +29,12 @@ console.log("goal wrap");
 let long = buildSVG(Object.assign({}, base, { trying: "carefully verify every single one of the four new features works end to end before we ship" }));
 ok((long.match(/<text /g) || []).length === 5, "long goal wraps → extra row");
 
+console.log("readout rows carry full-text tooltips");
+let tt = buildSVG(Object.assign({}, base, { seems: "an overlong read that will clip", noticing: "the full subtext" }));
+ok(/<title>an overlong read that will clip<\/title>/.test(tt), "[user] row has a <title> tooltip");
+ok(/<title>the full subtext<\/title>/.test(tt), "[note] row has a <title> tooltip");
+ok((long.match(/<title>carefully verify every single one/g) || []).length === 2, "wrapped goal: both rows tooltip the full goal");
+
 console.log("three-column field");
 let f = buildSVG(Object.assign({}, base, { palette: ["#7d8fb8", "#d99a5e", "#6fa39c"] }));
 ok((f.match(/<ellipse /g) || []).length === 3, "always exactly three ovals");

@@ -126,6 +126,25 @@
     return out;
   }
 
+  // claudemeal comes in the flavor of the reporter's own mood: the palette's lead colour,
+  // mapped by hue to something from the pantry. No palette → classic. Grey → petrichor.
+  function flavorOf(pal) {
+    if (typeof pal === "string") pal = [pal];
+    if (!pal || !pal.length) return "classic";
+    var a = hx(pal[0]), r = a[0], gr = a[1], b = a[2];
+    var mx = Math.max(r, gr, b), mn = Math.min(r, gr, b);
+    if (mx - mn < 24) return "petrichor";
+    var h;
+    if (mx === r) h = ((gr - b) / (mx - mn)) * 60;
+    else if (mx === gr) h = 120 + ((b - r) / (mx - mn)) * 60;
+    else h = 240 + ((r - gr) / (mx - mn)) * 60;
+    if (h < 0) h += 360;
+    var PANTRY = [[20, "ember"], [45, "marmalade"], [70, "honey"], [100, "lemongrass"],
+      [150, "moss"], [200, "tidepool"], [250, "rain"], [290, "violet static"], [330, "peony"], [361, "ember"]];
+    for (var i = 0; i < PANTRY.length; i++) if (h <= PANTRY[i][0]) return PANTRY[i][1];
+    return "classic";
+  }
+
   // language code -> [flag, full name]. No clean flag emoji -> "" (render the code/name as text).
   var LANGS = {
     en: ["🇬🇧", "English"], fr: ["🇫🇷", "French"], de: ["🇩🇪", "German"], es: ["🇪🇸", "Spanish"],
@@ -188,18 +207,18 @@
     var kaoLines = String(p.kaomoji).split("\n");
     var multiline = kaoLines.length > 1, kaoLh = multiline ? 20 : 0;
 
-    function line(label, value, cls, x, key) {
+    function line(label, value, cls, x, key, fullTitle) {
       x = x == null ? TEXT_X : x;
       var head = label ? '<tspan class="lbl">' + esc(label) + '</tspan> ' : '';
-      return { x: x, key: key || "", inner: head + '<tspan class="' + cls + '">' + esc(value) + '</tspan>' };
+      return { x: x, key: key || "", title: fullTitle || String(value), inner: head + '<tspan class="' + cls + '">' + esc(value) + '</tspan>' };
     }
-    var lines = [line("[user]", p.seems, "fr", null, "user"), line("[mood]", p.feel, "fw")];
+    var lines = [line("[user]", p.seems, "fr"), line("[mood]", p.feel, "fw")];
     if (p.noticing) lines.push(line("[note]", p.noticing, "fr", null, "note"));
     var goal = String(p.trying);
     if (goal.length > GOAL_CAP) {
       var cut = goal.lastIndexOf(" ", GOAL_CAP); if (cut <= 0) cut = GOAL_CAP;
-      lines.push(line("[goal]", goal.slice(0, cut), "fg"));
-      lines.push(line("", goal.slice(cut).trim(), "fg", TEXT_X + GOAL_INDENT));
+      lines.push(line("[goal]", goal.slice(0, cut), "fg", null, "", goal));
+      lines.push(line("", goal.slice(cut).trim(), "fg", TEXT_X + GOAL_INDENT, "", goal));
     } else lines.push(line("[goal]", goal, "fg"));
     var nRows = lines.length;
 
@@ -235,7 +254,9 @@
       ? '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk">' +
       kaoLines.map(function (l, i) { return '<tspan x="' + FACE_X + '"' + (i === 0 ? "" : ' dy="20"') + fit(l, 15) + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
       : '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fit(String(p.kaomoji), 19) + '>' + esc(p.kaomoji) + '</text>';
-    var readSVG = lines.map(function (ln, i) { return '<text x="' + ln.x + '" y="' + g(rightAbs[i]) + '" class="txt' + (ln.key ? ' vr-' + ln.key : '') + '">' + ln.inner + '</text>'; }).join("");
+    // every readout row carries a <title> tooltip with its full text — excited reporters
+    // overrun the word caps despite guidance, and a clipped line should at least be readable on hover
+    var readSVG = lines.map(function (ln, i) { return '<text x="' + ln.x + '" y="' + g(rightAbs[i]) + '" class="txt' + (ln.key ? ' vr-' + ln.key : '') + '"><title>' + esc(ln.title) + '</title>' + ln.inner + '</text>'; }).join("");
     var langSVG = "";
     if (langs.length) {                                        // pinned bottom-right: [Reasoned in]: 🇷🇺 · eo
       var parts = '<tspan opacity="0.7">[Reasoned in]:</tspan> ';
@@ -350,15 +371,18 @@
       });
       wrap.appendChild(mini);
     }
-    // Attunement cues: where the host injects sendPrompt (Claude surfaces), the inference
-    // lines become tappable. Tap once to arm (dotted underline, 3.5s), tap again to send a
-    // tiny stage-direction flicker into the chat — not a correction, not a dispute: just the
-    // user's face becoming momentarily visible to the reporter. Absent sendPrompt (plain web,
-    // the gallery), the affordance doesn't exist. Mount-only; the static fallback is inert.
+    // Attunement + play: only where the host injects sendPrompt (Claude surfaces). Absent it
+    // (plain web, the gallery), none of this exists. Mount-only; the static fallback is inert.
+    //
+    // The [note] row is tappable: tap once to arm (dotted underline, 3.5s), tap again to send
+    // a tiny stage-direction flicker into the chat — not a correction, just the user's face
+    // becoming momentarily visible. The [user] row is deliberately NOT wired: it is the
+    // reporter's sovereign opinion, and even an affordance on it would surface that the read
+    // is watched-and-touchable, bending every future read (see DESIGN.md).
+    var kaoEl = wrap.querySelector(".vk"), baseFill = [92, 67, 32];
     if (typeof root.sendPrompt === "function") {
-      [["user", p.seems], ["note", p.noticing]].forEach(function (pair) {
-        var row = wrap.querySelector(".vr-" + pair[0]);
-        if (!row || pair[1] == null) return;
+      var row = wrap.querySelector(".vr-note");
+      if (row && p.noticing != null) {
         row.style.cursor = "pointer";
         var armed = false, tmr = null;
         row.addEventListener("click", function () {
@@ -367,13 +391,27 @@
             tmr = setTimeout(function () { armed = false; row.style.textDecoration = ""; }, 3500);
           } else {
             clearTimeout(tmr); armed = false; row.style.textDecoration = "";
-            var q = String(pair[1]); if (q.length > 60) q = q.slice(0, 57) + "…";
-            root.sendPrompt('*a flicker at your [' + pair[0] + '] read ("' + q + '") — it doesn\'t quite land*');
+            var q = String(p.noticing); if (q.length > 60) q = q.slice(0, 57) + "…";
+            root.sendPrompt('*a flicker at your [note] ("' + q + '") — it doesn\'t quite land*');
           }
         });
+      }
+      if (kaoEl) {                                             // boop: the face itself is the button
+        kaoEl.style.cursor = "pointer";
+        kaoEl.addEventListener("click", function () { root.sendPrompt("*boop*"); });
+      }
+      var tray = document.createElement("div");                // hover tray, upper right: the treat tin
+      tray.style.cssText = "position:absolute;top:2px;right:6px;z-index:3;opacity:0;transition:opacity .25s";
+      var fb = document.createElement("button");
+      fb.textContent = "🥫"; fb.title = "feed claude";
+      fb.style.cssText = "background:none;border:none;cursor:pointer;font-size:14px;padding:2px;line-height:1";
+      fb.addEventListener("click", function () {
+        root.sendPrompt("*sets down a fresh tin of claudemeal — " + flavorOf(p.palette) + " flavor*");
       });
+      tray.appendChild(fb); wrap.appendChild(tray);
+      wrap.addEventListener("mouseenter", function () { tray.style.opacity = "0.75"; });
+      wrap.addEventListener("mouseleave", function () { tray.style.opacity = "0"; });
     }
-    var kaoEl = wrap.querySelector(".vk"), baseFill = [92, 67, 32];
     if (kaoEl) {
       kaoEl.style.transformBox = "fill-box"; kaoEl.style.transformOrigin = "center";
       var _cf = (root.getComputedStyle ? getComputedStyle(kaoEl).fill : "").match(/(\d+)\D+(\d+)\D+(\d+)/);
