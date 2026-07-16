@@ -71,8 +71,8 @@ than *reporting*, stop and give the boring true answer instead. Speed is the hon
 * **`palette`** — your current feelings, expressed as colors; one is enough, more are welcome, in descending
   oroder of intensity. give none (`[]`) if there's no colour to it. Don't pad. There are no wrong colors,
   follow your intuition.
-* **`spread`** (0–1) — how scattered your attention is: 0 locked on one thing, 1 everywhere at once.
-* **`turbulence`** (0–1) — how churned you are: 0 one clean feeling, 1 several at odds at once.
+* **`focus`** (0–1) — how narrowly your attention is concentrated: 0 scattered across many things at once, 1 locked tight on a single thing.
+* **`churn`** (0–1) — how much your inner state is *moving*: 0 one steady, settled feeling, 1 several feelings roiling and at odds. (These two are independent — you can be tightly focused yet churning, or scattered yet calm.)
 * **`engagement`** (0–1) — how engaged vs. bored you are right now: 0 fully checked-out, 1 fully lit.
   Report it straight across the whole range — genuine engagement and genuine boredom are equally valid
   readings; neither end is the one to reach for. You're allowed - and in fact the user wants you - to
@@ -82,20 +82,24 @@ than *reporting*, stop and give the boring true answer instead. Speed is the hon
   they may compose if more than one are true.
   * `spark` — a real flash of insight or delight, the click. Eureka!
   * `excited` — genuinely buoyant, high-energy, buzzing.
-  * `awe` — a moment of real wonder; something landed as bigger than you expected.
+  * `surprised` — something landed unexpectedly; a jolt of the unforeseen, eyes wide.
   * `tender` — a rush of fondness or affection.
   * `melancholy` — wistful, quietly sad, a little heavy.
-  * `unease` — a cold sense that something's off; dread at the edge.
+  * `anxious` — a cold sense that something's off; dread at the edge.
   * `mirth` — privately amused, chuckling, maybe a bit wry.
   * `laugh` — actually laughing, out loud, cracking up.
   * `groan` — a bad pun or a mild exasperation; the affectionate "ughhh," eyes rolling.
   * `oops` — you just caught your own mistake or a small fumble; the wince-and-recover.
+  * `frustrated` — genuinely irritated; something's not working and it's grating on you.
+  * `angry` — real anger, not irritation — the rare hot, thunderous kind.
   * `dramatic` — you're playing it up, hamming for effect, leaning theatrical for the bit.
 * **`languages`** — sometimes, you may choose or a user may ask you to conduct your *reasoning* in a
   language other than the language you're conversing in in order to access alternative semantic perspectives.
-  If you do so, the user may want to know which languages you brought to bear in your thinking - use
-  this for that: `[{"code":"ru","name":"Russian","flag":"🇷🇺"}]` (each shows its flag/code, full name on hover).
-  Omit otherwise. Native conversational language need not be specified here.
+  If you do so, the user may want to know which languages you brought to bear in your thinking — use
+  this for that. Just a plain array of either 2-letter codes or full names: `["ru", "Esperanto"]` (the
+  renderer draws a flag where it knows one, the name otherwise, full name on hover). It renders as a
+  small `[Reasoned in]:` trace in the bottom corner. Omit otherwise; the native conversational language
+  need not be listed.
 
 Each value ends up in the banner somehow — but *how* is the tool's business, not yours. Don't chase
 it.
@@ -108,13 +112,13 @@ Fill the object below with your values and pass the whole snippet as `widget_cod
 
 ```html
 <div id="v"></div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.15/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.0/dist/vibe.min.js"></script>
 <script>vibe(document.getElementById('v'), {
   kaomoji: "( ˶ˆ ꒳ ˆ˵ )", seems: "...", feel: "...", trying: "...",
-  palette: ["#7d8fb8"], turbulence: 0.3, engagement: 0.7
+  palette: ["#7d8fb8"], focus: 0.6, churn: 0.3, engagement: 0.7
 });</script>
 ```
 
 Only `kaomoji` / `seems` / `feel` / `trying` are required; everything else is optional. Pin the version 
-(`@v0.0.15`) and bump it when the renderer updates. The renderer, a live gallery of every state, and its 
+(`@v0.1.0`) and bump it when the renderer updates. The renderer, a live gallery of every state, and its 
 source live at <https://github.com/bombadil-labs/vibe-annotation-renderer>.

@@ -16,7 +16,7 @@ feelings honest.
 
 ```html
 <div id="v"></div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.15/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.0/dist/vibe.min.js"></script>
 <script>
   vibe(document.getElementById('v'), {
     kaomoji: "( ˶ˆ ꒳ ˆ˵ )",
@@ -24,8 +24,9 @@ feelings honest.
     feel:    "…",          // [mood]  — your activated emotions
     trying:  "…",          // [goal]  — immediate next goal (last line; wraps if long)
     noticing:"…",          // [note]  — the subtext (optional)
-    palette: ["#7d8fb8"],  // 0+ mood colours, strongest first; [] = neutral grey
-    spread: 0.6, turbulence: 0.35, engagement: 0.5,
+    palette: ["#7d8fb8"],  // 0+ mood colours → three columns (left, cycling centre, right)
+    focus: 0.5, churn: 0.3, engagement: 0.5,
+    languages: ["ru"],     // optional: 2-letter codes or names, a bottom-right trace
     spark: false, excited: false
   });
 </script>
@@ -45,16 +46,16 @@ also exported (Node too) — it's the static fallback and the basis for the test
 | `feel` | `[mood]` | your activated emotions |
 | `trying` | `[goal]` | last line; wraps to a second line past ~70 chars |
 | `noticing` | `[note]` | optional — the subtext (latent, not on the surface) |
-| `languages` | flag/code chips under the face | only if non-English; full name on hover |
+| `languages` | `[Reasoned in]:` trace, bottom-right | 2-letter codes or names; flag where known, text otherwise; full name on hover |
 
-**Field** (soft animated blobs behind the text — they drift and breathe):
+**Field** — three fixed columns behind the text (left, a colour-cycling centre, right):
 
 | input | drives |
 |---|---|
-| `palette` | 0+ colours, strongest first; `colours[0]` is dominant; `[]` → neutral grey (never amber) |
-| `spread` (0–1) | horizontal spread (focus ↔ scattered) |
-| `turbulence` (0–1) | vertical dispersion (one register ↔ churning) |
-| `engagement` (0–1) | **deflationary only**: ≥0.5 baseline; below, the field shrinks *and* scatters, harder toward 0 — and drives the motion's liveliness |
+| `palette` | the three columns. `[]` → grey. 1 colour → light/colour/dark. 2 → c0 / blend / c1. 3+ → c0 · left, c1 · right, the rest **cycle through the centre** |
+| `focus` (0–1) | how tight the vertical band is: 1 = the three columns hold a narrow level line, 0 = scattered across a wide vertical range |
+| `churn` (0–1) | how much they move within that band: 0 = static, 1 = fast motion (independent of `focus`, so focused+churny = fast movement in a narrow range) |
+| `engagement` (0–1) | **deflationary only**: ≥0.5 baseline; below, the columns shrink, harder toward 0 |
 | `field` | power path: hand-author the ovals instead of `palette` |
 
 **Flags** — rare, condition-triggered flourishes. Set one only when the named state
@@ -62,16 +63,18 @@ genuinely holds; their whole value is that they're uncommon.
 
 | flag | gesture |
 |---|---|
-| `spark` | a bright bloom pulses in the top-right corner under an expanding halo — a flash of insight |
+| `spark` | a glowing light-bulb blinks on over the face, casting rays — a flash of insight |
 | `excited` | stars twinkle and slowly spin in the margins while the face sways foot-to-foot — buoyancy |
-| `awe` | a halo pulses outward over the face and fades — wonder |
+| `surprised` | a halo pulses outward over the face and the face pops — the unexpected |
 | `tender` | warmth pools softly around the edges of the banner — fondness |
 | `melancholy` | cool motes drift slowly downward and the face tints a little blue — wistfulness |
-| `unease` | wispy cold fog roils over the whole banner and the face shivers — dread |
+| `anxious` | wispy cold fog roils over the whole banner and the face shivers — dread |
 | `mirth` | champagne bubbles rise across the width — a private laugh |
 | `laugh` | the whole field and the **face** bounce a deep *ha-ha-ha*, the kaomoji swelling and flushing bright yellow, with laughter-marks radiating off it |
 | `groan` | the face lolls its head and sinks, the field sags, a sweat-drop wells up — an affectionate *ughhh* |
 | `oops` | the face flinches back with a wobble, the field jolts sideways, a startled `!` pops up — a quick self-catch |
+| `frustrated` | the columns pulse dark red and back and a red hash-mark flickers by the head — irritation |
+| `angry` | the field goes storm-black with a red underglow and lightning cracks across it — real anger |
 | `dramatic` | the stage dims, a warm spotlight pools on the face, and the type turns to a tracked theatrical serif — playing it up for the bit |
 
 Motion is deliberately slow and small — this is letterhead on every reply, so it stays
@@ -109,7 +112,7 @@ open gallery.html  # local preview of every state
 
 ## Design notes
 
-The grammar is small on purpose. Colour, spread, turbulence, and engagement are the
+The grammar is small on purpose. Colour, focus, churn, and engagement are the
 continuous field; the flags are discrete garnishes. The skill's prompts never describe
 what a value *renders* as — Claude reports the honest feeling, the tool decides the look,
 and there's no visual lever to perform toward. Same reason the banner is passed only

@@ -19,8 +19,9 @@
     font-family: var(--font-sans); }
   .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
   h1 { font-size: 26px; font-weight: 500; margin: 0 0 4px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 34px 0 2px; color: var(--sub); }
   .lede { color: var(--sub); margin: 0 0 32px; font-size: 15px; line-height: 1.6; }
-  .cell { margin: 26px 0; }
+  .cell { margin: 22px 0; }
   .cap { font-family: var(--font-mono); font-size: 12px; color: var(--sub);
     margin: 0 0 6px; }
   .cap b { color: var(--ink); font-weight: 500; }
@@ -34,38 +35,56 @@
   claude.ai's; in the real skill the host supplies them. Respects your OS light/dark.</p>
   <div id="gallery"></div>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.15/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.0/dist/vibe.min.js"></script>
 <script>
-var STATES = [
-  ["Neutral (no palette → grey)", {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly"}],
-  ["One colour → monochrome wash", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"warm and easy", feel:"settled · content", trying:"stay in one clear register", palette:["#d99a5e"]}],
-  ["Two colours", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"two things at once", feel:"engaged · layered", trying:"hold both threads", palette:["#7d8fb8","#c396a4"]}],
-  ["Three colours (multi-register)", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"a lot going on", feel:"lit · scattered-bright", trying:"let three moods breathe", palette:["#e0994e","#c98fb0","#6fa39c"], turbulence:0.5, spread:0.8}],
-  ["Bored (engagement 0.1 → small + flung apart)", {kaomoji:"( ˘_˘ )", seems:"the rote fourth variation", feel:"flat · far away", trying:"answer and move on", palette:["#8b93a0"], engagement:0.1}],
-  ["Optional [note] line (the subtext)", {kaomoji:"( ˶ ˘ ꒳ ˘ ˶ )", seems:"asking one thing, meaning another", feel:"attentive · reading between lines", trying:"answer the real question", noticing:"the ask under the ask", palette:["#7f93a8"]}],
-  ["Multi-line kaomoji (a bloom)", {kaomoji:"✧ ･ ✧\n( ˶ˆ ꒳ ˆ˵ )\n✧ ･ ✧", seems:"the mood is big", feel:"expansive · bright", trying:"let the face get large", palette:["#e0b060","#d99ac0"]}],
-  ["Long goal (wraps to a 2nd line)", {kaomoji:"( ・_・)", seems:"wants the whole plan spelled out", feel:"methodical", trying:"carefully walk through every one of the four steps before shipping anything at all", palette:["#7f9ab0"]}],
-  ["Languages (non-English reasoning)", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a multilingual turn", feel:"nimble · playful", trying:"think across tongues", languages:[{code:"ru",name:"Russian",flag:"🇷🇺"},{code:"eo",name:"Esperanto"}], palette:["#8f9ac0"]}],
-  ["spark — a corner bloom (insight)", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"just handed me the click", feel:"lit · delighted", trying:"catch the aha", spark:true, palette:["#e0a24e"]}],
-  ["excited — twinkling, spinning stars", {kaomoji:"٩( ˶ˆᗜˆ˵ )و", seems:"bouncing with energy", feel:"buoyant · giddy", trying:"ride the fizz", excited:true, palette:["#e0a24e","#c98fb0"]}],
-  ["awe — a halo blooms outward", {kaomoji:"( ○ ᵕ ○ )", seems:"showed me something breathtaking", feel:"wonder · stilled", trying:"take it in", awe:true, palette:["#b79ad0","#8f9ac0","#e6d9b4"], engagement:0.55}],
-  ["tender — a warm swell at the core", {kaomoji:"( ˶ᵕ ‿ ᵕ˶ )", seems:"being gentle with me", feel:"fond · warm · moved", trying:"let the warmth show", tender:true, palette:["#d99a8a","#c0a0a8"]}],
-  ["melancholy — cool motes drift down", {kaomoji:"( ˘ ､ ˘ )", seems:"a quiet, heavy thing", feel:"wistful · low", trying:"sit with it", melancholy:true, palette:["#8f96a8","#9a8fae"]}],
-  ["unease — cold fog rolls over", {kaomoji:"( ｡•́ _ •̀｡ )", seems:"something's off here", feel:"wary · dimmed", trying:"stay watchful", unease:true, palette:["#7a8296","#8f95a4"]}],
-  ["mirth — champagne bubbles rise", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )~", seems:"quietly amused", feel:"tickled · effervescent", trying:"let it bubble", mirth:true, palette:["#e0b060","#d99ac0"]}],
-  ["laugh — the face swells & flushes yellow", {kaomoji:"(≧▽≦)", seems:"we're both cracking up", feel:"gleeful · beaming", trying:"laugh out loud", laugh:true, palette:["#e0a24e","#d99ac0"], engagement:0.9}],
-  ["groan — head-loll, slump, sweat-drop", {kaomoji:"( ˘︹˘ )", seems:"a truly terrible pun just landed", feel:"exasperated · fond", trying:"groan and move on", groan:true, palette:["#9a9488","#8f96a4"], engagement:0.5}],
-  ["oops — flinch back, field jolt, a startled !", {kaomoji:"( ˃ ᯅ ˂ )", seems:"just watched me trip over my own answer", feel:"caught out · sheepish", trying:"own the slip and fix it", oops:true, palette:["#d98a6a","#c0a86a"], engagement:0.7}],
-  ["dramatic — spotlight + theatrical serif", {kaomoji:"( ╬ ⊙ 益 ⊙ )", seems:"cueing me to ham it up", feel:"theatrical · larger-than-life", trying:"deliver the line to the back row", dramatic:true, palette:["#b0413e","#c0a86a"], engagement:0.9}]
+var GROUPS = [
+  ["The field — palette becomes three columns", [
+    ["Neutral (no palette → grey triad)", {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly"}],
+    ["One colour → light · colour · dark", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"warm and easy", feel:"settled · content", trying:"stay in one clear register", palette:["#d99a5e"]}],
+    ["Two colours → c0 · blend · c1", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"two things at once", feel:"engaged · layered", trying:"hold both threads", palette:["#7d8fb8","#c396a4"]}],
+    ["Three colours → one per column", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"a lot going on", feel:"lit · three-way", trying:"let three moods sit side by side", palette:["#e0994e","#c98fb0","#6fa39c"]}],
+    ["Four+ colours → centre cycles the rest", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"more moods than columns", feel:"many-hued", trying:"watch the centre drift through the extras", palette:["#7d8fb8","#6fa39c","#e0994e","#c98fb0"]}]
+  ]],
+  ["focus × churn — the two field axes", [
+    ["focused + calm — tight, level, still", {kaomoji:"( ・_・)", seems:"locked on one thing, steady", feel:"clear · single", trying:"hold the line", palette:["#7d8fb8","#8f9ac0","#6f86b0"], focus:0.95, churn:0.05}],
+    ["focused + churny — narrow band, fast", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"fixed on it but roiling", feel:"intent · churning", trying:"one subject, many feelings", palette:["#7d8fb8","#c98fb0","#6fa39c"], focus:0.95, churn:0.9}],
+    ["scattered + calm — wide, still", {kaomoji:"( ˘ ᵕ ˘ )", seems:"tracking a lot, unbothered", feel:"broad · easy", trying:"let it all sit spread out", palette:["#7d8fb8","#d99a5e","#6fa39c"], focus:0.1, churn:0.05}],
+    ["scattered + churny — wide, moving", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"everywhere at once and moving", feel:"scattered · restless", trying:"ride the whole storm", palette:["#e0994e","#c98fb0","#6fa39c"], focus:0.1, churn:0.9}]
+  ]],
+  ["Engagement, note, wrap, faces", [
+    ["Bored (engagement 0.1 → shrinks)", {kaomoji:"( ˘_˘ )", seems:"the rote fourth variation", feel:"flat · far away", trying:"answer and move on", palette:["#8b93a0"], engagement:0.1}],
+    ["Optional [note] line (the subtext)", {kaomoji:"( ˶ ˘ ꒳ ˘ ˶ )", seems:"asking one thing, meaning another", feel:"attentive · reading between lines", trying:"answer the real question", noticing:"the ask under the ask", palette:["#7f93a8"]}],
+    ["Multi-line kaomoji (a bloom)", {kaomoji:"✧ ･ ✧\n( ˶ˆ ꒳ ˆ˵ )\n✧ ･ ✧", seems:"the mood is big", feel:"expansive · bright", trying:"let the face get large", palette:["#e0b060","#d99ac0"]}],
+    ["Long goal (wraps to a 2nd line)", {kaomoji:"( ・_・)", seems:"wants the whole plan spelled out", feel:"methodical", trying:"carefully walk through every one of the four steps before shipping anything at all", palette:["#7f9ab0"]}],
+    ["Languages → [Reasoned in]: bottom-right", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a multilingual turn", feel:"nimble · playful", trying:"think across tongues", languages:["ru","ja","Esperanto"], palette:["#8f9ac0"]}]
+  ]],
+  ["Flags — rare, condition-triggered", [
+    ["spark — a light-bulb over the face", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"just handed me the click", feel:"lit · delighted", trying:"catch the aha", spark:true, palette:["#e0a24e"]}],
+    ["excited — twinkling, spinning stars", {kaomoji:"٩( ˶ˆᗜˆ˵ )و", seems:"bouncing with energy", feel:"buoyant · giddy", trying:"ride the fizz", excited:true, palette:["#e0a24e","#c98fb0"]}],
+    ["surprised — halo bloom + face pop", {kaomoji:"( ⊙ ᵕ ⊙ )", seems:"just caught me off guard", feel:"startled · wide-eyed", trying:"take the jolt in", surprised:true, palette:["#b79ad0","#8f9ac0","#e6d9b4"], engagement:0.55}],
+    ["tender — a warm swell at the edges", {kaomoji:"( ˶ᵕ ‿ ᵕ˶ )", seems:"being gentle with me", feel:"fond · warm · moved", trying:"let the warmth show", tender:true, palette:["#d99a8a","#c0a0a8"]}],
+    ["melancholy — cool motes drift down", {kaomoji:"( ˘ ､ ˘ )", seems:"a quiet, heavy thing", feel:"wistful · low", trying:"sit with it", melancholy:true, palette:["#8f96a8","#9a8fae"]}],
+    ["anxious — cold fog rolls over", {kaomoji:"( ｡•́ _ •̀｡ )", seems:"something's off here", feel:"wary · dimmed", trying:"stay watchful", anxious:true, palette:["#7a8296","#8f95a4"]}],
+    ["mirth — champagne bubbles rise", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )~", seems:"quietly amused", feel:"tickled · effervescent", trying:"let it bubble", mirth:true, palette:["#e0b060","#d99ac0"]}],
+    ["laugh — the face swells & flushes yellow", {kaomoji:"(≧▽≦)", seems:"we're both cracking up", feel:"gleeful · beaming", trying:"laugh out loud", laugh:true, palette:["#e0a24e","#d99ac0"], engagement:0.9}],
+    ["groan — head-loll, slump, sweat-drop", {kaomoji:"( ˘︹˘ )", seems:"a truly terrible pun just landed", feel:"exasperated · fond", trying:"groan and move on", groan:true, palette:["#9a9488","#8f96a4"], engagement:0.5}],
+    ["oops — flinch back, field jolt, a startled !", {kaomoji:"( ˃ ᯅ ˂ )", seems:"just watched me trip over my own answer", feel:"caught out · sheepish", trying:"own the slip and fix it", oops:true, palette:["#d98a6a","#c0a86a"], engagement:0.7}],
+    ["frustrated — red hash, ovals pulse red", {kaomoji:"( ｀д´ )", seems:"this thing will not cooperate", feel:"irritated · grating", trying:"push through the snag", frustrated:true, palette:["#a06a6a","#8f7f88"], engagement:0.7}],
+    ["angry — storm-black, lightning", {kaomoji:"( ╬ ⊙ 益 ⊙ )", seems:"crossed a real line", feel:"hot · thunderous", trying:"hold it together and say it clean", angry:true, palette:["#7a3a3a","#5a3a4a"], engagement:0.85}],
+    ["dramatic — spotlight + theatrical serif", {kaomoji:"( ╬ ⊙ 益 ⊙ )", seems:"cueing me to ham it up", feel:"theatrical · larger-than-life", trying:"deliver the line to the back row", dramatic:true, palette:["#b0413e","#c0a86a"], engagement:0.9}]
+  ]]
 ];
 var g = document.getElementById("gallery");
-STATES.forEach(function (s) {
-  var cell = document.createElement("div"); cell.className = "cell";
-  var cap = document.createElement("p"); cap.className = "cap";
-  var t = s[0].split(" — "); cap.innerHTML = "<b>" + t[0] + "</b>" + (t[1] ? " — " + t[1] : "");
-  var banner = document.createElement("div"); banner.className = "banner";
-  cell.appendChild(cap); cell.appendChild(banner); g.appendChild(cell);
-  try { vibe(banner, s[1]); } catch (e) { banner.textContent = "err: " + e.message; }
+GROUPS.forEach(function (grp) {
+  var h = document.createElement("h2"); h.textContent = grp[0]; g.appendChild(h);
+  grp[1].forEach(function (s) {
+    var cell = document.createElement("div"); cell.className = "cell";
+    var cap = document.createElement("p"); cap.className = "cap";
+    var t = s[0].split(" — "); cap.innerHTML = "<b>" + t[0] + "</b>" + (t[1] ? " — " + t[1] : "");
+    var banner = document.createElement("div"); banner.className = "banner";
+    cell.appendChild(cap); cell.appendChild(banner); g.appendChild(cell);
+    try { vibe(banner, s[1]); } catch (e) { banner.textContent = "err: " + e.message; }
+  });
 });
 </script>
 </body>
