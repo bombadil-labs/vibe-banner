@@ -29,6 +29,15 @@ console.log("goal wrap");
 let long = buildSVG(Object.assign({}, base, { trying: "carefully verify every single one of the four new features works end to end before we ship" }));
 ok((long.match(/<text /g) || []).length === 5, "long goal wraps → extra row");
 
+console.log("face-packs: image faces render in place of the kaomoji");
+let fp1 = buildSVG(Object.assign({}, base, { face: "https://cdn.jsdelivr.net/gh/u/r@abc/moogle.png" }));
+ok(/<image class="vk"[^>]*href="https:\/\/cdn\.jsdelivr\.net\/gh\/u\/r@abc\/moogle\.png"/.test(fp1), "face URL → <image> face");
+ok(!/class="txt fk vk"/.test(fp1), "image face replaces the kaomoji glyphs");
+let fp2 = buildSVG(Object.assign({}, base, { face: { url: "https://cdn.jsdelivr.net/gh/u/r@abc/sheet.png", cellW: 64, cellH: 64, cols: 4, rows: 2, index: 5 } }));
+ok(/<svg class="vk"[^>]*viewBox="64 64 64 64"/.test(fp2), "sprite index 5 of 4-col sheet → viewBox crops row 1, col 1");
+ok(/width="256" height="128"/.test(fp2), "sheet dims derive from cell size × grid");
+ok(buildSVG(Object.assign({}, base, { face: { nope: true } })).indexOf("vk") > 0, "malformed face → falls back to kaomoji, no crash");
+
 console.log("readout rows carry full-text tooltips");
 let tt = buildSVG(Object.assign({}, base, { seems: "an overlong read that will clip", noticing: "the full subtext" }));
 ok(/<title>an overlong read that will clip<\/title>/.test(tt), "[user] row has a <title> tooltip");

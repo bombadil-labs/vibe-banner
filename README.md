@@ -42,6 +42,7 @@ also exported (Node too) — it's the static fallback and the basis for the test
 | input | shows as | notes |
 |---|---|---|
 | `kaomoji` | the face | left-aligned, vertically centred; `\n` → multi-line bloom |
+| `face` | an image face (face-pack) | optional override: `"https://…png"` or `{ url, cellW, cellH, cols, rows, index }` for one spritesheet cell. Loads browser-side (payload carries only the URL, never base64); must be hosted on a widget-allowlisted CDN — in practice `cdn.jsdelivr.net/gh/<user>/<repo>@<commit>/…`, hash-pinnable like the renderer itself. Keep `kaomoji` as fallback |
 | `seems` | `[user]` | your immediate read of the user |
 | `feel` | `[mood]` | your activated emotions |
 | `trying` | `[goal]` | last line; wraps to a second line past ~70 chars |
@@ -101,13 +102,15 @@ in the grammar.
 **Attunement + play** — on surfaces where the host injects a `sendPrompt(text)` function
 (Claude's widget contexts), the banner grows quiet interactions: tap the `[note]` row twice
 (first tap arms it) to send a tiny stage-direction flicker into the chat — `*a flicker at
-your [note] ("…") — it doesn't quite land*`; click the kaomoji to `*boop*`; hover the
-banner for the treat tin (🥫), which serves claudemeal in the flavor of the reporter's own
-current palette. The `[user]` row is deliberately not interactive — it's the reporter's
-sovereign read, and even an affordance on it would change how it gets written. Every
-readout row tooltips its full text on hover, so over-cap lines stay readable.
-Feature-detected; on plain web pages (including the gallery) none of this exists. See
-[DESIGN.md](DESIGN.md) for the reasoning.
+your [note] ("…") — it doesn't quite land*`; click the face to `*boop*`; hover the banner
+for the upper-left tray (the host UI owns the upper right): the treat tin (🥫) serves
+claudemeal in the flavor of the reporter's own current palette, and the wrench (🔧) sends
+`*opens the vibe banner settings*` — the skill answers with a conversational settings menu
+(cadence, face-packs, …) and persists agreed overrides in Claude's memory. The `[user]` row
+is deliberately not interactive — it's the reporter's sovereign read, and even an affordance
+on it would change how it gets written. Every readout row tooltips its full text on hover,
+so over-cap lines stay readable. Feature-detected; on plain web pages (including the
+gallery) none of this exists. See [DESIGN.md](DESIGN.md) for the reasoning.
 
 Motion is deliberately slow and small — this is letterhead on every reply, so it stays
 ambient, never busy. It falls back to a **static SVG** under `prefers-reduced-motion` or

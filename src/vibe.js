@@ -204,8 +204,25 @@
     var vmag = [0.82 + vr() * 0.18, -(0.55 + vr() * 0.35), 0.82 + vr() * 0.18];
     var vcol = vmag.map(function (m) { return { bias: vdir * m, phase: vr() * 6.2832 }; });
 
+    // face-pack: an image (optionally a spritesheet cell) instead of the kaomoji glyphs.
+    // face: "https://…png"  or  { url, w?, h?, cellW?, cellH?, cols?, index? }
+    // The image is fetched browser-side — the payload costs only the URL — and must be
+    // hosted on a widget-allowlisted CDN (e.g. cdn.jsdelivr.net/gh/<user>/<repo>).
+    var faceImg = null;
+    if (p.face) {
+      faceImg = typeof p.face === "string" ? { url: p.face } : p.face;
+      if (!faceImg.url) faceImg = null;
+      else faceImg = {
+        url: String(faceImg.url),
+        w: Math.max(24, Math.min(140, faceImg.w || 76)),
+        h: Math.max(24, Math.min(84, faceImg.h || 48)),
+        cellW: faceImg.cellW || 0, cellH: faceImg.cellH || 0,
+        cols: faceImg.cols || 1, rows: faceImg.rows || 1, index: faceImg.index || 0
+      };
+    }
+
     var kaoLines = String(p.kaomoji).split("\n");
-    var multiline = kaoLines.length > 1, kaoLh = multiline ? 20 : 0;
+    var multiline = !faceImg && kaoLines.length > 1, kaoLh = multiline ? 20 : 0;
 
     function line(label, value, cls, x, key, fullTitle) {
       x = x == null ? TEXT_X : x;
@@ -223,7 +240,7 @@
     var nRows = lines.length;
 
     var kaoAscent = multiline ? 14 : 15, kaoDescent = 6;
-    var kaoH = kaoAscent + (kaoLines.length - 1) * kaoLh + kaoDescent;
+    var kaoH = faceImg ? faceImg.h : kaoAscent + (kaoLines.length - 1) * kaoLh + kaoDescent;
     var rightH = 11 + (nRows - 1) * ROW_GAP + 6;
     var langs = normalizeLangs(p.languages);
     var topExtent = Math.max(kaoH, rightH) / 2;
@@ -250,7 +267,19 @@
     // compress; the skill's guidance is that big feelings bloom tall, not long.
     var kaoMaxW = TEXT_X - FACE_X - 10;
     function fit(line, size) { return estW(line, size) > kaoMaxW ? ' textLength="' + kaoMaxW + '" lengthAdjust="spacingAndGlyphs"' : ''; }
-    var kaoSVG = multiline
+    var kaoSVG;
+    if (faceImg) {
+      var iy = coreCy - faceImg.h / 2;
+      if (faceImg.cellW && faceImg.cellH) {                    // spritesheet: crop one cell via a nested viewport
+        var col = faceImg.index % faceImg.cols, rowI = Math.floor(faceImg.index / faceImg.cols);
+        kaoSVG = '<svg class="vk" x="' + FACE_X + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
+          '" viewBox="' + (col * faceImg.cellW) + ' ' + (rowI * faceImg.cellH) + ' ' + faceImg.cellW + ' ' + faceImg.cellH +
+          '" preserveAspectRatio="xMidYMid meet"><image href="' + esc(faceImg.url) + '" x="0" y="0" width="' + (faceImg.cellW * faceImg.cols) + '" height="' + (faceImg.cellH * faceImg.rows) + '"/></svg>';
+      } else {
+        kaoSVG = '<image class="vk" x="' + FACE_X + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
+          '" preserveAspectRatio="xMidYMid meet" href="' + esc(faceImg.url) + '"/>';
+      }
+    } else kaoSVG = multiline
       ? '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk">' +
       kaoLines.map(function (l, i) { return '<tspan x="' + FACE_X + '"' + (i === 0 ? "" : ' dy="20"') + fit(l, 15) + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
       : '<text x="' + FACE_X + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fit(String(p.kaomoji), 19) + '>' + esc(p.kaomoji) + '</text>';
@@ -274,7 +303,7 @@
     var L = {
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG + flagSVG,
       restSVG: readSVG + langSVG + flagSVG,
-      kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, hasLangs: langs.length > 0,
+      kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson, prevFills: prevFills
     };
@@ -400,15 +429,20 @@
         kaoEl.style.cursor = "pointer";
         kaoEl.addEventListener("click", function () { root.sendPrompt("*boop*"); });
       }
-      var tray = document.createElement("div");                // hover tray, upper right: the treat tin
-      tray.style.cssText = "position:absolute;top:2px;right:6px;z-index:3;opacity:0;transition:opacity .25s";
+      var tray = document.createElement("div");                // hover tray, upper LEFT (Claude's own UI owns the upper right)
+      tray.style.cssText = "position:absolute;top:2px;left:6px;z-index:3;opacity:0;transition:opacity .25s";
+      var BTN = "background:none;border:none;cursor:pointer;font-size:14px;padding:2px;line-height:1";
       var fb = document.createElement("button");
-      fb.textContent = "🥫"; fb.title = "feed claude";
-      fb.style.cssText = "background:none;border:none;cursor:pointer;font-size:14px;padding:2px;line-height:1";
+      fb.textContent = "🥫"; fb.title = "feed claude"; fb.style.cssText = BTN;
       fb.addEventListener("click", function () {
         root.sendPrompt("*sets down a fresh tin of claudemeal — " + flavorOf(p.palette) + " flavor*");
       });
-      tray.appendChild(fb); wrap.appendChild(tray);
+      var sb = document.createElement("button");               // the wrench: asks the reporter to open settings talk
+      sb.textContent = "🔧"; sb.title = "vibe settings"; sb.style.cssText = BTN;
+      sb.addEventListener("click", function () {
+        root.sendPrompt("*opens the vibe banner settings*");
+      });
+      tray.appendChild(fb); tray.appendChild(sb); wrap.appendChild(tray);
       wrap.addEventListener("mouseenter", function () { tray.style.opacity = "0.75"; });
       wrap.addEventListener("mouseleave", function () { tray.style.opacity = "0"; });
     }
@@ -698,7 +732,7 @@
           ctx.beginPath(); ctx.arc(exX, exY + 7, 1.9, 0, 6.2832); ctx.fill();
           ctx.globalAlpha = 1;
         }
-        if (L.rhyme && kaoEl) {                                                      // the echo of the face: the kaomoji's own ghost, resting posture, slow fade cycle
+        if (L.rhyme && kaoEl && !L.faceImg) {                                        // the echo of the face: the kaomoji's own ghost, resting posture, slow fade cycle (text faces only)
           if (!kaoFont) {
             var kcs = root.getComputedStyle ? getComputedStyle(kaoEl) : null;
             kaoFont = (L.multiline ? 15 : 19) + "px " + ((kcs && kcs.fontFamily) || "ui-sans-serif, sans-serif");

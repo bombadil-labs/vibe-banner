@@ -94,6 +94,24 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   text: reporters overrun the word caps despite the IMPORTANT markers, and a clipped line
   should at least be recoverable on hover. This is a reading aid, not a license — the caps
   stand, because the *banner* is the medium and the tooltip is the fire escape.
+- **Settings via the wrench (v0.6.0) — the skill is the settings UI, memory is the store.**
+  The 🔧 in the hover tray sends `*opens the vibe banner settings*`; the skill answers with
+  a conversational menu and persists agreed overrides in the reporter's durable memory. No
+  config file, no schema, no renderer knowledge of settings — behavioral overrides
+  ("only strong feelings") never touch this codebase at all. Boundary: users can override
+  presentation and cadence but not the honesty contract (no reporting feelings on demand,
+  and the veil stays).
+- **Face-packs (v0.6.0) — image faces with zero token weight.** `face: "https://…png"` or
+  `{ url, cellW, cellH, cols, rows, index }` renders an image (or one spritesheet cell, via
+  a nested-viewport crop) in place of the kaomoji glyphs, ~76×48 constrained. The image is
+  fetched browser-side, so the payload costs only a URL — base64-in-context was considered
+  and rejected as pure token waste. Hosting constraint: the widget sandbox CSP allowlists
+  only certain CDNs, so packs live in a public GitHub repo served via
+  `cdn.jsdelivr.net/gh/…` — the same channel as the renderer, hash-pinnable the same way.
+  The image element carries the `.vk` class, so face transforms, boop, and bbox-anchored
+  marks all keep working; rhyme's ghost is text-only (skipped for image faces); the
+  `kaomoji` field remains required as fallback and seed material. The hover tray moved to
+  the upper LEFT because Claude's own UI owns the widget's upper right.
 
 ## Explicitly not features (recorded so they aren't re-derived)
 
