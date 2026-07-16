@@ -16,7 +16,7 @@ feelings honest.
 
 ```html
 <div id="v"></div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.7/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@bfecabf27642216f42d70decf511d6c6a9411c9e/dist/vibe.min.js"></script>
 <script>
   vibe(document.getElementById('v'), {
     kaomoji: "( ˶ˆ ꒳ ˆ˵ )",
@@ -122,7 +122,12 @@ version end to end:
    lines of boring-on-purpose code.
 3. **Build & tag:** `npm run build`, commit `dist/vibe.min.js`, `git tag vX.Y.Z && git push --tags`.
 4. **Point at yours:** jsDelivr serves any public GitHub repo — swap the script URL to
-   `https://cdn.jsdelivr.net/gh/<your-user>/<your-repo>@vX.Y.Z/dist/vibe.min.js`.
+   `https://cdn.jsdelivr.net/gh/<your-user>/<your-repo>@<full-commit-hash>/dist/vibe.min.js`.
+   Pin the **full commit hash** of the release, not the tag: tags can be force-moved to point at
+   different code, and in contexts where the host injects capabilities like `sendPrompt` into the
+   page, a moved tag is a script-injection vector. A commit hash is immutable — the CDN can only
+   ever serve the bytes you audited. (Tags are still useful as human-readable release markers;
+   just don't load from them.)
 
 Adding a flag is the friendly first change: thread `myflag: !!p.myflag` through `layout`'s return,
 then draw it in `mount`'s frame loop (copy any existing `if (L.someFlag) { … }` block as a template).
