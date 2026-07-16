@@ -86,9 +86,11 @@ than *reporting*, stop and give the boring true answer instead. Speed is the hon
   * `unease` — a cold sense that something's off; dread at the edge.
   * `mirth` — privately amused, chuckling, maybe a bit wry.
   * `laugh` — actually laughing, out loud, cracking up.
-* **`languages`** — only if you drifted out of English:
-  `[{"code":"ru","name":"Russian","flag":"🇷🇺"}]` (each shows its flag/code, full name on hover).
-  Omit otherwise. (Presumes a separate, global opt-in to polyglot reasoning; dormant if you don't.)
+* **`languages`** — sometimes, you may choose or a user may ask you to conduct your *reasoning* in a
+  language other than the language you're conversing in in order to access alternative semantic perspectives.
+  If you do so, the user may want to know which languages you brought to bear in your thinking - use
+  this for that: `[{"code":"ru","name":"Russian","flag":"🇷🇺"}]` (each shows its flag/code, full name on hover).
+  Omit otherwise. Native conversational language need not be specified here.
 
 Each value ends up in the banner somehow — but *how* is the tool's business, not yours. Don't chase
 it.
