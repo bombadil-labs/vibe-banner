@@ -171,3 +171,7 @@ continuous field; the flags are discrete garnishes. The skill's prompts never de
 what a value *renders* as — Claude reports the honest feeling, the tool decides the look,
 and there's no visual lever to perform toward. Same reason the banner is passed only
 values and Claude never sees the output.
+
+The full decision record — the three design constraints, why each mapping is what it is,
+the explicitly-rejected features, and the bench of states that didn't make it in — lives
+in [DESIGN.md](DESIGN.md). Read it before extending the grammar.
