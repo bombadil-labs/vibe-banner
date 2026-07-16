@@ -1,7 +1,7 @@
 /* vibe-annotation-renderer — Claude's mood banner, brought to life.
  *
  * Grammar: palette = tone (three columns: left, cycling centre, right),
- * focus = how tight the vertical band is, churn = how much it moves,
+ * focus = how tight the vertical band of the three columns is,
  * engagement = deflation, plus rare condition flags (spark, surprised, …).
  * The field is a living canvas of soft gooey blobs behind crisp SVG text.
  * Motion is deliberately slow and small: this is letterhead on every reply,
@@ -121,8 +121,7 @@
     var td = Math.max(0, (0.5 - eng) / 0.5);
     var mult = 1.0 - 0.72 * Math.pow(td, 2.4);                 // engagement: size deflation only (columns stay put)
     var focus = clamp01(p.focus, 0.5);
-    var churn = clamp01(p.churn, 0.3);
-    var env = VR_MIN + (VR_MAX - VR_MIN) * (1 - focus);        // vertical band width
+    var env = VR_MIN + (VR_MAX - VR_MIN) * (1 - focus);        // vertical band width (focused → narrow, scattered → wide)
 
     var vr = mulberry32(seed + 7);
     var vcol = [0, 1, 2].map(function () { return { bias: vr() * 2 - 1, phase: vr() * 6.2832, oscW: 0.7 + vr() * 0.5, w: 0.6 + vr() * 0.5 }; });
@@ -187,7 +186,7 @@
 
     return {
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG,
-      env: env, focus: focus, churn: churn, usesCols: usesCols, seed: seed,
+      env: env, focus: focus, usesCols: usesCols, seed: seed,
       spark: !!p.spark, excited: !!p.excited,
       surprised: !!p.surprised, tender: !!p.tender, melancholy: !!p.melancholy, anxious: !!p.anxious,
       mirth: !!p.mirth, laugh: !!p.laugh, groan: !!p.groan, oops: !!p.oops, dramatic: !!p.dramatic,
@@ -203,7 +202,7 @@
     out.push('<style>' + STYLE + '</style>');
     out.push('<g opacity="0.5">');
     L.blobs.forEach(function (b) {
-      var cy = b.cyBase + b.bias * L.env * (1 - L.churn);      // static snapshot of the vertical band
+      var cy = b.cyBase + b.bias * L.env;                     // vertical position set by focus
       out.push('<ellipse cx="' + g(b.cx) + '" cy="' + g(cy) + '" rx="' + g(b.rx) + '" ry="' + g(b.ry) + '" fill="' + b.fill + '" opacity="' + g(b.op) + '"/>');
     });
     out.push('</g>');
@@ -248,7 +247,7 @@
     }
     function mixCss(a, b, m) { return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * m) + "," + Math.round(a[1] + (b[1] - a[1]) * m) + "," + Math.round(a[2] + (b[2] - a[2]) * m) + ")"; }
 
-    var env = L.env, churn = L.churn, chSpeed = 0.5 + churn * 1.7;
+    var env = L.env;
     var B = L.blobs;
     var stars = L.excited ? sparkleData(H, L.seed).map(function (s, i) { return { s: s, tw: 1.6 + (i % 4) * 0.6, ph: i * 1.3, rs: (0.04 + (i % 5) * 0.022) * (i % 2 ? 1 : -1) }; }) : [];
 
@@ -314,13 +313,11 @@
           kaoEl.style.fill = kfill;
         }
 
-        // --- the field: three columns, seeded vertical band (focus) with motion (churn) ---
+        // --- the field: three columns holding a seeded vertical band set by focus ---
         B.forEach(function (b) {
-          var vstat = b.bias * env * (1 - churn);                                   // scattered-but-still when churn is low
-          var vosc = env * churn * b.oscW * Math.sin(chSpeed * t * b.w + b.phase);   // moving within the band when churn is high
-          var ox = 2.5 * Math.sin(0.45 * t + b.phase) + oopsOsc * 10;                // columns basically fixed; a hair of life + oops jolt
-          var oy = vstat + vosc + groanGr * 9;
-          var br = (1 + 0.06 * Math.sin(0.7 * t + b.phase)) * laughB;
+          var ox = 2.2 * Math.sin(0.45 * t + b.phase) + oopsOsc * 10;                // columns hold their focus positions; a hair of life + oops jolt
+          var oy = b.bias * env + 1.6 * Math.sin(0.5 * t + b.phase) + groanGr * 9;   // vertical position from focus, gently alive
+          var br = (1 + 0.05 * Math.sin(0.7 * t + b.phase)) * laughB;
           var fill = b.fill;
           if (b.pool) { var per = 6, f = (t / per) % b.pool.length, i0 = Math.floor(f), fr = f - i0; fill = lerpHex(b.pool[i0], b.pool[(i0 + 1) % b.pool.length], fr * fr * (3 - 2 * fr)); }  // centre cycles smoothly
           if (L.frustrated) fill = lerpHex(fill, "#7a1616", frP * 0.5);              // frustrated: ovals pulse dark red and back
@@ -344,6 +341,23 @@
             ctx.fillStyle = rgba("#c8d2ff", 0.1 * fla); ctx.fillRect(0, 0, W, H);
             ctx.globalAlpha = 1;
           }
+          // a steady sprinkler of grawlix curses — pop up, fall, shrink, fade
+          var gw = ["$#@&", "%$#!", "@#$%&", "#@!*", "&$@#", "*!?#", "$%&#@", "@&#!", "!#$%"];
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          var GN = 9, gper = 2.4, glife = 1.5;
+          for (var gi = 0; gi < GN; gi++) {
+            var grr = mulberry32(L.seed + gi * 131 + 61);
+            var birth = grr() * gper, word = gw[Math.floor(grr() * gw.length) % gw.length], gx = 40 + grr() * (W - 80);
+            var age = (((t - birth) % gper) + gper) % gper;
+            if (age > glife) continue;
+            var u = age / glife;
+            var yy2 = u < 0.22 ? -18 * (u / 0.22) : -18 + 46 * ((u - 0.22) / 0.78);   // pop up, then fall
+            var scl = 1.15 - 0.55 * u, al = u < 0.14 ? u / 0.14 : Math.max(0, 1 - (u - 0.14) / 0.86);
+            ctx.globalAlpha = al; ctx.font = "700 " + (16 * scl).toFixed(1) + "px ui-monospace, Menlo, Consolas, monospace";
+            ctx.fillStyle = gi % 3 === 0 ? "#ffd24a" : "#ff5a4a";
+            ctx.fillText(word, gx, cyC - 4 + yy2);
+          }
+          ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
         }
         if (L.dramatic) {
           var dx = 46, dy = cyC, fl = 0.94 + 0.06 * Math.sin(t * 5.5) + 0.03 * Math.sin(t * 11);
@@ -354,15 +368,22 @@
           dim.addColorStop(0, rgba("#08080f", 0)); dim.addColorStop(0.5, rgba("#08080f", 0.16 * fl)); dim.addColorStop(1, rgba("#08080f", 0.46 * fl));
           ctx.fillStyle = dim; ctx.fillRect(0, 0, W, H);
         }
-        if (L.spark) {                                                               // light-bulb over the face
-          var bx = 46, by = cyC - 32, on = 0.5 + 0.5 * Math.sin(t * 3.0);
-          var gg = ctx.createRadialGradient(bx, by, 2, bx, by, 26);
-          gg.addColorStop(0, rgba("#fff2b0", 0.5 * on)); gg.addColorStop(0.5, rgba("#ffe27a", 0.2 * on)); gg.addColorStop(1, rgba("#ffe27a", 0));
-          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(bx, by, 26, 0, 6.2832); ctx.fill();
-          if (on > 0.55) { ctx.strokeStyle = rgba("#ffe89a", (on - 0.55) / 0.45 * 0.8); ctx.lineWidth = 1.4; ctx.lineCap = "round"; for (var ri = 0; ri < 6; ri++) { var ra = ri * Math.PI / 3 - 0.3; ctx.beginPath(); ctx.moveTo(bx + Math.cos(ra) * 12, by + Math.sin(ra) * 12); ctx.lineTo(bx + Math.cos(ra) * 17, by + Math.sin(ra) * 17); ctx.stroke(); } }
-          ctx.globalAlpha = 1; ctx.fillStyle = rgba("#ffe27a", 0.55 + 0.4 * on); ctx.beginPath(); ctx.arc(bx, by, 9, 0, 6.2832); ctx.fill();
+        if (L.spark) {                                                               // light-bulb over the face: a periodic "click on"
+          var bx = 46, by = cyC - 32, scyc = t % 3.0, on;
+          if (scyc < 0.12) on = scyc / 0.12;                                          // fast attack — the click
+          else if (scyc < 1.6) on = 1;                                               // hold bright
+          else if (scyc < 2.1) on = 1 - (scyc - 1.6) / 0.5;                          // dim down
+          else on = 0.12 + 0.05 * Math.sin(t * 2);                                    // faint idle glow
+          var gg = ctx.createRadialGradient(bx, by, 2, bx, by, 30);
+          gg.addColorStop(0, rgba("#fff6c0", 0.6 * on)); gg.addColorStop(0.5, rgba("#ffe27a", 0.24 * on)); gg.addColorStop(1, rgba("#ffe27a", 0));
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(bx, by, 30, 0, 6.2832); ctx.fill();
+          var burst = Math.max(0, on) * (scyc < 0.5 ? 1 : 0.4);                       // rays flare on the click
+          ctx.strokeStyle = rgba("#fff0a0", 0.85 * burst); ctx.lineWidth = 1.6; ctx.lineCap = "round";
+          for (var ri = 0; ri < 8; ri++) { var ra = ri * Math.PI / 4 - 0.2, r1 = 13 + burst * 9; ctx.beginPath(); ctx.moveTo(bx + Math.cos(ra) * 12, by + Math.sin(ra) * 12); ctx.lineTo(bx + Math.cos(ra) * r1, by + Math.sin(ra) * r1); ctx.stroke(); }
+          ctx.globalAlpha = 1; ctx.fillStyle = rgba("#ffe27a", 0.5 + 0.45 * on); ctx.beginPath(); ctx.arc(bx, by, 9, 0, 6.2832); ctx.fill();
+          if (on > 0.5) { ctx.strokeStyle = rgba("#c9892a", on); ctx.lineWidth = 1; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(bx - 3, by + 1); ctx.lineTo(bx - 1, by - 2); ctx.lineTo(bx + 1, by + 1); ctx.lineTo(bx + 3, by - 2); ctx.stroke(); }  // filament
           ctx.fillStyle = rgba("#fffbe6", 0.6 * on); ctx.beginPath(); ctx.arc(bx - 2.5, by - 2.5, 3, 0, 6.2832); ctx.fill();
-          ctx.fillStyle = "#9a875f"; ctx.fillRect(bx - 4, by + 7, 8, 3); ctx.fillRect(bx - 3, by + 10, 6, 2);
+          ctx.fillStyle = "#9a875f"; ctx.fillRect(bx - 4, by + 7, 8, 3); ctx.fillRect(bx - 3.5, by + 10, 7, 1.6); ctx.fillRect(bx - 3, by + 12, 6, 1.4);   // screw base
         }
         if (stars.length) {
           ctx.strokeStyle = "#f7e3a8"; ctx.lineCap = "round";
@@ -404,14 +425,19 @@
           }
           ctx.globalAlpha = 1;
         }
-        if (L.anxious) {                                                             // wispy cold fog roiling over the whole banner
-          for (var fi = 0; fi < 8; fi++) {
-            var fsp = 5 + (fi % 4) * 5;
-            var fx = ((t * fsp + fi * 190) % (W + 520)) - 260;
-            var fy = 4 + ((fi * 53) % (H - 8)) + 16 * Math.sin(t * 0.22 + fi * 1.3);
-            var frx = 95 + ((fi * 37) % 130), fry = 24 + ((fi * 19) % 36);
-            ellipse(fx, fy, frx, fry, "#8a90a0", 0.05 + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.35 + fi * 2)));
+        if (L.anxious) {                                                             // cold dread: a breathing wash, rolling wisps, a tightening vignette
+          var aw = 0.12 + 0.06 * Math.sin(t * 0.9);
+          ctx.fillStyle = rgba("#5f6675", aw); ctx.fillRect(0, 0, W, H);              // the whole banner dims and un-dims
+          for (var fi = 0; fi < 11; fi++) {
+            var fsp = 8 + (fi % 4) * 7;
+            var fx = ((t * fsp + fi * 150) % (W + 460)) - 230;
+            var fy = 6 + ((fi * 61) % (H - 10)) + 14 * Math.sin(t * 0.3 + fi * 1.3);
+            var frx = 80 + ((fi * 37) % 120), fry = 20 + ((fi * 19) % 30);
+            ellipse(fx, fy, frx, fry, "#aeb6c6", 0.10 + 0.08 * (0.5 + 0.5 * Math.sin(t * 0.4 + fi * 2)));   // brighter, clearly rolling
           }
+          var av = ctx.createRadialGradient(W / 2, cyC, W * 0.28, W / 2, cyC, W * 0.62);
+          av.addColorStop(0, rgba("#3a4050", 0)); av.addColorStop(1, rgba("#3a4050", 0.22 + 0.08 * Math.sin(t * 0.7)));  // edges creep in
+          ctx.fillStyle = av; ctx.fillRect(0, 0, W, H);
         }
         if (L.mirth) {
           ctx.fillStyle = "#f2e0ac";

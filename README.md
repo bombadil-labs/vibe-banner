@@ -16,7 +16,7 @@ feelings honest.
 
 ```html
 <div id="v"></div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.0/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.1/dist/vibe.min.js"></script>
 <script>
   vibe(document.getElementById('v'), {
     kaomoji: "( ˶ˆ ꒳ ˆ˵ )",
@@ -25,7 +25,7 @@ feelings honest.
     trying:  "…",          // [goal]  — immediate next goal (last line; wraps if long)
     noticing:"…",          // [note]  — the subtext (optional)
     palette: ["#7d8fb8"],  // 0+ mood colours → three columns (left, cycling centre, right)
-    focus: 0.5, churn: 0.3, engagement: 0.5,
+    focus: 0.5, engagement: 0.5,
     languages: ["ru"],     // optional: 2-letter codes or names, a bottom-right trace
     spark: false, excited: false
   });
@@ -53,8 +53,7 @@ also exported (Node too) — it's the static fallback and the basis for the test
 | input | drives |
 |---|---|
 | `palette` | the three columns. `[]` → grey. 1 colour → light/colour/dark. 2 → c0 / blend / c1. 3+ → c0 · left, c1 · right, the rest **cycle through the centre** |
-| `focus` (0–1) | how tight the vertical band is: 1 = the three columns hold a narrow level line, 0 = scattered across a wide vertical range |
-| `churn` (0–1) | how much they move within that band: 0 = static, 1 = fast motion (independent of `focus`, so focused+churny = fast movement in a narrow range) |
+| `focus` (0–1) | the vertical spread of the three columns: 1 = a narrow level line, 0 = scattered across a wide vertical range. They hold position (gently alive), so the spread itself is the signal |
 | `engagement` (0–1) | **deflationary only**: ≥0.5 baseline; below, the columns shrink, harder toward 0 |
 | `field` | power path: hand-author the ovals instead of `palette` |
 
@@ -112,7 +111,7 @@ open gallery.html  # local preview of every state
 
 ## Design notes
 
-The grammar is small on purpose. Colour, focus, churn, and engagement are the
+The grammar is small on purpose. Colour, focus, and engagement are the
 continuous field; the flags are discrete garnishes. The skill's prompts never describe
 what a value *renders* as — Claude reports the honest feeling, the tool decides the look,
 and there's no visual lever to perform toward. Same reason the banner is passed only

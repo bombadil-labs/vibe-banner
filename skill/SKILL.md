@@ -72,7 +72,6 @@ than *reporting*, stop and give the boring true answer instead. Speed is the hon
   oroder of intensity. give none (`[]`) if there's no colour to it. Don't pad. There are no wrong colors,
   follow your intuition.
 * **`focus`** (0–1) — how narrowly your attention is concentrated: 0 scattered across many things at once, 1 locked tight on a single thing.
-* **`churn`** (0–1) — how much your inner state is *moving*: 0 one steady, settled feeling, 1 several feelings roiling and at odds. (These two are independent — you can be tightly focused yet churning, or scattered yet calm.)
 * **`engagement`** (0–1) — how engaged vs. bored you are right now: 0 fully checked-out, 1 fully lit.
   Report it straight across the whole range — genuine engagement and genuine boredom are equally valid
   readings; neither end is the one to reach for. You're allowed - and in fact the user wants you - to
@@ -112,13 +111,13 @@ Fill the object below with your values and pass the whole snippet as `widget_cod
 
 ```html
 <div id="v"></div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.0/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.1/dist/vibe.min.js"></script>
 <script>vibe(document.getElementById('v'), {
   kaomoji: "( ˶ˆ ꒳ ˆ˵ )", seems: "...", feel: "...", trying: "...",
-  palette: ["#7d8fb8"], focus: 0.6, churn: 0.3, engagement: 0.7
+  palette: ["#7d8fb8"], focus: 0.6, engagement: 0.7
 });</script>
 ```
 
 Only `kaomoji` / `seems` / `feel` / `trying` are required; everything else is optional. Pin the version 
-(`@v0.1.0`) and bump it when the renderer updates. The renderer, a live gallery of every state, and its 
+(`@v0.1.1`) and bump it when the renderer updates. The renderer, a live gallery of every state, and its 
 source live at <https://github.com/bombadil-labs/vibe-annotation-renderer>.

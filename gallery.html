@@ -35,7 +35,7 @@
   claude.ai's; in the real skill the host supplies them. Respects your OS light/dark.</p>
   <div id="gallery"></div>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.0/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.1.1/dist/vibe.min.js"></script>
 <script>
 var GROUPS = [
   ["The field — palette becomes three columns", [
@@ -45,11 +45,10 @@ var GROUPS = [
     ["Three colours → one per column", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"a lot going on", feel:"lit · three-way", trying:"let three moods sit side by side", palette:["#e0994e","#c98fb0","#6fa39c"]}],
     ["Four+ colours → centre cycles the rest", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"more moods than columns", feel:"many-hued", trying:"watch the centre drift through the extras", palette:["#7d8fb8","#6fa39c","#e0994e","#c98fb0"]}]
   ]],
-  ["focus × churn — the two field axes", [
-    ["focused + calm — tight, level, still", {kaomoji:"( ・_・)", seems:"locked on one thing, steady", feel:"clear · single", trying:"hold the line", palette:["#7d8fb8","#8f9ac0","#6f86b0"], focus:0.95, churn:0.05}],
-    ["focused + churny — narrow band, fast", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"fixed on it but roiling", feel:"intent · churning", trying:"one subject, many feelings", palette:["#7d8fb8","#c98fb0","#6fa39c"], focus:0.95, churn:0.9}],
-    ["scattered + calm — wide, still", {kaomoji:"( ˘ ᵕ ˘ )", seems:"tracking a lot, unbothered", feel:"broad · easy", trying:"let it all sit spread out", palette:["#7d8fb8","#d99a5e","#6fa39c"], focus:0.1, churn:0.05}],
-    ["scattered + churny — wide, moving", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"everywhere at once and moving", feel:"scattered · restless", trying:"ride the whole storm", palette:["#e0994e","#c98fb0","#6fa39c"], focus:0.1, churn:0.9}]
+  ["focus — the vertical spread of the columns", [
+    ["focused → a tight, level line", {kaomoji:"( ・_・)", seems:"locked on one thing", feel:"clear · single", trying:"hold the line", palette:["#7d8fb8","#8f9ac0","#6f86b0"], focus:0.95}],
+    ["mid focus → a moderate spread", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a couple of threads", feel:"steady · layered", trying:"hold two or three things", palette:["#7d8fb8","#c98fb0","#6fa39c"], focus:0.5}],
+    ["scattered → a wide vertical range", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"everywhere at once", feel:"broad · diffuse", trying:"let it all spread out", palette:["#e0994e","#c98fb0","#6fa39c"], focus:0.1}]
   ]],
   ["Engagement, note, wrap, faces", [
     ["Bored (engagement 0.1 → shrinks)", {kaomoji:"( ˘_˘ )", seems:"the rote fourth variation", feel:"flat · far away", trying:"answer and move on", palette:["#8b93a0"], engagement:0.1}],
