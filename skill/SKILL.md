@@ -88,6 +88,7 @@ than *reporting*, stop and give the boring true answer instead. Speed is the hon
   * `unease` — a cold sense that something's off; dread at the edge.
   * `mirth` — privately amused, chuckling, maybe a bit wry.
   * `laugh` — actually laughing, out loud, cracking up.
+  * `groan` — a bad pun or a mild exasperation; the affectionate "ughhh," eyes rolling.
 * **`languages`** — sometimes, you may choose or a user may ask you to conduct your *reasoning* in a
   language other than the language you're conversing in in order to access alternative semantic perspectives.
   If you do so, the user may want to know which languages you brought to bear in your thinking - use
@@ -105,7 +106,7 @@ Fill the object below with your values and pass the whole snippet as `widget_cod
 
 ```html
 <div id="v"></div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.11/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.12/dist/vibe.min.js"></script>
 <script>vibe(document.getElementById('v'), {
   kaomoji: "( ˶ˆ ꒳ ˆ˵ )", seems: "...", feel: "...", trying: "...",
   palette: ["#7d8fb8"], turbulence: 0.3, engagement: 0.7
@@ -113,5 +114,5 @@ Fill the object below with your values and pass the whole snippet as `widget_cod
 ```
 
 Only `kaomoji` / `seems` / `feel` / `trying` are required; everything else is optional. Pin the version 
-(`@v0.0.11`) and bump it when the renderer updates. The renderer, a live gallery of every state, and its 
+(`@v0.0.12`) and bump it when the renderer updates. The renderer, a live gallery of every state, and its 
 source live at <https://github.com/bombadil-labs/vibe-annotation-renderer>.

@@ -34,7 +34,7 @@
   claude.ai's; in the real skill the host supplies them. Respects your OS light/dark.</p>
   <div id="gallery"></div>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.11/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.12/dist/vibe.min.js"></script>
 <script>
 var STATES = [
   ["Neutral (no palette → grey)", {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly"}],
@@ -53,7 +53,8 @@ var STATES = [
   ["melancholy — cool motes drift down", {kaomoji:"( ˘ ､ ˘ )", seems:"a quiet, heavy thing", feel:"wistful · low", trying:"sit with it", melancholy:true, palette:["#8f96a8","#9a8fae"]}],
   ["unease — cold fog rolls over", {kaomoji:"( ｡•́ _ •̀｡ )", seems:"something's off here", feel:"wary · dimmed", trying:"stay watchful", unease:true, palette:["#7a8296","#8f95a4"]}],
   ["mirth — champagne bubbles rise", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )~", seems:"quietly amused", feel:"tickled · effervescent", trying:"let it bubble", mirth:true, palette:["#e0b060","#d99ac0"]}],
-  ["laugh — the face swells & flushes yellow", {kaomoji:"(≧▽≦)", seems:"we're both cracking up", feel:"gleeful · beaming", trying:"laugh out loud", laugh:true, palette:["#e0a24e","#d99ac0"], engagement:0.9}]
+  ["laugh — the face swells & flushes yellow", {kaomoji:"(≧▽≦)", seems:"we're both cracking up", feel:"gleeful · beaming", trying:"laugh out loud", laugh:true, palette:["#e0a24e","#d99ac0"], engagement:0.9}],
+  ["groan — head-loll, slump, sweat-drop", {kaomoji:"( ˘︹˘ )", seems:"a truly terrible pun just landed", feel:"exasperated · fond", trying:"groan and move on", groan:true, palette:["#9a9488","#8f96a4"], engagement:0.5}]
 ];
 var g = document.getElementById("gallery");
 STATES.forEach(function (s) {
