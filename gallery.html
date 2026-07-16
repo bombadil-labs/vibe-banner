@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vibe-annotation-renderer — gallery</title>
+<style>
+  :root {
+    /* stand-ins for the host's fonts (claude.ai provides these live) */
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    --font-voice: ui-serif, Georgia, "Times New Roman", serif;
+    --paper: #fbf7ef; --ink: #3a2f1e; --sub: #8a7c63;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #1a1712; --ink: #e9dcc4; --sub: #a08c6a; }
+  }
+  html, body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--font-sans); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 26px; font-weight: 500; margin: 0 0 4px; }
+  .lede { color: var(--sub); margin: 0 0 32px; font-size: 15px; line-height: 1.6; }
+  .cell { margin: 26px 0; }
+  .cap { font-family: var(--font-mono); font-size: 12px; color: var(--sub);
+    margin: 0 0 6px; }
+  .cap b { color: var(--ink); font-weight: 500; }
+  .banner { border-radius: 12px; overflow: hidden; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>vibe-annotation-renderer</h1>
+  <p class="lede">Every state, rendered live from the CDN bundle. Fonts here are stand-ins for
+  claude.ai's; in the real skill the host supplies them. Respects your OS light/dark.</p>
+  <div id="gallery"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@v0.0.10/dist/vibe.min.js"></script>
+<script>
+var STATES = [
+  ["Neutral (no palette → grey)", {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly"}],
+  ["One colour → monochrome wash", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"warm and easy", feel:"settled · content", trying:"stay in one clear register", palette:["#d99a5e"]}],
+  ["Two colours", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"two things at once", feel:"engaged · layered", trying:"hold both threads", palette:["#7d8fb8","#c396a4"]}],
+  ["Three colours (multi-register)", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"a lot going on", feel:"lit · scattered-bright", trying:"let three moods breathe", palette:["#e0994e","#c98fb0","#6fa39c"], turbulence:0.5, spread:0.8}],
+  ["Bored (engagement 0.1 → small + flung apart)", {kaomoji:"( ˘_˘ )", seems:"the rote fourth variation", feel:"flat · far away", trying:"answer and move on", palette:["#8b93a0"], engagement:0.1}],
+  ["Optional [note] line (the subtext)", {kaomoji:"( ˶ ˘ ꒳ ˘ ˶ )", seems:"asking one thing, meaning another", feel:"attentive · reading between lines", trying:"answer the real question", noticing:"the ask under the ask", palette:["#7f93a8"]}],
+  ["Multi-line kaomoji (a bloom)", {kaomoji:"✧ ･ ✧\n( ˶ˆ ꒳ ˆ˵ )\n✧ ･ ✧", seems:"the mood is big", feel:"expansive · bright", trying:"let the face get large", palette:["#e0b060","#d99ac0"]}],
+  ["Long goal (wraps to a 2nd line)", {kaomoji:"( ・_・)", seems:"wants the whole plan spelled out", feel:"methodical", trying:"carefully walk through every one of the four steps before shipping anything at all", palette:["#7f9ab0"]}],
+  ["Languages (non-English reasoning)", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a multilingual turn", feel:"nimble · playful", trying:"think across tongues", languages:[{code:"ru",name:"Russian",flag:"🇷🇺"},{code:"eo",name:"Esperanto"}], palette:["#8f9ac0"]}],
+  ["spark — a corner bloom (insight)", {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"just handed me the click", feel:"lit · delighted", trying:"catch the aha", spark:true, palette:["#e0a24e"]}],
+  ["excited — twinkling, spinning stars", {kaomoji:"٩( ˶ˆᗜˆ˵ )و", seems:"bouncing with energy", feel:"buoyant · giddy", trying:"ride the fizz", excited:true, palette:["#e0a24e","#c98fb0"]}],
+  ["awe — a halo blooms outward", {kaomoji:"( ○ ᵕ ○ )", seems:"showed me something breathtaking", feel:"wonder · stilled", trying:"take it in", awe:true, palette:["#b79ad0","#8f9ac0","#e6d9b4"], engagement:0.55}],
+  ["tender — a warm swell at the core", {kaomoji:"( ˶ᵕ ‿ ᵕ˶ )", seems:"being gentle with me", feel:"fond · warm · moved", trying:"let the warmth show", tender:true, palette:["#d99a8a","#c0a0a8"]}],
+  ["melancholy — cool motes drift down", {kaomoji:"( ˘ ､ ˘ )", seems:"a quiet, heavy thing", feel:"wistful · low", trying:"sit with it", melancholy:true, palette:["#8f96a8","#9a8fae"]}],
+  ["unease — cold fog rolls over", {kaomoji:"( ｡•́ _ •̀｡ )", seems:"something's off here", feel:"wary · dimmed", trying:"stay watchful", unease:true, palette:["#7a8296","#8f95a4"]}],
+  ["mirth — champagne bubbles rise", {kaomoji:"( ˶ˆ ꒳ ˆ˵ )~", seems:"quietly amused", feel:"tickled · effervescent", trying:"let it bubble", mirth:true, palette:["#e0b060","#d99ac0"]}],
+  ["laugh — the face swells & flushes yellow", {kaomoji:"(≧▽≦)", seems:"we're both cracking up", feel:"gleeful · beaming", trying:"laugh out loud", laugh:true, palette:["#e0a24e","#d99ac0"], engagement:0.9}]
+];
+var g = document.getElementById("gallery");
+STATES.forEach(function (s) {
+  var cell = document.createElement("div"); cell.className = "cell";
+  var cap = document.createElement("p"); cap.className = "cap";
+  var t = s[0].split(" — "); cap.innerHTML = "<b>" + t[0] + "</b>" + (t[1] ? " — " + t[1] : "");
+  var banner = document.createElement("div"); banner.className = "banner";
+  cell.appendChild(cap); cell.appendChild(banner); g.appendChild(cell);
+  try { vibe(banner, s[1]); } catch (e) { banner.textContent = "err: " + e.message; }
+});
+</script>
+</body>
+</html>
