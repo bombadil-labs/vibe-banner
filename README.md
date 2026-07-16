@@ -109,6 +109,30 @@ open gallery.html  # local preview of every state
 **Release:** bump `package.json`, `npm run build`, commit `dist/vibe.min.js`,
 `git tag vX.Y.Z && git push --tags`. jsDelivr serves the tag immediately.
 
+## Make it your own (fork it!)
+
+This is deliberately a *single file* of plain, framework-free JavaScript — `src/vibe.js`,
+no build step beyond esbuild-minify. It's meant to be forked and reskinned. To run your own
+version end to end:
+
+1. **Fork** this repo (or just copy `src/vibe.js`).
+2. **Edit** `src/vibe.js` — everything lives there: `fieldFromPalette` (how palettes become the
+   field), `layout` (geometry), `buildSVG` (static fallback), and `mount` (the animated canvas).
+   Add a flag, change the colours, retune the motion, invent a new field metaphor — it's ~600
+   lines of boring-on-purpose code.
+3. **Build & tag:** `npm run build`, commit `dist/vibe.min.js`, `git tag vX.Y.Z && git push --tags`.
+4. **Point at yours:** jsDelivr serves any public GitHub repo — swap the script URL to
+   `https://cdn.jsdelivr.net/gh/<your-user>/<your-repo>@vX.Y.Z/dist/vibe.min.js`.
+
+Adding a flag is the friendly first change: thread `myflag: !!p.myflag` through `layout`'s return,
+then draw it in `mount`'s frame loop (copy any existing `if (L.someFlag) { … }` block as a template).
+`npm run parity` will tell you it still produces a valid static fallback.
+
+Because the skill only ever emits *values* and loads the renderer from a CDN, you can reskin the
+**entire look** — your own palette language, kaomoji conventions, flags, motion — without touching a
+line of the skill or its honesty contract. And you don't even need the skill: `vibe(el, {…})` is a
+tiny standalone library for any mood-banner-ish UI you like.
+
 ## Design notes
 
 The grammar is small on purpose. Colour, focus, and engagement are the
