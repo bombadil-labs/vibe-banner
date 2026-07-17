@@ -215,84 +215,11 @@ MOODS.forEach((mood, i) => { for (let frame = 0; frame < 3; frame++) {
     frect(41, 22, 10, 2, RING);
   }
 
-  // chromatophores: sub-pixel FIDELITY, macro-scale SHAPES. Dots were texture; patterns
-  // are language. Each mood wears a nameable whole — saddle, cheek blooms, rings, zebra
-  // bands (the real cuttlefish agonistic display), dense camo mottle, or a blanch —
-  // with organic 1px edges only this resolution allows.
-  {
-    const r = rng(i * 104729 + 7);               // the SAME pattern on every frame: fins flutter and lids blink, but the baked
-    const D = () => 0;                           // coloration never jumps — a pattern that teleported with the fins read as
-    const S = () => 1;                           // "spots resetting". Continuous pattern motion belongs to the renderer's smooth
-                                                 // roaming layer alone (v0.19.x); the drift channel here is retired.
-    const hue = mood[3];
-    // contrast-safe sibling: light hues get a darker one, dark hues a LIGHTER one —
-    // a dark sibling of a dark hue merges with the body outline and swallows limbs
-    const lum = c => { const h = hex(c); return 0.299 * h[0] + 0.587 * h[1] + 0.114 * h[2]; };
-    const dark = lum(hue) > 120
-      ? "#" + hex(hue).map(v => Math.max(0, Math.round(v * 0.66)).toString(16).padStart(2, "0")).join("")
-      : mixHex(hue, "#e8dcd0", 0.38);
-    const okRaw = (x, y) => {
-      if (x < 0 || x >= CELL || y < 0 || y >= CELL) return false;
-      if (BASE[y >> 2][x >> 2] !== "b") return false;                          // mantle only
-      if (y >= 17 && y <= 34 && ((x >= 11 && x <= 24) || (x >= 39 && x <= 52))) return false;  // eyes + 2px lashes
-      if (x >= 22 && x <= 41 && y >= 34 && y <= 44) return false;              // mouth zone
-      return true;
-    };
-    const ok = (x, y) =>                                                        // eroded 1px: patterns never touch the silhouette
-      okRaw(x, y) && okRaw(x - 1, y) && okRaw(x + 1, y) && okRaw(x, y - 1) && okRaw(x, y + 1);
-    const blob = (bx0, by0, rad0, c) => {                                       // organic patch: jittered edge, drifting anchor
-      const bx = bx0 + D(), by = by0 + D(), rad = rad0 * S();
-      for (let y = Math.floor(by - rad - 2); y <= by + rad + 2; y++)
-        for (let x = Math.floor(bx - rad - 2); x <= bx + rad + 2; x++) {
-          const e = rad + (r() - 0.5) * 1.7;
-          if ((x - bx) * (x - bx) + (y - by) * (y - by) <= e * e && ok(x, y)) fpx(x, y, c);
-        }
-    };
-    const ring = (bx0, by0, rad0, c) => {                                       // eye-spot ring, thick enough to read, drifting anchor
-      const bx = Math.round(bx0 + D()), by = Math.round(by0 + D()), rad = rad0 * S();
-      for (let y = Math.floor(by - rad - 2); y <= by + rad + 2; y++)
-        for (let x = Math.floor(bx - rad - 2); x <= bx + rad + 2; x++) {
-          const d = Math.sqrt((x - bx) * (x - bx) + (y - by) * (y - by));
-          if (Math.abs(d - rad) < 1.15 && ok(x, y)) fpx(x, y, c);
-        }
-    };
-    const band = (y00, amp, th, c, ph) => {                                     // wavy stripe across the mantle, sliding vertically
-      const y0 = y00 + D() * 0.6;
-      for (let x = 8; x <= 55; x++) {
-        const yy = Math.round(y0 + Math.sin(x / 5.5 + ph) * amp);
-        for (let t = 0; t < th; t++) if (ok(x, yy + t)) fpx(x, yy + t, c);
-      }
-    };
-    const P = {
-      blanch:  () => {},                                                        // fear-pale: the pattern is its absence
-      blanch1: () => blob(31, 48, 3, hue),
-      calm:    () => { blob(26, 12, 4.4, hue); blob(16, 46, 3.6, hue); },
-      saddle:  () => { blob(31, 11, 6, hue); blob(14, 42, 4.2, hue); blob(49, 42, 4.2, hue); },
-      lively:  () => { blob(31, 11, 6, hue); blob(14, 42, 4, hue); ring(47, 42, 4.6, hue); },
-      bloom:   () => { blob(17, 40, 5, hue); blob(46, 40, 5, hue); blob(31, 11, 3.6, hue); },
-      bloom2:  () => { blob(17, 40, 6, hue); blob(46, 40, 6, hue); blob(31, 10, 4.2, hue); },
-      rings:   () => { ring(20, 12, 5, hue); ring(42, 12, 5, hue); ring(31, 47, 5, hue); blob(31, 11, 2.6, hue); },
-      bands:   () => { band(8, 2, 4, hue, r() * 6); band(45, 2, 4, hue, r() * 6); },
-      storm:   () => { band(7, 1.8, 6, dark, r() * 6); band(14, 1.4, 1, hue, r() * 6); band(43, 1.8, 6, dark, r() * 6); band(50, 1.4, 1, hue, r() * 6); },
-      camo:    () => {                                                          // stratified mottle: full coverage on a tinted body, texture not twine
-        [[24, 10], [40, 12], [14, 40], [49, 40], [22, 50], [42, 50]].forEach(([zx, zy], k) =>
-          blob(zx + (r() - 0.5) * 5, zy + (r() - 0.5) * 4, 3.8 + r() * 1.6, k % 2 ? dark : hue));
-      }
-    };
-    const PTYPE = {
-      awe: "blanch", surprised: "blanch1",
-      at_peace: "calm", solemn: "calm", sleepy: "calm", weary: "calm", melancholy: "calm",
-      neutral: "saddle", content: "saddle", focused: "saddle", thinking: "saddle", asking: "saddle",
-      rhyme: "saddle", puzzled: "saddle", wink: "saddle", sheepish: "saddle", groan: "saddle", oops: "saddle",
-      delighted: "lively", mirth: "lively", spark: "lively", booped: "lively", laugh: "lively",
-      tender: "bloom", love: "bloom2",
-      excited: "rings", vertigo: "rings",
-      dramatic: "bands", resolute: "bands",
-      frustrated: "storm", angry: "storm",
-      anxious: "camo"
-    };
-    P[PTYPE[mood[0]] || "saddle"]();
-  }
+  // The baked chromatophore patterns are RETIRED (v0.20.0): the maintainer found the
+  // fixed bold patches distracting once the smooth roaming layer existed. All camo is
+  // alive now — drawn by the renderer, moving, in the live palette. The skin stays
+  // clean cream (plus the whole-body TINT states); the mask cell below still gates
+  // where the living colour may travel.
 
   if (mood[0] === "resolute") {                 // the hachimaki: crisp cloth from the high-res world
     const R = "#c04a48", Rd = "#8a3230", Rh = "#e07a70";
