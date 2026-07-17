@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@01632dcf138b307a6674ee4bdbd4c81b7d689b8c/assets/sepia-sheet.png";   // 3 frames per mood: base / shimmer / blink
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@8883a1d7a848af73f52fa62ff9b78ed9156eb085/assets/sepia-sheet.png";   // 3 frames per mood: base / shimmer / blink
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -915,7 +915,7 @@
             // layer's tempo now reports the same thing the field's size does.
             var cEng = Math.max(0, Math.min(1, p.engagement == null ? 0.7 : +p.engagement || 0));
             var cSpd = 0.3 + 0.7 * cEng;
-            for (var ci = 0; ci < 4; ci++) {
+            for (var ci = 0; ci < 7; ci++) {                   // seven roamers — the only camo there is, now that the baked patterns retired
               var crr = mulberry32(L.seed + ci * 7717 + 5);
               var sw1 = (0.11 + crr() * 0.11) * cSpd, sw2 = (0.09 + crr() * 0.1) * cSpd;   // fast enough to SEE at full energy: a body-crossing in seconds
               var cp1 = crr() * 6.28, cp2 = crr() * 6.28, cp3 = crr() * 6.28, cp4 = crr() * 6.28;
