@@ -639,7 +639,7 @@ route();
       var kt = mood.k || "( ˘ ᵕ ˘ )";
       var fs2 = fitPx ? Math.min(13, (fitPx - 5) / (kt.length * 0.55)) : 13;
       d.textContent = kt;
-      d.style.cssText += "width:auto;height:auto;flex:0 0 auto;white-space:nowrap;line-height:1.15;font-size:" + (Math.round(fs2 * 10) / 10) + "px;";
+      d.style.cssText += "width:auto;height:auto;flex:0 0 auto;white-space:nowrap;line-height:1.15;font-size:" + (Math.round(fs2 * 10) / 10) + "px;background:rgba(20,14,8,0.32);border-radius:6px;padding:1px 4px;";
       return d;
     }
     if (pv.kind === "sheet") {
@@ -809,7 +809,7 @@ route();
       var kao = "( ˘ ᵕ ˘ )";
       var fs = Math.min(box * 0.19, (box - 8) / (kao.length * 0.55));
       d.textContent = kao;
-      d.style.cssText += "width:auto;height:auto;white-space:nowrap;line-height:1.15;font-size:" + (Math.round(fs * 10) / 10) + "px;";
+      d.style.cssText += "width:auto;height:auto;white-space:nowrap;line-height:1.15;font-size:" + (Math.round(fs * 10) / 10) + "px;background:rgba(20,14,8,0.32);border-radius:8px;padding:2px 6px;";
       return d;
     }
     if (pv.kind === "sheet") {

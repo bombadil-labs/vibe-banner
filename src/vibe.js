@@ -29,7 +29,8 @@
     ".fw{font-family:var(--font-voice);font-size:14px;font-style:italic;fill:#5c4320;stroke-width:2.4}" +
     ".fg{font-family:var(--font-sans);font-size:13px;fill:#5c4320;stroke-width:2.2}" +
     ".fl{font-family:var(--font-mono);font-size:10px;fill:#786040;stroke-width:1.8}" +
-    "@media (prefers-color-scheme:dark){.txt{stroke:#241a06}" +
+    ".vkp{fill:#fff8ec;fill-opacity:0.4}" +
+    "@media (prefers-color-scheme:dark){.txt{stroke:#241a06}.vkp{fill:#241a06;fill-opacity:0.45}" +
     ".fk,.fkt{fill:#f6ead0}.lbl{fill:#d8c5a0}.fr{fill:#f6ead0}" +
     ".fw{fill:#f6ead0}.fg{fill:#f6ead0}.fl{fill:#b7a079}}" +
     ".drama .fk,.drama .fkt{font-family:var(--font-voice)}" +
@@ -368,7 +369,7 @@
     // text SVG fragments. Oversized faces get squeezed into the face column (the readout
     // starts at TEXT_X) instead of running underneath it — exuberant single-line kaomoji
     // compress; the skill's guidance is that big feelings bloom tall, not long.
-    var kaoSVG, faceBox = null;
+    var kaoSVG, faceBox = null, textPivot = null;
     if (faceImg) {
       var iy = faceCy - faceImg.h / 2;
       var ix = portrait.x + (portrait.s - faceImg.w) / 2;                // centre the image in the window
@@ -397,10 +398,15 @@
       var wAfter = Math.min(kmaxL, kfit);
       var kaoX = portrait.x + Math.max(4, (portrait.s - wAfter) / 2);
       var fsAttr = krat < 1 ? ' style="font-size:' + g(kfs0 * krat) + 'px"' : '';
-      kaoSVG = multiline
+      // a soft scheme-aware plate behind the text so it pops on any scene — sprites
+      // carry their own bodies, bare text gets lent one. It rides every pose/animation.
+      var plX = kaoX - 6, plY = faceCy - kaoHE / 2 - 4, plW = wAfter + 12, plH = kaoHE + 8;
+      textPivot = [plX + plW / 2, faceCy];
+      var plateSVG = '<rect class="vkp" x="' + g(plX) + '" y="' + g(plY) + '" width="' + g(plW) + '" height="' + g(plH) + '" rx="8"/>';
+      kaoSVG = plateSVG + (multiline
         ? '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk"' + fsAttr + '>' +
         kaoLines.map(function (l, i) { return '<tspan x="' + g(kaoX) + '"' + (i === 0 ? "" : ' dy="' + g(klhE) + '"') + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
-        : '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fsAttr + '>' + esc(kaoText) + '</text>';
+        : '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fsAttr + '>' + esc(kaoText) + '</text>');
     }
     // every readout row carries a <title> tooltip with its full text — excited reporters
     // overrun the word caps despite guidance, and a clipped line should at least be readable on hover
@@ -434,7 +440,7 @@
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG + flagSVG,
       restSVG: readSVG + langSVG + flagSVG, sceneSVG: sceneSVG, portrait: portrait,
       mountSVG: kaoSVG + langSVG, oItems: oItems, caption: !!activeFlag, flagName: activeFlag,
-      kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, faceBox: faceBox, scene: scene, hasLangs: langs.length > 0,
+      kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, faceBox: faceBox, textPivot: textPivot, scene: scene, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson, prevFills: prevFills
     };
@@ -608,6 +614,7 @@
     // reporter's sovereign opinion, and even an affordance on it would surface that the read
     // is watched-and-touchable, bending every future read (see DESIGN.md).
     var kaoEl = wrap.querySelector(".vk"), baseFill = [92, 67, 32];
+    var kplate = wrap.querySelector(".vkp");                   // the text face's backdrop plate — mirrors every face transform, boops like the face
     // Every banner-generated message carries this prefix so it never reads as typed text —
     // the skill tells the reporter to receive these as gestures, not prompts. Each one also
     // ends with a blank line: consecutive taps (a boop then a feeding) land as separate
@@ -643,9 +650,12 @@
           }
         });
       }
-      if (kaoEl && p.play !== false) {                         // boop: the face itself is the button
-        kaoEl.style.cursor = "pointer";
-        kaoEl.addEventListener("click", function () { say("*boop*"); });
+      if (kaoEl && p.play !== false) {                         // boop: the face itself is the button (plate included — it reads as part of the face)
+        [kaoEl, kplate].forEach(function (e) {
+          if (!e) return;
+          e.style.cursor = "pointer";
+          e.addEventListener("click", function () { say("*boop*"); });
+        });
       }
       if (p.play !== false) {
       var tray = document.createElement("div");                // hover tray, upper LEFT (Claude's own UI owns the upper right)
@@ -671,12 +681,19 @@
       }
     }
     if (kaoEl) {
-      // Text faces: fill-box/center is exact. Image faces: a nested sprite <svg> makes
-      // fill-box unreliable (corner-origin fallback → rotations orbit instead of nod),
-      // so pin the origin explicitly at the face centre that layout computed.
+      // Image faces: a nested sprite <svg> makes fill-box unreliable (corner-origin
+      // fallback → rotations orbit instead of nod), so pin the origin explicitly at the
+      // face centre that layout computed. Text faces pivot on the plate centre so text
+      // and plate turn together.
       if (L.faceBox) {
         kaoEl.style.transformBox = "view-box";
         kaoEl.style.transformOrigin = (L.faceBox.x + L.faceBox.w / 2) + "px " + (L.faceBox.y + L.faceBox.h / 2) + "px";
+      } else if (L.textPivot) {
+        [kaoEl, kplate].forEach(function (e) {
+          if (!e) return;
+          e.style.transformBox = "view-box";
+          e.style.transformOrigin = L.textPivot[0] + "px " + L.textPivot[1] + "px";
+        });
       } else {
         kaoEl.style.transformBox = "fill-box"; kaoEl.style.transformOrigin = "center";
       }
@@ -833,6 +850,7 @@
           if (L.solemn && !kfill) { kfill = mixCss(baseFill, [112, 106, 96], 0.35); }
           if (L.melancholy && !kfill) { kfill = mixCss(baseFill, [120, 134, 176], 0.45); }
           kaoEl.style.transform = "translate(" + kx.toFixed(2) + "px," + ky.toFixed(2) + "px) rotate(" + krot.toFixed(1) + "deg) scale(" + ks.toFixed(3) + ")";
+          if (kplate) kplate.style.transform = kaoEl.style.transform;   // the plate rides along; fill stays its own (scheme-aware)
           kaoEl.style.fill = kfill;
         }
 

@@ -19,6 +19,12 @@ let n = buildSVG(Object.assign({}, base, { noticing: "peripheral" }));
 ok(/viewBox="0 0 680 132"/.test(n), "4-row banner is H=132");
 ok(/\[note\]/.test(n) && (n.match(/<text /g) || []).length === 5, "[note] present, 5 <text>");
 
+console.log("text faces carry a backdrop plate; sprites do not");
+let plt = buildSVG(base);
+ok(/<rect class="vkp"[^>]*rx="8"/.test(plt), "kaomoji face → rounded .vkp plate behind it");
+ok(plt.indexOf('class="vkp"') < plt.indexOf('class="txt fk vk"'), "plate renders under the text");
+ok(!/class="vkp"/.test(buildSVG(Object.assign({}, base, { face: { set: "sepia", item: "content" } }))), "sprite face → no plate (it has its own body)");
+
 console.log("oversized kaomoji SCALE DOWN to fit the window (shape preserved, never crushed)");
 ok(!/style="font-size:/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ˘ ᵕ ˘ )" }))) , "compact face → natural size, no scaling");
 let wide = buildSVG(Object.assign({}, base, { kaomoji: "( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/" }));
