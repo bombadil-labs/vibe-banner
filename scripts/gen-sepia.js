@@ -42,16 +42,10 @@ const BASE = [
 // Fin frills are an expression channel, not anatomy furniture: straight side bars read
 // as arms (the maintainer's flicker, round two), but fins that flare, ripple, droop, and
 // tuck with the mood can only be fins. Left-side pixels; the right side mirrors.
-const FRILL = {
-  ripple: [[1,4],[1,5],[0,5],[1,6],[1,7],[0,7],[1,8],[1,9],[0,9]],
-  flared: [[1,4],[0,4],[1,5],[0,5],[1,6],[0,6],[1,7],[0,7],[1,8],[0,8],[1,9],[0,9]],
-  drooped:[[1,7],[1,8],[1,9],[1,10],[0,9],[0,10]],
-  flat:   [[1,5],[1,6],[1,7],[1,8]],
-  calm:   [[1,4],[1,5],[1,6],[0,6],[1,7],[1,8],[0,8],[1,9]]
-};
-// shimmer-frame fin posture: a flutter one notch toward rest. Tense postures (flat)
-// map to themselves — held fins ARE the tension; stillness is the expression.
-const FRILL_ALT = { ripple: "calm", flared: "ripple", drooped: "flat", calm: "ripple", flat: "flat" };
+// Fin posture per mood — the canonical table. Since v0.21.0 fins are DRAWN BY THE
+// RENDERER as smooth undulating membranes (sub-pixel fins: the grid could only
+// crenelate); the renderer's 32-char fins code-string derives from this table
+// (r=ripple f=flared d=drooped t=flat/tucked c=calm) — keep them in sync.
 const FRILL_OF = {
   neutral:"ripple", content:"ripple", delighted:"flared", focused:"flat", sleepy:"drooped",
   sheepish:"flat", booped:"flared", thinking:"ripple", spark:"flared", excited:"flared",
@@ -163,7 +157,7 @@ const MOODS = [
 if (MOODS.length !== 32) throw new Error("expected 32 moods, got " + MOODS.length);
 BASE.forEach((r, i) => { if (r.length !== 16) throw new Error("BASE row " + i + " length " + r.length); });
 
-const SCALE = 4, CELL = 64, COLS = 8, ROWS = 16, FRAME_ROWS = 4;   // rows 0-11: 3 frames × 32 moods; rows 12-15: PER-MOOD mantle masks
+const SCALE = 4, CELL = 64, COLS = 8, ROWS = 12, FRAME_ROWS = 4;   // rows 0-3: base; rows 4-7: blink; rows 8-11: PER-MOOD mantle masks. Fins are NOT baked — the renderer draws them as smooth membranes (v0.21.0)
 const W = CELL * COLS, H = CELL * ROWS;
 const px = Buffer.alloc(W * H * 4);   // RGBA, transparent
 const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
@@ -182,18 +176,18 @@ const mixHex = (a, b, t) => {
   const A = hex(a), B = hex(b);
   return "#" + A.map((v, k) => Math.round(v + (B[k] - v) * t).toString(16).padStart(2, "0")).join("");
 };
-MOODS.forEach((mood, i) => { for (let frame = 0; frame < 3; frame++) {
+MOODS.forEach((mood, i) => { for (let frame = 0; frame < 2; frame++) {
   const cx = (i % COLS) * CELL, cy = (Math.floor(i / COLS) + frame * FRAME_ROWS) * CELL;
-  const blink = frame === 2;
+  const blink = frame === 1;
   const t = TINT[mood[0]] || 0;
   const skin = t > 0 ? mixHex(COLORS.b, mood[3], t) : t < 0 ? mixHex(COLORS.b, "#f9f4ea", -t) : COLORS.b;
   for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
     const k = BASE[y][x];
     if (k !== ".") cellPut(cx, cy, x, y, (k === "b" || (blink && k === "W")) ? skin : COLORS[k]);   // blink: lids replace the whites
   }
-  const posture = FRILL_OF[mood[0]] || "ripple";
-  const frill = FRILL[frame === 1 ? (FRILL_ALT[posture] || posture) : posture];
-  frill.concat(mirror(frill)).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS.n));
+  // fins are no longer baked: the renderer draws them as smooth undulating membranes,
+  // posture per mood (FRILL_OF remains the canonical mood→posture table; the renderer's
+  // fins code-string derives from it — keep them in sync)
   const lidL = [[3, 6], [4, 6], [5, 6]];
   const eyePix = blink ? lidL.concat(mirror(lidL)).map(q => [q[0], q[1], "p"]) : mood[1];
   const mouthPix = FINE_MOUTH[mood[0]] ? [] : mood[2];         // fine-mouth moods draw their lips in the fine pass below
@@ -250,7 +244,7 @@ MOODS.forEach((mood, i) => { for (let frame = 0; frame < 3; frame++) {
 // corners around small mouths, reading as a grid overlay on the flow (the maintainer's
 // catch). Each mask now excludes only this mood's ACTUAL feature pixels + 1px margin.
 MOODS.forEach((mood, i) => {
-  const mx0 = (i % COLS) * CELL, my0 = (12 + Math.floor(i / COLS)) * CELL;
+  const mx0 = (i % COLS) * CELL, my0 = (8 + Math.floor(i / COLS)) * CELL;
   const ex = new Uint8Array(CELL * CELL);                      // real-px exclusion: this mood's mouth + extras, with margin
   const mark = (gx, gy) => {
     for (let y = gy * SCALE - 1; y <= gy * SCALE + SCALE; y++)
