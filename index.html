@@ -801,7 +801,7 @@ route();
   scOpRow.innerHTML = 'opacity <input type="range" min="0.15" max="0.9" step="0.05" value="0.5" style="flex:1;max-width:220px;"> <span>0.5</span>';
   cE.appendChild(scOpRow);
   var scPrev = document.createElement("div");
-  scPrev.style.cssText = "display:none;height:52px;border-radius:8px;border:1px solid var(--edge);background-size:cover;background-position:center;";
+  scPrev.style.cssText = "display:none;width:92px;height:92px;border-radius:10px;border:1px solid var(--edge);background-size:cover;background-position:center;image-rendering:pixelated;";   // square, like the window it previews — a full-width strip distorts the scene
   cE.appendChild(scPrev);
   function refreshScene() {
     var on = S.scene !== "none";
@@ -942,7 +942,7 @@ route();
   kaoIn.value = "( ˶ˆ ꒳ ˆ˵ )"; kaoIn.style.cssText = SEL + "width:130px;display:none;";
   kaoIn.addEventListener("input", render); ctl.appendChild(kaoIn);
 
-  var scOpts = [["none", "no scene"]];
+  var scOpts = [["none", "empty window"]];
   Object.keys(P.SCENES).forEach(function (k) { scOpts.push([k, "the " + k]); });
   scOpts.push(["custom", "custom URL"]);
   mkSel("environment", scOpts, X.scene, function (v) { X.scene = v; urlIn.style.display = v === "custom" ? "block" : "none"; render(); });
@@ -983,13 +983,13 @@ route();
     payload.kaomoji = "( ˘ ᵕ ˘ )";
     var sc = P.SCENES[X.scene];
     var su = sc ? sc.url : (X.scene === "custom" ? (X.sceneUrl || "").trim() : "");
-    if (su) {
-      payload.scene = { url: su, opacity: X.op };
-      if (sc && sc.live) payload.scene.live = sc.live;
-    }
+    // the Explorer ALWAYS shows the square block — populated when an environment is
+    // chosen, empty (frame only) when not, so composition is visible either way
+    payload.scene = su ? { url: su, opacity: X.op } : {};
+    if (su && sc && sc.live) payload.scene.live = sc.live;
     mnt.innerHTML = "";
     try { vibe(mnt, payload); } catch (e) { mnt.textContent = "err: " + e.message; }
-    cap.textContent = sc && sc.blurb ? "the " + X.scene + " — " + sc.blurb : (su ? "custom scene" : "no scene — the classic layout");
+    cap.textContent = sc && sc.blurb ? "the " + X.scene + " — " + sc.blurb : (su ? "custom scene" : "the empty window — pick an environment to fill it");
   }
 
   refreshItems(); render();

@@ -280,17 +280,22 @@
     // scene: the banner's habitat — a framed, rounded PORTRAIT WINDOW on the left with
     // the face centred inside it; readout and field keep the right side. A window you
     // look into, not a wash, so it can run richer: default opacity 0.5.
-    // scene: "https://…" or { url, opacity, live }. Allowlisted CDNs, like faces.
+    // scene: "https://…" or { url, opacity, live } — or true / {} for an EMPTY window:
+    // the square block renders with just its frame and a faint interior, no view yet
+    // (the Explorer shows composition this way). Allowlisted CDNs, like faces.
     // live names a first-party ambience the renderer draws natively in the frame loop
     // (currently only "tidepool"); unknown names are ignored, static render ignores all.
     var scene = null;
     if (p.scene) {
-      scene = typeof p.scene === "string" ? { url: p.scene } : p.scene;
-      scene = scene.url ? {
-        url: String(scene.url),
-        op: Math.max(0.15, Math.min(0.95, scene.opacity || 0.5)),
-        live: scene.live === "tidepool" ? "tidepool" : null
-      } : null;
+      scene = typeof p.scene === "string" ? { url: p.scene } : (p.scene === true ? {} : p.scene);
+      if (scene && typeof scene === "object") {
+        var scu = scene.url ? String(scene.url) : null;
+        scene = {
+          url: scu,
+          op: Math.max(0.15, Math.min(0.95, scene.opacity || 0.5)),
+          live: (scu && scene.live === "tidepool") ? "tidepool" : null
+        };
+      } else scene = null;
     }
 
     var kaoLines = kaoText.split("\n");
@@ -408,11 +413,15 @@
         : '<text x="12" y="' + g(H - 7) + '" class="txt fl">[' + esc(activeFlag.replace("_", " ")) + ']</text>')
       : "";
     var sceneSVG = "";
-    if (scene) {                                               // the window itself: clipped image + a quiet frame
-      var cid = "vscn" + (++SCENE_IDS);
-      sceneSVG = '<defs><clipPath id="' + cid + '"><rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10"/></clipPath></defs>' +
-        '<g clip-path="url(#' + cid + ')" opacity="' + g(scene.op) + '"><image href="' + esc(scene.url) + '" x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" preserveAspectRatio="xMidYMid slice"/></g>' +
-        '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="none" stroke="#8a7a86" stroke-opacity="0.45" stroke-width="1.5"/>';
+    if (scene) {                                               // the window itself: clipped image (or a faint empty interior) + a quiet frame
+      var frameRect = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="none" stroke="#8a7a86" stroke-opacity="0.45" stroke-width="1.5"/>';
+      if (scene.url) {
+        var cid = "vscn" + (++SCENE_IDS);
+        sceneSVG = '<defs><clipPath id="' + cid + '"><rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10"/></clipPath></defs>' +
+          '<g clip-path="url(#' + cid + ')" opacity="' + g(scene.op) + '"><image href="' + esc(scene.url) + '" x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" preserveAspectRatio="xMidYMid slice"/></g>' + frameRect;
+      } else {
+        sceneSVG = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="#8a7a86" fill-opacity="0.07"/>' + frameRect;
+      }
     }
 
     var L = {

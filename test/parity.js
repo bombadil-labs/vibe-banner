@@ -60,6 +60,15 @@ ok(/cx="265"/.test(sc) && /cx="397"/.test(sc) && /cx="530"/.test(sc), "field col
 ok(/cx="150"/.test(buildSVG(base)) && !/clipPath/.test(buildSVG(base)), "no scene → classic layout, no window");
 ok(/opacity="0.95"><image/.test(buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png", opacity: 3 } }))), "opacity clamps to 0.95");
 
+console.log("empty window: scene {} or true renders the frame with no image");
+let ew = buildSVG(Object.assign({}, base, { scene: {} }));
+ok(/stroke="#8a7a86"/.test(ew) && !/<image/.test(ew), "scene: {} → framed window, no image");
+ok(/fill="#8a7a86" fill-opacity="0.07"/.test(ew), "empty window has a faint interior");
+ok(/cx="265"/.test(ew), "empty window still shifts the field columns");
+ok(!/clipPath/.test(ew), "no image → no clip needed");
+let ewT = buildSVG(Object.assign({}, base, { scene: true }));
+ok(/stroke="#8a7a86"/.test(ewT) && !/<image/.test(ewT), "scene: true → same empty window");
+
 console.log("scene.live is animation-only: the static render ignores it entirely");
 const noClip = (svg) => svg.replace(/vscn\d+/g, "vscn");
 let lv0 = buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png" } }));
