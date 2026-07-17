@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@707a9fb7e9901dd4e3b5fa66ca88226fe3d5a4f2/assets/sepia-sheet.png";
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e62aa119cf3f7b69e42b9059e6b4d2646694d26c/assets/sepia-sheet.png";   // 3 frames per mood: base / shimmer / blink
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -155,7 +155,7 @@
     },
     "sepia": function (item) {
       var i = SEPIA_MOODS.indexOf(item); if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
-      return { url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 4, index: i };
+      return { url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 12, index: i, anim: { frames: 3, stride: 32 } };   // the renderer cycles shimmer + blink natively
     }
   };
 
@@ -274,7 +274,8 @@
       w: Math.max(24, Math.min(140, faceImg.w || 56)),
       h: Math.max(24, Math.min(84, faceImg.h || 56)),
       cellW: faceImg.cellW || 0, cellH: faceImg.cellH || 0,
-      cols: faceImg.cols || 1, rows: faceImg.rows || 1, index: faceImg.index || 0
+      cols: faceImg.cols || 1, rows: faceImg.rows || 1, index: faceImg.index || 0,
+      anim: faceImg.anim || null
     };
     if (kaoText == null) kaoText = p.kaomoji != null ? String(p.kaomoji) : "( ˘ ᵕ ˘ )";
 
@@ -374,7 +375,7 @@
       var iy = faceCy - faceImg.h / 2;
       var ix = portrait.x + (portrait.s - faceImg.w) / 2;                // centre the image in the window
       faceMeta = faceImg.cellW && faceImg.cellH
-        ? { kind: "sprite", url: faceImg.url, cols: faceImg.cols, rows: faceImg.rows, index: faceImg.index, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } }
+        ? { kind: "sprite", url: faceImg.url, cols: faceImg.cols, rows: faceImg.rows, index: faceImg.index, anim: faceImg.anim, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } }
         : { kind: "img", url: faceImg.url, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } };
       faceBox = { x: ix, y: iy, w: faceImg.w, h: faceImg.h };            // authoritative banner-space box — getBBox on a nested sprite svg reports sheet coords, never use it
       if (faceImg.cellW && faceImg.cellH) {                    // spritesheet: crop one cell via a nested viewport
@@ -735,6 +736,7 @@
     var resLines = L.resolute ? resoluteData(H, L.seed) : [];
     var soft = 1 - L.conson;                                   // consonance: 0 soft → today's falloff; grows → diffuse washes
     var kaoFont = "";                                          // resolved lazily for rhyme's canvas ghost
+    var spriteFrame = 0;                                       // current sheet frame for animated sprites (base/shimmer/blink)
 
     var dpr = Math.min(root.devicePixelRatio || 1, 2), sx = 1, sy = 1, pxScale = 1;
     function fit() {
@@ -857,6 +859,22 @@
         }
         var surP = L.surprised ? Math.exp(-((t % 2.2) / 2.2) * 6) : 0;   // a quick startle every 2.2s
         var frP = L.frustrated ? 0.5 + 0.5 * Math.sin(t * 2.2) : 0;
+
+        // --- the living sprite: shimmer + blink, cycled from the sheet's extra frames.
+        // Chromatophores drift on a slow uneven clock; blinks land on a seeded organic
+        // cadence. Native frames, never an animated image — the tidepool's philosophy. ---
+        if (kaoEl && fm && fm.kind === "sprite" && fm.anim) {
+          var fRows = fm.rows / fm.anim.frames;
+          var fr = Math.floor(t / 2.3 + (L.seed % 4) * 0.37) % 2;                    // shimmer: base ↔ alt
+          var bper = 3.2 + (L.seed % 5) * 0.9;
+          if (((t + (L.seed % 7) * 0.6) % bper) < 0.16) fr = 2;                      // blink overrides, ~160ms
+          if (fr !== spriteFrame) {
+            spriteFrame = fr;
+            var fcol2 = fm.index % fm.cols, frow2 = Math.floor(fm.index / fm.cols) + fr * fRows;
+            kaoEl.style.backgroundPosition =
+              g(fm.cols > 1 ? fcol2 / (fm.cols - 1) * 100 : 0) + "% " + g(fm.rows > 1 ? frow2 / (fm.rows - 1) * 100 : 0) + "%";
+          }
+        }
 
         // --- the face itself ---
         var kx = 0, ky = 0, ks = 1, krot = 0, kfill = "";                            // face transform, hoisted so marks can ride along

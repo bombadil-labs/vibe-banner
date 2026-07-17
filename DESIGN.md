@@ -234,14 +234,17 @@ Entered, not admitted. If you take one up, honor the notes.
 - **`overwhelmed`** — capacity flooded; fluttering rects falling through the frame.
   Composition hazard: reads confusingly against melancholy's falling motes — differentiate
   by tumble-rotation vs. straight drift before admitting.
-- **Animated face sheets (moving chromatophores)** — the maintainer's musing: coloration
-  that drifts, GIF-style. Technical path if attempted: extend scripts/gen-sepia.js's
-  hand-rolled PNG encoder to APNG (acTL/fcTL/fdAT chunks) rather than writing a GIF-LZW
-  encoder; phase-lock every dot's cycle to one shared period so the loop closes cleanly
-  (the maintainer's explicit caution). BLOCKER to verify first: whether animated images
-  actually animate inside SVG <image> elements per browser — historically inconsistent,
-  and the face renders through a nested-svg crop. Don't build until that's tested on the
-  real surfaces.
+- ~~**Animated face sheets (moving chromatophores)**~~ — SHIPPED v0.18.0, but not as
+  APNG/GIF: the sheet holds three frames per mood (base / shimmer / blink) and the
+  renderer cycles them natively in the frame loop by swapping background-position —
+  the tidepool's philosophy (animation is code, never an animated image). The old
+  blocker (animated images inside SVG `<image>`) became moot when the face moved to
+  HTML, and native frames beat APNG anyway: seeded phase, no loop-splice risk, ~14KB
+  extra. Shimmer re-rolls the chromatophore pattern and flutters the fins one notch
+  toward rest — tense flat-fin moods hold deliberately still; blinks land on a seeded
+  organic cadence (~160ms every 3–7s). Frame 0 stayed byte-identical to the previous
+  sheet. The `anim: { frames, stride }` channel on the registry is generic — a future
+  pack can carry any frame count.
 - **`mischief`** — about-to-do-something-playful, distinct from mirth's private amusement.
   Genuinely entered, but every good gesture found so far requires editing the face, which
   the architecture correctly forbids (the kaomoji is caller-supplied opaque text; whole-face
