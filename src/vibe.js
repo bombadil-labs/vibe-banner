@@ -369,10 +369,13 @@
     // text SVG fragments. Oversized faces get squeezed into the face column (the readout
     // starts at TEXT_X) instead of running underneath it — exuberant single-line kaomoji
     // compress; the skill's guidance is that big feelings bloom tall, not long.
-    var kaoSVG, faceBox = null, textPivot = null;
+    var kaoSVG, faceBox = null, textPivot = null, faceMeta = null;
     if (faceImg) {
       var iy = faceCy - faceImg.h / 2;
       var ix = portrait.x + (portrait.s - faceImg.w) / 2;                // centre the image in the window
+      faceMeta = faceImg.cellW && faceImg.cellH
+        ? { kind: "sprite", url: faceImg.url, cols: faceImg.cols, rows: faceImg.rows, index: faceImg.index, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } }
+        : { kind: "img", url: faceImg.url, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } };
       faceBox = { x: ix, y: iy, w: faceImg.w, h: faceImg.h };            // authoritative banner-space box — getBBox on a nested sprite svg reports sheet coords, never use it
       if (faceImg.cellW && faceImg.cellH) {                    // spritesheet: crop one cell via a nested viewport
         var col = faceImg.index % faceImg.cols, rowI = Math.floor(faceImg.index / faceImg.cols);
@@ -402,6 +405,7 @@
       // carry their own bodies, bare text gets lent one. It rides every pose/animation.
       var plX = kaoX - 6, plY = faceCy - kaoHE / 2 - 4, plW = wAfter + 12, plH = kaoHE + 8;
       textPivot = [plX + plW / 2, faceCy];
+      faceMeta = { kind: "text", fs: kfs0 * krat, lh: klhE, lines: kaoLines, multiline: multiline, box: { x: plX, y: plY, w: plW, h: plH } };
       var plateSVG = '<rect class="vkp" x="' + g(plX) + '" y="' + g(plY) + '" width="' + g(plW) + '" height="' + g(plH) + '" rx="8"/>';
       // spaces become NBSP: SVG text collapses leading spaces and internal runs, which
       // would destroy the indentation multi-line kaomoji art depends on
@@ -442,7 +446,7 @@
     var L = {
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG + flagSVG,
       restSVG: readSVG + langSVG + flagSVG, sceneSVG: sceneSVG, portrait: portrait,
-      mountSVG: kaoSVG + langSVG, oItems: oItems, caption: !!activeFlag, flagName: activeFlag,
+      mountSVG: langSVG, faceMeta: faceMeta, oItems: oItems, caption: !!activeFlag, flagName: activeFlag,
       kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, faceBox: faceBox, textPivot: textPivot, scene: scene, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson, prevFills: prevFills
@@ -556,7 +560,12 @@
       ".vo-panel{background:rgba(30,24,16,0.22);box-shadow:inset 0 0 0 1px rgba(246,234,208,0.08)}}" +
       ".vdrama .vo{font-family:var(--font-voice,Georgia,serif)}" +
       ".vdrama .vo .fr,.vdrama .vo .fw,.vdrama .vo .fg{font-weight:600;letter-spacing:0.04em}" +
-      ".vdrama .vo .pill{text-transform:uppercase;letter-spacing:0.18em}";
+      ".vdrama .vo .pill{text-transform:uppercase;letter-spacing:0.18em}" +
+      ".vft{white-space:pre;text-align:left;font-family:var(--font-sans,ui-sans-serif,sans-serif);color:#5c4320;line-height:1.15;" +
+      "background:rgba(255,248,236,0.4);border-radius:8px;padding:3px 6px;text-shadow:0 1px 1px rgba(255,248,236,0.5)}" +
+      ".vftm{font-family:var(--font-mono,ui-monospace,Menlo,monospace);line-height:1.33}" +
+      "@media (prefers-color-scheme:dark){.vft{color:#f6ead0;background:rgba(36,26,6,0.45);text-shadow:0 1px 1px rgba(36,26,6,0.5)}}" +
+      ".vdrama .vft{font-family:var(--font-voice,Georgia,serif)}";
     var ovStyle = document.createElement("style"); ovStyle.textContent = OV_CSS; wrap.appendChild(ovStyle);
     if (L.dramatic) wrap.classList.add("vdrama");
     var ov = document.createElement("div");
@@ -616,8 +625,38 @@
     // becoming momentarily visible. The [user] row is deliberately NOT wired: it is the
     // reporter's sovereign opinion, and even an affordance on it would surface that the read
     // is watched-and-touchable, bending every future read (see DESIGN.md).
-    var kaoEl = wrap.querySelector(".vk"), baseFill = [92, 67, 32];
-    var kplate = wrap.querySelector(".vkp");                   // the text face's backdrop plate — mirrors every face transform, boops like the face
+    // The face itself is HTML now (v0.17.0): flex-centred over the window. Text faces
+    // keep exact whitespace via white-space:pre and wear their plate as CSS background;
+    // sprites crop with percentage background math (no nested-svg atlas, no getBBox
+    // lies); transforms pivot on the element's own centre, as CSS intends. The static
+    // fallback (buildSVG) keeps the SVG face.
+    var fm = L.faceMeta, kaoEl = null, baseFill = [92, 67, 32];
+    if (fm) {
+      var faceLayer = document.createElement("div");
+      faceLayer.style.cssText = "position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;" +
+        "left:" + g(L.portrait.x / W * 100) + "%;top:" + g(L.portrait.y / L.H * 100) + "%;" +
+        "width:" + g(L.portrait.s / W * 100) + "%;height:" + g(L.portrait.s / L.H * 100) + "%;";
+      if (fm.kind === "text") {
+        kaoEl = document.createElement("span");
+        kaoEl.className = "vft" + (fm.multiline ? " vftm" : "");
+        kaoEl.textContent = fm.lines.join("\n");
+      } else {
+        kaoEl = document.createElement("div");
+        var fwp = g(fm.box.w / L.portrait.s * 100) + "%", fhp = g(fm.box.h / L.portrait.s * 100) + "%";
+        if (fm.kind === "sprite") {
+          var fcol = fm.index % fm.cols, frow = Math.floor(fm.index / fm.cols);
+          kaoEl.style.cssText = "width:" + fwp + ";height:" + fhp + ";background-image:url(" + fm.url + ");" +
+            "background-size:" + (fm.cols * 100) + "% " + (fm.rows * 100) + "%;" +
+            "background-position:" + g(fm.cols > 1 ? fcol / (fm.cols - 1) * 100 : 0) + "% " + g(fm.rows > 1 ? frow / (fm.rows - 1) * 100 : 0) + "%;" +
+            "image-rendering:pixelated;";
+        } else {
+          kaoEl.style.cssText = "width:" + fwp + ";height:" + fhp + ";background-image:url(" + fm.url + ");" +
+            "background-size:contain;background-repeat:no-repeat;background-position:center;";
+        }
+      }
+      kaoEl.style.pointerEvents = "auto";                      // the face is tappable; the rest of the layer lets water-clicks through
+      faceLayer.appendChild(kaoEl); wrap.appendChild(faceLayer);
+    }
     // Every banner-generated message carries this prefix so it never reads as typed text —
     // the skill tells the reporter to receive these as gestures, not prompts. Each one also
     // ends with a blank line: consecutive taps (a boop then a feeding) land as separate
@@ -653,12 +692,9 @@
           }
         });
       }
-      if (kaoEl && p.play !== false) {                         // boop: the face itself is the button (plate included — it reads as part of the face)
-        [kaoEl, kplate].forEach(function (e) {
-          if (!e) return;
-          e.style.cursor = "pointer";
-          e.addEventListener("click", function () { say("*boop*"); });
-        });
+      if (kaoEl && p.play !== false) {                         // boop: the face itself is the button
+        kaoEl.style.cursor = "pointer";
+        kaoEl.addEventListener("click", function () { say("*boop*"); });
       }
       if (p.play !== false) {
       var tray = document.createElement("div");                // hover tray, upper LEFT (Claude's own UI owns the upper right)
@@ -684,24 +720,11 @@
       }
     }
     if (kaoEl) {
-      // Image faces: a nested sprite <svg> makes fill-box unreliable (corner-origin
-      // fallback → rotations orbit instead of nod), so pin the origin explicitly at the
-      // face centre that layout computed. Text faces pivot on the plate centre so text
-      // and plate turn together.
-      if (L.faceBox) {
-        kaoEl.style.transformBox = "view-box";
-        kaoEl.style.transformOrigin = (L.faceBox.x + L.faceBox.w / 2) + "px " + (L.faceBox.y + L.faceBox.h / 2) + "px";
-      } else if (L.textPivot) {
-        [kaoEl, kplate].forEach(function (e) {
-          if (!e) return;
-          e.style.transformBox = "view-box";
-          e.style.transformOrigin = L.textPivot[0] + "px " + L.textPivot[1] + "px";
-        });
-      } else {
-        kaoEl.style.transformBox = "fill-box"; kaoEl.style.transformOrigin = "center";
+      kaoEl.style.transformOrigin = "50% 50%";                 // an HTML face pivots on its own centre — no transform-box juju
+      if (fm.kind === "text") {
+        var _cc = (root.getComputedStyle ? getComputedStyle(kaoEl).color : "").match(/(\d+)\D+(\d+)\D+(\d+)/);
+        if (_cc) baseFill = [+_cc[1], +_cc[2], +_cc[3]];
       }
-      var _cf = (root.getComputedStyle ? getComputedStyle(kaoEl).fill : "").match(/(\d+)\D+(\d+)\D+(\d+)/);
-      if (_cf) baseFill = [+_cf[1], +_cf[2], +_cf[3]];
     }
     function mixCss(a, b, m) { return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * m) + "," + Math.round(a[1] + (b[1] - a[1]) * m) + "," + Math.round(a[2] + (b[2] - a[2]) * m) + ")"; }
 
@@ -713,13 +736,14 @@
     var soft = 1 - L.conson;                                   // consonance: 0 soft → today's falloff; grows → diffuse washes
     var kaoFont = "";                                          // resolved lazily for rhyme's canvas ghost
 
-    var dpr = Math.min(root.devicePixelRatio || 1, 2), sx = 1, sy = 1;
+    var dpr = Math.min(root.devicePixelRatio || 1, 2), sx = 1, sy = 1, pxScale = 1;
     function fit() {
       var w = wrap.clientWidth, h = wrap.clientHeight; if (!w || !h) return;
       cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-      sx = cv.width / W; sy = cv.height / H;
+      sx = cv.width / W; sy = cv.height / H; pxScale = w / W;
       ov.style.fontSize = g(w / W * 13.2) + "px";               // overlay text tracks the banner's rendered scale, like the SVG text used to
       if (fpill) fpill.style.fontSize = ov.style.fontSize;
+      if (kaoEl && fm.kind === "text") kaoEl.style.fontSize = g(pxScale * fm.fs) + "px";   // the HTML face scales with the banner exactly as SVG text did
     }
     fit();
     var ro = root.ResizeObserver ? new ResizeObserver(fit) : null; if (ro) ro.observe(wrap);
@@ -742,10 +766,8 @@
       if (!visible) { requestAnimationFrame(frame); return; }
       try {
         var cyC = L.coreCy;
-        // face anchor box: layout's own numbers for image faces (getBBox on a nested sprite
-        // svg reports sheet coordinates); measured bbox for text faces (multi-line blooms vary)
-        var fb = L.faceBox;
-        if (!fb && kaoEl && kaoEl.getBBox) { try { var _b = kaoEl.getBBox(); if (_b && _b.width) fb = { x: _b.x, y: _b.y, w: _b.width, h: _b.height }; } catch (e) { } }
+        // face anchor box: layout's own numbers, always — the HTML face never needs measuring
+        var fb = fm && fm.box;
         var faceCX = fb ? fb.x + fb.w / 2 : 46;
         var faceTop = fb ? fb.y : cyC - 15;
         var faceRight = fb ? fb.x + fb.w : 92;
@@ -852,9 +874,8 @@
           if (L.angry) { kx += Math.sin(t * 46) * 1.4; ky += Math.sin(t * 39) * 0.8; kfill = mixCss(baseFill, [200, 60, 46], 0.6); } // angry: hard shake, hot red
           if (L.solemn && !kfill) { kfill = mixCss(baseFill, [112, 106, 96], 0.35); }
           if (L.melancholy && !kfill) { kfill = mixCss(baseFill, [120, 134, 176], 0.45); }
-          kaoEl.style.transform = "translate(" + kx.toFixed(2) + "px," + ky.toFixed(2) + "px) rotate(" + krot.toFixed(1) + "deg) scale(" + ks.toFixed(3) + ")";
-          if (kplate) kplate.style.transform = kaoEl.style.transform;   // the plate rides along; fill stays its own (scheme-aware)
-          kaoEl.style.fill = kfill;
+          kaoEl.style.transform = "translate(" + (kx * pxScale).toFixed(2) + "px," + (ky * pxScale).toFixed(2) + "px) rotate(" + krot.toFixed(1) + "deg) scale(" + ks.toFixed(3) + ")";   // banner units → real pixels for the HTML face
+          kaoEl.style.color = kfill;                           // mood tint: text recolors, image faces ignore it
         }
 
         // --- the field: three columns holding a seeded vertical band set by focus ---
@@ -1056,7 +1077,7 @@
         if (L.rhyme && kaoEl && !L.faceImg) {                                        // the echo of the face: the kaomoji's own ghost, resting posture, slow fade cycle (text faces only)
           if (!kaoFont) {
             var kcs = root.getComputedStyle ? getComputedStyle(kaoEl) : null;
-            kaoFont = (L.multiline ? 15 : 19) + "px " + ((kcs && kcs.fontFamily) || "ui-sans-serif, sans-serif");
+            kaoFont = g(fm.fs) + "px " + ((kcs && kcs.fontFamily) || "ui-sans-serif, sans-serif");   // banner units — the canvas draws in viewBox space
           }
           ctx.globalAlpha = 0.09 + 0.07 * (0.5 + 0.5 * Math.sin(t * 0.45));
           ctx.font = kaoFont; ctx.fillStyle = "rgb(" + baseFill[0] + "," + baseFill[1] + "," + baseFill[2] + ")";

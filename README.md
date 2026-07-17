@@ -42,8 +42,10 @@ that wraps naturally instead of clipping (the banner grows to fit; a scroll appe
 past a height cap), over a barely-there frosted panel the ovals stay visible through.
 The type is deliberately quiet — captions on the weather, not the weather. A small **▾
 toggle collapses the readout to bare pills** (values on hover) so the field can be
-watched unobstructed; the preference persists where storage allows. The static fallback
-keeps crisp SVG rows:
+watched unobstructed; the preference persists where storage allows. The **face is HTML
+in the live banner too** — exact whitespace for multi-line kaomoji, CSS plate,
+percentage-cropped sprites, centre-pivot transforms. The static fallback keeps crisp
+SVG rows and the SVG face:
 
 | input | shows as | notes |
 |---|---|---|

@@ -168,6 +168,15 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   general sub-pixel doctrine: the body lives on the 4px grid; body definition uses fine
   ink sparingly (lash-lines); worldly objects (the hachimaki) render at true 1px.
 
+- **The live face is HTML (v0.17.0).** The maintainer's call, after a run of SVG-tax
+  fixes (NBSP whitespace, textLength, transform-box pivots, nested-sprite getBBox
+  lies): the mount renders the face as an HTML layer flex-centred over the window.
+  Text faces use `white-space:pre` (real spaces survive), wear the plate as CSS
+  background, and scale via font-size; sprites crop with percentage background math;
+  transforms pivot on the element's own centre. Mark anchors come from layout's
+  `faceMeta.box` — nothing is ever measured from the DOM. buildSVG keeps the SVG face
+  (static fallback + parity target); the NBSP conversion remains for that path only.
+
 - **The window IS the layout (v0.16.0).** The maintainer's escalating series of scene
   requests turned out to be one request: the face always lives in the framed square
   block on the banner's left — scene set or not. With no scene the window renders
