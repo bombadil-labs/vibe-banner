@@ -83,7 +83,7 @@ snippet as `widget_code`:
 <div id="v" style="min-height: 80px;"></div>
 <script>(function(){
   var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@198e299ef0f2db8767314eda802ff4f902733c89/dist/vibe.min.js';
+  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@bf890eb2320c335f327f453d7824e82f9ababb33/dist/vibe.min.js';
   s.onload = function(){
     vibe(document.getElementById('v'), {
       face: "( ˶ˆ ꒳ ˆ˵ )", seems: "...", feel: "...", trying: "...",
