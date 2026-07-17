@@ -19,11 +19,15 @@ let n = buildSVG(Object.assign({}, base, { noticing: "peripheral" }));
 ok(/viewBox="0 0 680 132"/.test(n), "4-row banner is H=132");
 ok(/\[note\]/.test(n) && (n.match(/<text /g) || []).length === 5, "[note] present, 5 <text>");
 
-console.log("oversized kaomoji squeeze into the window");
-ok(!/textLength/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ˘ ᵕ ˘ )" }))), "compact face → no squeeze");
-ok(/textLength="111" lengthAdjust="spacingAndGlyphs"/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/" }))), "wide single-line face → squeezed to the window (95px side + small overhang)");
+console.log("oversized kaomoji SCALE DOWN to fit the window (shape preserved, never crushed)");
+ok(!/style="font-size:/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ˘ ᵕ ˘ )" }))) , "compact face → natural size, no scaling");
+let wide = buildSVG(Object.assign({}, base, { kaomoji: "( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/" }));
+let wfs = /style="font-size:([0-9.]+)px"/.exec(wide);
+ok(wfs && +wfs[1] < 19, "wide single-line face → font scales below 19px (got " + (wfs && wfs[1]) + ")");
+ok(!/textLength/.test(wide), "no textLength squeeze anywhere — scaling replaced it");
 let wideML = buildSVG(Object.assign({}, base, { kaomoji: "✧\n( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/\n✧" }));
-ok((wideML.match(/textLength/g) || []).length === 1, "multi-line bloom: only the wide line squeezes");
+let mfs = /style="font-size:([0-9.]+)px"/.exec(wideML);
+ok(mfs && +mfs[1] < 15 && (wideML.match(/style="font-size:/g) || []).length === 1, "multi-line bloom scales uniformly as one unit");
 
 console.log("goal wrap");
 let long = buildSVG(Object.assign({}, base, { trying: "carefully verify every single one of the four new features works end to end before we ship" }));

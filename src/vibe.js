@@ -368,10 +368,7 @@
     // text SVG fragments. Oversized faces get squeezed into the face column (the readout
     // starts at TEXT_X) instead of running underneath it — exuberant single-line kaomoji
     // compress; the skill's guidance is that big feelings bloom tall, not long.
-    var kaoMaxW = Math.min(TEXT_X - FACE_X - 10, portrait.s + 16);       // text faces get a small symmetric overhang past the frame; hard squeeze beyond
-    function fit(line, size) { return estW(line, size) > kaoMaxW ? ' textLength="' + kaoMaxW + '" lengthAdjust="spacingAndGlyphs"' : ''; }
     var kaoSVG, faceBox = null;
-    var kaoX = portrait.x + Math.max(5, (portrait.s - Math.min(estW(kaoLines[0] || "", multiline ? 15 : 19), kaoMaxW)) / 2);   // text faces centre in the window
     if (faceImg) {
       var iy = faceCy - faceImg.h / 2;
       var ix = portrait.x + (portrait.s - faceImg.w) / 2;                // centre the image in the window
@@ -386,10 +383,25 @@
         kaoSVG = '<image class="vk" x="' + g(ix) + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
           '" preserveAspectRatio="xMidYMid meet" href="' + esc(faceImg.url) + '"/>';
       }
-    } else kaoSVG = multiline
-      ? '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk">' +
-      kaoLines.map(function (l, i) { return '<tspan x="' + g(kaoX) + '"' + (i === 0 ? "" : ' dy="20"') + fit(l, 15) + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
-      : '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fit(kaoText, 19) + '>' + esc(kaoText) + '</text>';
+    } else {
+      // Text faces SCALE DOWN to fit the window — the whole face shrinks uniformly,
+      // preserving its shape (the old textLength squeeze condensed glyph spacing and
+      // crushed wide faces). All metrics re-derive from the effective font size.
+      var kfs0 = multiline ? 15 : 19, kmaxL = 0;
+      kaoLines.forEach(function (l) { var w2 = estW(l, kfs0); if (w2 > kmaxL) kmaxL = w2; });
+      var kfit = portrait.s;                                             // estW runs generous and paren edges are airy — the full side is the honest fit width
+      var krat = kmaxL > kfit ? Math.max(0.4, kfit / kmaxL) : 1;
+      var klhE = 20 * krat;
+      var kaoHE = kaoAscent * krat + (kaoLines.length - 1) * (multiline ? klhE : 0) + kaoDescent * krat;
+      kaoAbs = kaoLines.map(function (_, i) { return faceCy - kaoHE / 2 + kaoAscent * krat + i * (multiline ? klhE : 0); });
+      var wAfter = Math.min(kmaxL, kfit);
+      var kaoX = portrait.x + Math.max(4, (portrait.s - wAfter) / 2);
+      var fsAttr = krat < 1 ? ' style="font-size:' + g(kfs0 * krat) + 'px"' : '';
+      kaoSVG = multiline
+        ? '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk"' + fsAttr + '>' +
+        kaoLines.map(function (l, i) { return '<tspan x="' + g(kaoX) + '"' + (i === 0 ? "" : ' dy="' + g(klhE) + '"') + '>' + esc(l) + '</tspan>'; }).join("") + '</text>'
+        : '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fsAttr + '>' + esc(kaoText) + '</text>';
+    }
     // every readout row carries a <title> tooltip with its full text — excited reporters
     // overrun the word caps despite guidance, and a clipped line should at least be readable on hover
     var readSVG = lines.map(function (ln, i) { return '<text x="' + ln.x + '" y="' + g(rightAbs[i]) + '" class="txt' + (ln.key ? ' vr-' + ln.key : '') + '"><title>' + esc(ln.title) + '</title>' + ln.inner + '</text>'; }).join("");

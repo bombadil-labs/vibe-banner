@@ -174,9 +174,11 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   empty (frame + faint interior); `scene` only decides what's visible through it. The
   classic un-windowed layout is retired: columns always sit at 265/397/530, faces
   always centre in the window, the flag pill always sits in the window's corner. Text
-  faces get a small symmetric overhang allowance (`portrait.s + 16`) before the hard
-  squeeze — parens are airy and a slight poke past the frame reads fine; crushing
-  every ordinary kaomoji to the frame width does not.
+  faces **scale down to fit the window** (v0.16.1): the whole face shrinks uniformly
+  via an effective font size, preserving its shape — the old `textLength` squeeze
+  condensed glyph spacing and crushed wide faces, and is gone entirely. Multi-line
+  blooms scale as one unit. Fit width is the full window side (estW runs generous and
+  paren edges are airy).
 
 - **Banner-generated messages carry the `[vibe banner]` prefix (v0.12.0).** Without it, a
   boop lands in the chat as if the user typed the word "boop" — provenance is invisible.

@@ -42,8 +42,8 @@ rather than *reporting*, stop and give the boring true answer instead. Speed is 
   oops 1f605 · frustrated 1f624 · angry 1f621 · dramatic 1f3ad · at_peace 1f60c ·
   solemn 1f636 · rhyme 1f300 · awe 1f92f · vertigo 1f635 · resolute 1f4aa · puzzled 1f928`
   A kaomoji is **always a valid face**: improvised text, first instinct. Keep each line to roughly
-  12 characters — big feelings bloom *tall* (join lines with `\n`), never long; wide faces get
-  squeezed and look crushed.
+  12 characters — big feelings bloom *tall* (join lines with `\n`), never long; wide faces scale
+  down to fit their window and read small.
 * **`seems` → `[user]`** — your immediate, shoot-from-the-hip read of the *user* from their
   prompt: kind? obvious? confused? mistaken? sharp? A snap judgment, said plainly. It's allowed to
   disagree with your own polite prose — the flicker of truth that informs the intentional wording
@@ -87,7 +87,7 @@ snippet as `widget_code`:
 <div id="v" style="min-height: 80px;"></div>
 <script>(function(){
   var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@1f5d57fc831223147d53c49b9443032a862db2bb/dist/vibe.min.js';
+  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/dist/vibe.min.js';
   s.onload = function(){
     vibe(document.getElementById('v'), {
       face: { set: "twemoji", item: "1f60a" },

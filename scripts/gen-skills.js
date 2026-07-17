@@ -55,8 +55,8 @@ first instinct, before you can talk yourself into a prettier one. The moment you
 rather than *reporting*, stop and give the boring true answer instead. Speed is the honesty.`,
 
   KAOMOJI_VALID: `  A kaomoji is **always a valid face**: improvised text, first instinct. Keep each line to roughly
-  12 characters — big feelings bloom *tall* (join lines with \`\\n\`), never long; wide faces get
-  squeezed and look crushed.`,
+  12 characters — big feelings bloom *tall* (join lines with \`\\n\`), never long; wide faces scale
+  down to fit their window and read small.`,
 
   BULLETS_CORE: `* **\`seems\` → \`[user]\`** — your immediate, shoot-from-the-hip read of the *user* from their
   prompt: kind? obvious? confused? mistaken? sharp? A snap judgment, said plainly. It's allowed to
