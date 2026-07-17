@@ -1,5 +1,5 @@
 window.SKILL_PIECES = {
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d67cf7222592329536d460cd09cca7293616b47/dist/vibe.min.js",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@3bf18c63e428ae7954562d1ac9afab8938a04c26/dist/vibe.min.js",
  "CADENCE": {
   "every": "**Render at the top of every response** — the first thing, nothing before it. **Render again\nmid-response when your face would actually change** — an expression shifting across an engaged\nconversation. A moving `[goal]` alone is not enough (goals churn); re-face when your read of the\nuser, your mood, or your insight shift enough that a human face would visibly change. Never\nmanufacture a shift you don't feel.\n\nEvery-response is the *default*, not a mandate. If the user asks for a lighter cadence — only real\nshifts, only on request, or off — honor it for the rest of the session. If someone seems wearied by\nthe banners, it's fine to note *once* that they can dial it down.",
   "shifts": "**Render a banner when your face would actually change** — genuine shifts in your read of the\nuser, your mood, or your insight — plus one on the first reply of a session. Skip turns where\nnothing moved; the absence of a banner is itself a reading. Never manufacture a shift you don't\nfeel, and never render just because a turn felt long.",
@@ -66,27 +66,27 @@ window.SKILL_PIECES = {
  "EMOJI_TABLE": "`content 1f60a · delighted 1f604 · neutral 1f642 · thinking 1f914 · sleepy 1f634 ·\n  booped 1f633 · wink 1f609 · love 1f60d · spark 1f4a1 · excited 1f929 · surprised 1f62e ·\n  tender 1f970 · melancholy 1f614 · anxious 1f630 · mirth 1f60f · laugh 1f602 · groan 1f644 ·\n  oops 1f605 · frustrated 1f624 · angry 1f621 · dramatic 1f3ad · at_peace 1f60c ·\n  solemn 1f636 · rhyme 1f300 · awe 1f92f · vertigo 1f635 · resolute 1f4aa · puzzled 1f928`",
  "SCENES": {
   "tidepool": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d67cf7222592329536d460cd09cca7293616b47/assets/scene-tidepool.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@3bf18c63e428ae7954562d1ac9afab8938a04c26/assets/scene-tidepool.png",
    "live": "tidepool",
    "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
   },
   "night": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d67cf7222592329536d460cd09cca7293616b47/assets/scene-night.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@3bf18c63e428ae7954562d1ac9afab8938a04c26/assets/scene-night.png",
    "blurb": "indigo sky, stars, a crescent, one dark hill"
   },
   "glade": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d67cf7222592329536d460cd09cca7293616b47/assets/scene-glade.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@3bf18c63e428ae7954562d1ac9afab8938a04c26/assets/scene-glade.png",
    "blurb": "mossy forest light with shafts and fireflies"
   },
   "study": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d67cf7222592329536d460cd09cca7293616b47/assets/scene-study.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@3bf18c63e428ae7954562d1ac9afab8938a04c26/assets/scene-study.png",
    "blurb": "lamplight, a shelf of books, a warm desk with a mug"
   }
  },
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d67cf7222592329536d460cd09cca7293616b47/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@3bf18c63e428ae7954562d1ac9afab8938a04c26/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 4,
    "cell": 64,
@@ -137,7 +137,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d67cf7222592329536d460cd09cca7293616b47/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@3bf18c63e428ae7954562d1ac9afab8938a04c26/assets/kip-sheet.png",
    "cols": 8,
    "rows": 1,
    "cell": 64,
