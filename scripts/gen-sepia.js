@@ -168,13 +168,15 @@ MOODS.forEach((mood, i) => {
   // a low-resolution entity interfacing with a higher-resolution reality.
   const fpx = (x, y, c) => { if (x >= 0 && x < CELL && y >= 0 && y < CELL) put(cx + x, cy + y, c); };
   const frect = (x, y, w, h, c) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) fpx(xx, yy, c); };
-  const ring1 = (x, y, w, h, c) => {           // 1px definition line around a real-pixel rect — lash-line, not eyewear
-    frect(x - 1, y - 1, w + 2, 1, c); frect(x - 1, y + h, w + 2, 1, c);
-    frect(x - 1, y, 1, h, c); frect(x + w, y, 1, h, c);
+  const RING = "#a08a9a", RING_SOFT = "#c8b6c2"; // lash plum + its fainter echo
+  const softenEye = (x) => {                    // patch is 12x12 real px at (x, 20)
+    fpx(x, 20, COLORS.b); fpx(x + 11, 20, COLORS.b);      // clip the white patch's corners back to skin —
+    fpx(x, 31, COLORS.b); fpx(x + 11, 31, COLORS.b);      // the eye itself rounds; no frame needed
+    frect(x + 1, 19, 10, 1, RING);              // top lash, inset — never touches the silhouette
+    frect(x + 1, 32, 10, 1, RING_SOFT);         // soft under-line
   };
-  const RING = "#a08a9a";                       // whisper of plum: just enough to lift white from cream
-  ring1(12, 20, 12, 12, RING);                  // left eye patch (logical cols 3-5, rows 5-7)
-  ring1(40, 20, 12, 12, RING);                  // right eye patch (cols 10-12)
+  softenEye(12);                                // left eye (logical cols 3-5, rows 5-7)
+  softenEye(40);                                // right eye (cols 10-12)
 
   if (mood[0] === "resolute") {                 // the hachimaki: crisp cloth from the high-res world
     const R = "#c04a48", Rd = "#8a3230", Rh = "#e07a70";
