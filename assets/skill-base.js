@@ -1,5 +1,5 @@
 window.SKILL_PIECES = {
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@a00c0c3a70e71046ccc8fc2f41acd8ad22428dad/dist/vibe.min.js",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/dist/vibe.min.js",
  "CADENCE": {
   "every": "**Render at the top of every response** — the first thing, nothing before it. **Render again\nmid-response when your face would actually change** — an expression shifting across an engaged\nconversation. A moving `[goal]` alone is not enough (goals churn); re-face when your read of the\nuser, your mood, or your insight shift enough that a human face would visibly change. Never\nmanufacture a shift you don't feel.\n\nEvery-response is the *default*, not a mandate. If the user asks for a lighter cadence — only real\nshifts, only on request, or off — honor it for the rest of the session. If someone seems wearied by\nthe banners, it's fine to note *once* that they can dial it down.",
   "shifts": "**Render a banner when your face would actually change** — genuine shifts in your read of the\nuser, your mood, or your insight — plus one on the first reply of a session. Skip turns where\nnothing moved; the absence of a banner is itself a reading. Never manufacture a shift you don't\nfeel, and never render just because a turn felt long.",
@@ -66,7 +66,7 @@ window.SKILL_PIECES = {
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@a00c0c3a70e71046ccc8fc2f41acd8ad22428dad/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@619ec44839075fbd8539c78ca7dba0863f7f18c8/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 4,
    "cell": 64,
@@ -117,7 +117,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@a00c0c3a70e71046ccc8fc2f41acd8ad22428dad/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png",
    "cols": 8,
    "rows": 1,
    "cell": 64,
