@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@8883a1d7a848af73f52fa62ff9b78ed9156eb085/assets/sepia-sheet.png";   // 3 frames per mood: base / shimmer / blink
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@a3fa0f7ed059821a4e11e6aa42081d644a546312/assets/sepia-sheet.png";   // 3 frames per mood: base / shimmer / blink
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -155,7 +155,7 @@
     },
     "sepia": function (item) {
       var i = SEPIA_MOODS.indexOf(item); if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
-      return { url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 13, index: i, anim: { frames: 3, frameRows: 4, stride: 32, maskIndex: 96 } };   // shimmer + blink cycled natively; maskIndex cell gates the smooth chromo layer
+      return { url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 16, index: i, anim: { frames: 3, frameRows: 4, stride: 32, maskStart: 96 } };   // shimmer + blink cycled natively; mask cell maskStart+index gates the smooth chromo layer per mood
     }
   };
 
@@ -663,7 +663,7 @@
     // drifting continuously, masked to the mantle by the sheet's own mask cell. The
     // space doctrine's sibling: chunky body, fine ink; chunky frames, fluid colour.
     var chromo = null, chromoMask = null;
-    if (kaoEl && fm && fm.kind === "sprite" && fm.anim && fm.anim.maskIndex != null) {
+    if (kaoEl && fm && fm.kind === "sprite" && fm.anim && (fm.anim.maskStart != null || fm.anim.maskIndex != null)) {
       chromo = document.createElement("canvas");
       chromo.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
       kaoEl.style.position = "relative";
@@ -672,7 +672,8 @@
       mimg.onload = function () {
         try {
           var mc = document.createElement("canvas"); mc.width = fm.cellW || 64; mc.height = fm.cellH || 64;
-          var mcol = fm.anim.maskIndex % fm.cols, mrow = Math.floor(fm.anim.maskIndex / fm.cols);
+          var mIdx = fm.anim.maskStart != null ? fm.anim.maskStart + fm.index : fm.anim.maskIndex;   // per-mood mask: the flow hugs THIS expression's features
+          var mcol = mIdx % fm.cols, mrow = Math.floor(mIdx / fm.cols);
           var mx = mc.getContext("2d");
           mx.drawImage(mimg, mcol * mc.width, mrow * mc.height, mc.width, mc.height, 0, 0, mc.width, mc.height);
           mx.getImageData(0, 0, 1, 1);                         // taint probe — throws if CORS failed, and we quietly skip the layer
