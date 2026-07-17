@@ -21,12 +21,12 @@ const BASE = [
   ".....oooooo.....",
   "...oobbbbbboo...",
   "..obbbbbbbbbbo..",
-  ".nobbbbbbbbbbon.",
-  ".noWWWbbbbWWWon.",
-  ".noWWWbbbbWWWon.",
-  ".noWWWbbbbWWWon.",
-  ".nobbbbbbbbbbon.",
-  ".nobbbbbbbbbbon.",
+  "..obbbbbbbbbbo..",
+  "..oWWWbbbbWWWo..",
+  "..oWWWbbbbWWWo..",
+  "..oWWWbbbbWWWo..",
+  "..obbbbbbbbbbo..",
+  "..obbbbbbbbbbo..",
   "..obbbbbbbbbbo..",
   "..obbbbbbbbbbo..",
   "...obb.bb.bbo...",
@@ -34,6 +34,25 @@ const BASE = [
   "....oo.oo.oo....",
   "................"
 ];
+// Fin frills are an expression channel, not anatomy furniture: straight side bars read
+// as arms (the maintainer's flicker, round two), but fins that flare, ripple, droop, and
+// tuck with the mood can only be fins. Left-side pixels; the right side mirrors.
+const FRILL = {
+  ripple: [[1,4],[1,5],[0,5],[1,6],[1,7],[0,7],[1,8],[1,9],[0,9]],
+  flared: [[1,4],[0,4],[1,5],[0,5],[1,6],[0,6],[1,7],[0,7],[1,8],[0,8],[1,9],[0,9]],
+  drooped:[[1,7],[1,8],[1,9],[1,10],[0,9],[0,10]],
+  flat:   [[1,5],[1,6],[1,7],[1,8]],
+  calm:   [[1,4],[1,5],[1,6],[0,6],[1,7],[1,8],[0,8],[1,9]]
+};
+const FRILL_OF = {
+  neutral:"ripple", content:"ripple", delighted:"flared", focused:"flat", sleepy:"drooped",
+  sheepish:"flat", booped:"flared", thinking:"ripple", spark:"flared", excited:"flared",
+  surprised:"flared", tender:"ripple", melancholy:"drooped", anxious:"flat", mirth:"ripple",
+  laugh:"flared", groan:"drooped", oops:"flat", frustrated:"flat", angry:"flat",
+  dramatic:"flared", at_peace:"calm", solemn:"drooped", rhyme:"ripple", awe:"flat",
+  vertigo:"ripple", resolute:"calm", puzzled:"ripple", asking:"ripple", weary:"drooped",
+  wink:"ripple", love:"flared"
+};
 // left-eye pupil presets (whites: cols 3-5 / 10-12, rows 5-7); right eye mirrors x -> 15-x
 const PUP = {
   w:      [[3,6],[4,7],[5,6]],
@@ -138,6 +157,8 @@ MOODS.forEach((mood, i) => {
     const k = BASE[y][x];
     if (k !== ".") cellPut(cx, cy, x, y, COLORS[k]);
   }
+  const frill = FRILL[FRILL_OF[mood[0]] || "ripple"];
+  frill.concat(mirror(frill)).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS.n));
   mood[1].concat(mood[2], mood[4] || []).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS[q[2]]));
   FRECK.forEach(q => cellPut(cx, cy, q[0], q[1], mood[3]));
 });
