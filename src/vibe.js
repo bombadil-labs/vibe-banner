@@ -912,23 +912,23 @@
             var hueC = (p.palette && p.palette[0]) || "#b89ab0";
             for (var ci = 0; ci < 4; ci++) {
               var crr = mulberry32(L.seed + ci * 7717 + 5);
-              var sw1 = 0.04 + crr() * 0.06, sw2 = 0.035 + crr() * 0.055;
+              var sw1 = 0.11 + crr() * 0.11, sw2 = 0.09 + crr() * 0.1;   // fast enough to SEE: a body-crossing takes seconds, not half a minute
               var cp1 = crr() * 6.28, cp2 = crr() * 6.28, cp3 = crr() * 6.28, cp4 = crr() * 6.28;
               // free roam: no zones — quasi-periodic wander (incommensurate golden-ratio
               // frequencies, never repeats) spanning the WHOLE body; the mask is the only
               // boundary, and crossing the features reads as slipping under them
               var cxp = (0.5 + 0.34 * Math.sin(t * sw1 * 6.28 + cp1) + 0.24 * Math.sin(t * sw1 * 6.28 * 1.618 + cp2)) * ccw;
               var cyp = (0.5 + 0.34 * Math.sin(t * sw2 * 6.28 + cp3) + 0.24 * Math.sin(t * sw2 * 6.28 * 2.414 + cp4)) * cch;
-              var cal = 0.24 + 0.12 * Math.sin(t * 0.8 + ci * 1.7);
+              var cal = 0.34 + 0.16 * Math.sin(t * 0.8 + ci * 1.7);
               // the spot is an amoeba: three overlapping lobes, each with its own
               // wandering offset and breathing radius (clamped min/max) — shape mutates
               for (var kk = 0; kk < 3; kk++) {
                 var kph = cp1 * (kk + 1) + kk * 2.1;
                 var lox = 0.06 * Math.sin(t * (0.21 + kk * 0.07) + kph) * ccw;
                 var loy = 0.06 * Math.sin(t * (0.17 + kk * 0.09) * 1.618 + kph * 1.3) * cch;
-                var lr = (0.055 + 0.05 * (0.5 + 0.5 * Math.sin(t * (0.23 + kk * 0.11) + kph * 0.7))) * ccw;   // radius breathes 0.055–0.105 of the body
+                var lr = (0.08 + 0.06 * (0.5 + 0.5 * Math.sin(t * (0.23 + kk * 0.11) + kph * 0.7))) * ccw;   // radius breathes 0.08–0.14 of the body
                 var cg = cctx.createRadialGradient(cxp + lox, cyp + loy, 0, cxp + lox, cyp + loy, lr);
-                cg.addColorStop(0, rgba(hueC, cal)); cg.addColorStop(1, rgba(hueC, 0));
+                cg.addColorStop(0, rgba(hueC, cal)); cg.addColorStop(0.62, rgba(hueC, cal * 0.85)); cg.addColorStop(1, rgba(hueC, 0));   // hard-ish core: a patch, not a haze
                 cctx.fillStyle = cg; cctx.beginPath(); cctx.arc(cxp + lox, cyp + loy, lr, 0, 6.2832); cctx.fill();
               }
             }
