@@ -178,6 +178,12 @@ one base — `npm run skills` — so they never drift):
 | `skill/SKILL.md` | kaomoji, improvised fresh every banner |
 | `skill/SKILL.sepia.md` | Sepia — the cuttlefish Claude designed for itself (32 moods) |
 | `skill/SKILL.kip.md` | Kip — the project mascot (8 moods) |
+| `skill/SKILL.noto-animated.md` | Noto animated emoji (Google's GIFs; big files, they move) |
+| `skill/SKILL.noto.md` | Noto emoji (warm, round, static) |
+| `skill/SKILL.twemoji.md` | Twemoji (flat, tiny, classic) |
+
+Try them before choosing: the site's **Gallery tab has a face picker** that re-dresses
+every scene in any shipped face.
 
 Every variant accepts a kaomoji as a valid alternative at any time — when the pack's
 vocabulary doesn't fit the moment, honesty outranks the pack.

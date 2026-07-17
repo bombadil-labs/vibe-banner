@@ -184,6 +184,38 @@ reference face-pack. Cheerful, compact, eight moods.`,
   }
 };
 
+// The three emoji sets share Unicode, so one curated mood table serves them all.
+// Conservative codepoints only — every entry exists in all three sets.
+const EMOJI_TABLE =
+`\`content 1f60a · delighted 1f604 · neutral 1f642 · thinking 1f914 · sleepy 1f634 ·
+  booped 1f633 · wink 1f609 · love 1f60d · spark 1f4a1 · excited 1f929 · surprised 1f62e ·
+  tender 1f970 · melancholy 1f614 · anxious 1f630 · mirth 1f60f · laugh 1f602 · groan 1f644 ·
+  oops 1f605 · frustrated 1f624 · angry 1f621 · dramatic 1f3ad · at_peace 1f60c ·
+  solemn 1f636 · rhyme 1f300 · awe 1f92f · vertigo 1f635 · resolute 1f4aa · puzzled 1f928\``;
+
+function emojiVariant(setName, pretty, note) {
+  return {
+    DESC: "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears " + pretty + " emoji faces.",
+    TITLE: " — " + pretty + " variant",
+    PREAMBLE:
+`This is the vibe-annotations skill with one difference: **your face comes from the ${pretty}
+emoji set**, freely available and served from a widget-allowlisted CDN.${note}`,
+    FACE:
+`wear ${pretty}: \`face: { set: "${setName}", item: "<codepoint>" }\`, chosen on first
+  instinct from this mood table — or any other codepoint that is honestly you (the table is a
+  starting vocabulary, not a cage):
+  ${EMOJI_TABLE}`,
+    SNIPPET_FACE:
+`      face: { set: "${setName}", item: "1f60a" },
+      kaomoji: "( ˘ ᵕ ˘ )", seems: "...", feel: "...", trying: "...",`
+  };
+}
+
+VARIANTS["SKILL.noto-animated.md"] = emojiVariant("noto-animated", "Noto animated",
+  " These are Google's animated emoji (large files, 1–3 MB each; they animate on surfaces that play GIFs inside SVG).");
+VARIANTS["SKILL.noto.md"] = emojiVariant("noto", "Noto", " Warm, round, static PNGs.");
+VARIANTS["SKILL.twemoji.md"] = emojiVariant("twemoji", "Twemoji", " Flat, tiny (1–2 KB), classic.");
+
 Object.keys(VARIANTS).forEach(function (file) {
   var v = VARIANTS[file];
   var out = BASE

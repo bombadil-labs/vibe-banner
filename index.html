@@ -246,6 +246,16 @@ Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-annotatio
     <p class="lede" style="margin-bottom:0">Each cell is a mocked-up exchange: what the user said,
     the banner Claude rendered in the moment, and the opening of the reply. Every banner is drawn
     live by the same pinned bundle the skill uses.</p>
+    <p style="margin:16px 0 0; font-size:13px; color:var(--sub);">Dress the scenes in any shipped
+    face (each has a matching skill variant in the repo):</p>
+    <div id="face-picker" style="display:flex; gap:2px; flex-wrap:wrap; margin:4px 0 0;">
+      <button class="tab-btn" data-face="kaomoji">kaomoji</button>
+      <button class="tab-btn" data-face="sepia">sepia</button>
+      <button class="tab-btn" data-face="kip">kip</button>
+      <button class="tab-btn" data-face="noto-animated">noto animated</button>
+      <button class="tab-btn" data-face="noto">noto</button>
+      <button class="tab-btn" data-face="twemoji">twemoji</button>
+    </div>
     <div id="gallery-cells"></div>
   </section>
 
@@ -454,6 +464,27 @@ var GROUPS = [
   ]]
 ];
 var g = document.getElementById("gallery-cells");
+// Face picker: re-dress every scene in any shipped face. The scene's mood key is its flag
+// (or "content"); each adapter maps that mood into its set's vocabulary.
+var EMOJI_MOODS = { content:"1f60a", delighted:"1f604", spark:"1f4a1", excited:"1f929", surprised:"1f62e",
+  tender:"1f970", melancholy:"1f614", anxious:"1f630", mirth:"1f60f", laugh:"1f602", groan:"1f644",
+  oops:"1f605", frustrated:"1f624", angry:"1f621", dramatic:"1f3ad", at_peace:"1f60c", solemn:"1f636",
+  rhyme:"1f300", awe:"1f92f", vertigo:"1f635", resolute:"1f4aa", puzzled:"1f928" };
+var KIP_MAP = { spark:"delighted", excited:"excited", surprised:"surprised", tender:"content",
+  melancholy:"solemn", anxious:"sheepish", mirth:"delighted", laugh:"delighted", groan:"sheepish",
+  oops:"sheepish", frustrated:"puzzled", angry:"solemn", dramatic:"excited", at_peace:"at_peace",
+  solemn:"solemn", rhyme:"content", awe:"surprised", vertigo:"puzzled", resolute:"excited", puzzled:"puzzled" };
+var FACE_CHOICE = "kaomoji";
+try { FACE_CHOICE = localStorage.getItem("vibeFace") || "kaomoji"; } catch (e) {}
+function withFace(p) {
+  if (FACE_CHOICE === "kaomoji") return p;
+  var mood = p.flag || "content";
+  var q = {}; for (var k in p) q[k] = p[k];
+  if (FACE_CHOICE === "sepia") q.face = { set: "sepia", item: mood };
+  else if (FACE_CHOICE === "kip") q.face = { set: "kip", item: KIP_MAP[mood] || "content" };
+  else q.face = { set: FACE_CHOICE, item: EMOJI_MOODS[mood] || EMOJI_MOODS.content };
+  return q;
+}
 function buildChat(promptText) {
   var chat = document.createElement("div"); chat.className = "chat";
   var bar = document.createElement("div"); bar.className = "chat-bar";
@@ -465,7 +496,9 @@ function buildChat(promptText) {
   chat.appendChild(bar); chat.appendChild(body);
   return { chat: chat, body: body };
 }
-GROUPS.forEach(function (grp) {
+function buildGallery() {
+  g.innerHTML = ""; MOUNT_QUEUE["gallery"] = [];
+  GROUPS.forEach(function (grp) {
   var h = document.createElement("h3"); h.textContent = grp[0]; g.appendChild(h);
   grp[1].forEach(function (s) {
     var cell = document.createElement("div"); cell.className = "cell";
@@ -480,9 +513,9 @@ GROUPS.forEach(function (grp) {
     c.body.appendChild(banner); c.body.appendChild(r);
     cell.appendChild(cap); cell.appendChild(c.chat);
     g.appendChild(cell);
-    queueMount("gallery", banner, s[2]);
+    queueMount("gallery", banner, withFace(s[2]));
   });
-});
+  });
 
 var SHIFT_DEMO = {
   prompt: "I transcribed my grandfather's letters from the war, but the dates make no sense — the April one is postmarked from a port he shouldn't have reached until June. Did I mess up the transcription?",
@@ -498,29 +531,40 @@ var SHIFT_DEMO = {
      true]
   ]
 };
-(function () {
-  var h = document.createElement("h3"); h.textContent = "Mid-response shifts"; g.appendChild(h);
-  var cell = document.createElement("div"); cell.className = "cell";
-  var cap = document.createElement("p"); cap.className = "cap";
-  cap.innerHTML = "<b>Mid-response shifts</b> — a long reply re-faces when the state genuinely turns: methodical → surprised → spark";
-  var c = buildChat(SHIFT_DEMO.prompt);
+  var h2 = document.createElement("h3"); h2.textContent = "Mid-response shifts"; g.appendChild(h2);
+  var cell2 = document.createElement("div"); cell2.className = "cell";
+  var cap2 = document.createElement("p"); cap2.className = "cap";
+  cap2.innerHTML = "<b>Mid-response shifts</b> — a long reply re-faces when the state genuinely turns: methodical → surprised → spark";
+  var c2 = buildChat(SHIFT_DEMO.prompt);
   SHIFT_DEMO.segments.forEach(function (seg) {
     var banner = document.createElement("div"); banner.className = "banner";
-    c.body.appendChild(banner);
-    queueMount("gallery", banner, seg[0]);
+    c2.body.appendChild(banner);
+    queueMount("gallery", banner, withFace(seg[0]));
     var r = document.createElement("p"); r.className = "resp";
     r.textContent = seg[1];
     if (seg[2]) { var trail = document.createElement("span"); trail.className = "trail"; trail.textContent = " …"; r.appendChild(trail); }
-    c.body.appendChild(r);
+    c2.body.appendChild(r);
   });
-  cell.appendChild(cap); cell.appendChild(c.chat);
-  g.appendChild(cell);
-})();
+  cell2.appendChild(cap2); cell2.appendChild(c2.chat);
+  g.appendChild(cell2);
+  if (document.getElementById("tab-gallery").classList.contains("active")) mountTab("gallery");
+}
+document.querySelectorAll("#face-picker button").forEach(function (b) {
+  if (b.dataset.face === FACE_CHOICE) b.classList.add("active");
+  b.addEventListener("click", function () {
+    FACE_CHOICE = b.dataset.face;
+    try { localStorage.setItem("vibeFace", FACE_CHOICE); } catch (e) {}
+    document.querySelectorAll("#face-picker button").forEach(function (x) { x.classList.remove("active"); });
+    b.classList.add("active");
+    buildGallery();
+  });
+});
+buildGallery();
 
 var TAB_ALIAS = { "": "landing", landing: "landing", meaning: "meaning", key: "meaning",
   how: "meaning", install: "install", library: "install", gallery: "gallery" };
 function activate(tab) {
-  document.querySelectorAll(".tab-btn").forEach(function (b) {
+  document.querySelectorAll(".tabs .tab-btn").forEach(function (b) {
     b.classList.toggle("active", b.dataset.tab === tab);
   });
   document.querySelectorAll(".tab-panel").forEach(function (p) {
@@ -536,7 +580,7 @@ function route() {
   if (target && h !== tab) target.scrollIntoView();
   else window.scrollTo(0, 0);
 }
-document.querySelectorAll(".tab-btn").forEach(function (b) {
+document.querySelectorAll(".tabs .tab-btn").forEach(function (b) {
   b.addEventListener("click", function () { location.hash = b.dataset.tab; });
 });
 window.addEventListener("hashchange", route);

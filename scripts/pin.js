@@ -22,7 +22,9 @@ try {
   process.exit(1);
 }
 
-const FILES = ["skill/SKILL.md", "skill/SKILL.sepia.md", "skill/SKILL.kip.md", "README.md", "index.html"];
+const FILES = ["skill/SKILL.md", "skill/SKILL.sepia.md", "skill/SKILL.kip.md",
+  "skill/SKILL.noto-animated.md", "skill/SKILL.noto.md", "skill/SKILL.twemoji.md",
+  "README.md", "index.html"];
 const RE = /vibe-annotation-renderer@[0-9a-f]{40}/g;
 let changed = 0;
 for (const f of FILES) {
