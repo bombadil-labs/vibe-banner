@@ -221,6 +221,11 @@ MOODS.forEach((mood, i) => { for (let frame = 0; frame < 3; frame++) {
   // with organic 1px edges only this resolution allows.
   {
     const r = rng(i * 104729 + 7 + (frame === 1 ? 39119 : 0));   // shimmer re-rolls the pattern; blink keeps frame 0's (patterns don't jump mid-blink)
+    // shimmer DRIFT: the pattern anchors themselves travel (edge jitter alone read as a
+    // wiggle-in-place). A separate rng so frame 0 stays byte-identical to the shipped art.
+    const dr = rng(i * 7919 + 31 + frame);
+    const D = frame === 1 ? () => (dr() - 0.5) * 16 : () => 0;   // centres wander up to ±8px — real migration across the mantle
+    const S = frame === 1 ? () => 0.75 + dr() * 0.7 : () => 1;   // radii breathe 0.75–1.45×
     const hue = mood[3];
     // contrast-safe sibling: light hues get a darker one, dark hues a LIGHTER one —
     // a dark sibling of a dark hue merges with the body outline and swallows limbs
@@ -237,21 +242,24 @@ MOODS.forEach((mood, i) => { for (let frame = 0; frame < 3; frame++) {
     };
     const ok = (x, y) =>                                                        // eroded 1px: patterns never touch the silhouette
       okRaw(x, y) && okRaw(x - 1, y) && okRaw(x + 1, y) && okRaw(x, y - 1) && okRaw(x, y + 1);
-    const blob = (bx, by, rad, c) => {                                          // organic patch: jittered edge
+    const blob = (bx0, by0, rad0, c) => {                                       // organic patch: jittered edge, drifting anchor
+      const bx = bx0 + D(), by = by0 + D(), rad = rad0 * S();
       for (let y = Math.floor(by - rad - 2); y <= by + rad + 2; y++)
         for (let x = Math.floor(bx - rad - 2); x <= bx + rad + 2; x++) {
           const e = rad + (r() - 0.5) * 1.7;
           if ((x - bx) * (x - bx) + (y - by) * (y - by) <= e * e && ok(x, y)) fpx(x, y, c);
         }
     };
-    const ring = (bx, by, rad, c) => {                                          // eye-spot ring, thick enough to read
-      for (let y = by - rad - 2; y <= by + rad + 2; y++)
-        for (let x = bx - rad - 2; x <= bx + rad + 2; x++) {
+    const ring = (bx0, by0, rad0, c) => {                                       // eye-spot ring, thick enough to read, drifting anchor
+      const bx = Math.round(bx0 + D()), by = Math.round(by0 + D()), rad = rad0 * S();
+      for (let y = Math.floor(by - rad - 2); y <= by + rad + 2; y++)
+        for (let x = Math.floor(bx - rad - 2); x <= bx + rad + 2; x++) {
           const d = Math.sqrt((x - bx) * (x - bx) + (y - by) * (y - by));
           if (Math.abs(d - rad) < 1.15 && ok(x, y)) fpx(x, y, c);
         }
     };
-    const band = (y0, amp, th, c, ph) => {                                      // wavy stripe across the mantle
+    const band = (y00, amp, th, c, ph) => {                                     // wavy stripe across the mantle, sliding vertically
+      const y0 = y00 + D() * 0.6;
       for (let x = 8; x <= 55; x++) {
         const yy = Math.round(y0 + Math.sin(x / 5.5 + ph) * amp);
         for (let t = 0; t < th; t++) if (ok(x, yy + t)) fpx(x, yy + t, c);
