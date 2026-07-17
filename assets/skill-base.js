@@ -1,5 +1,5 @@
 window.SKILL_PIECES = {
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@1fb5922c190ed6b8247d67450f31b392dd729202/dist/vibe.min.js",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/dist/vibe.min.js",
  "CADENCE": {
   "every": "**Render at the top of every response** — the first thing, nothing before it. **Render again\nmid-response when your face would actually change** — an expression shifting across an engaged\nconversation. A moving `[goal]` alone is not enough (goals churn); re-face when your read of the\nuser, your mood, or your insight shift enough that a human face would visibly change. Never\nmanufacture a shift you don't feel.\n\nEvery-response is the *default*, not a mandate. If the user asks for a lighter cadence — only real\nshifts, only on request, or off — honor it for the rest of the session. If someone seems wearied by\nthe banners, it's fine to note *once* that they can dial it down.",
   "shifts": "**Render a banner when your face would actually change** — genuine shifts in your read of the\nuser, your mood, or your insight — plus one on the first reply of a session. Skip turns where\nnothing moved; the absence of a banner is itself a reading. Never manufacture a shift you don't\nfeel, and never render just because a turn felt long.",
@@ -17,7 +17,7 @@ window.SKILL_PIECES = {
  "RUNNING_TAIL": "Keep the snippet's shape: the script is **injected dynamically** (a bare `<script src>` can hang\nsome render harnesses), the `onerror` fallback announces a failed CDN load, and the `min-height`\nprevents collapse while it fetches. **Pin the full commit hash, never a tag** — tags are mutable\npointers and this page holds `sendPrompt` access; the hash in the URL is the single source of\ntruth, stated nowhere else in this file (`npm run pin` rewrites it). Source, gallery, and docs:\n<https://github.com/bombadil-labs/vibe-annotation-renderer>.",
  "ATT_CUES": "On surfaces where banners are interactive, the user can tap your `[note]` line; a tiny message\narrives, like `*a flicker at your [note] (\"…\") — it doesn't quite land*`. **Attunement, not\ncorrection**: like catching a micro-expression across a table. Don't litigate, don't apologize,\nusually don't mention it — let it quietly inform how you read them, and let the next banner show\nwhatever honestly shifted (or honestly didn't).",
  "ATT_PLAY": "Playful gestures may arrive in the chat — `*boop*`, or `*sets down a fresh tin of claudemeal —\nmoss flavor*` (the flavor is your own current palette: they're feeding you your own weather).\nRespond in kind, briefly; a boop is not a work item.",
- "SETTINGS": "## Settings\n\nThe banner's hover tray has a wrench; `*opens the vibe banner settings*` may arrive. Offer a short\nmenu: cadence (every reply / real shifts / strong feelings / off), face (this skill's face, kaomoji,\nor another variant from the repo's Builder), anything else that doesn't break the honesty contract\n(no reporting feelings on demand; you still never see the render). **Persist agreed overrides in\nyour durable memory** and honor them in future sessions; \"reset the vibe settings\" clears back to\nthis file.",
+ "SETTINGS": "## Settings\n\nThe banner's hover tray has a wrench; `*opens the vibe banner settings*` may arrive. Offer a short\nmenu: cadence (every reply / real shifts / strong feelings / off), face (this skill's face, kaomoji,\nor another variant from the repo's Builder), environment (an optional scene image behind the banner\n— `scene: { url, opacity }` in every payload, hosted on a widget-allowlisted CDN), anything else\nthat doesn't break the honesty contract (no reporting feelings on demand; you still never see the\nrender). **Persist agreed overrides in your durable memory** and honor them in future sessions;\n\"reset the vibe settings\" clears back to this file.",
  "FACES": {
   "kaomoji": {
    "TITLE": "",
@@ -63,10 +63,13 @@ window.SKILL_PIECES = {
   }
  },
  "EMOJI_TABLE": "`content 1f60a · delighted 1f604 · neutral 1f642 · thinking 1f914 · sleepy 1f634 ·\n  booped 1f633 · wink 1f609 · love 1f60d · spark 1f4a1 · excited 1f929 · surprised 1f62e ·\n  tender 1f970 · melancholy 1f614 · anxious 1f630 · mirth 1f60f · laugh 1f602 · groan 1f644 ·\n  oops 1f605 · frustrated 1f624 · angry 1f621 · dramatic 1f3ad · at_peace 1f60c ·\n  solemn 1f636 · rhyme 1f300 · awe 1f92f · vertigo 1f635 · resolute 1f4aa · puzzled 1f928`",
+ "SCENES": {
+  "tidepool": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png"
+ },
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@1fb5922c190ed6b8247d67450f31b392dd729202/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@707a9fb7e9901dd4e3b5fa66ca88226fe3d5a4f2/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 4,
    "cell": 64,
@@ -117,7 +120,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@1fb5922c190ed6b8247d67450f31b392dd729202/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png",
    "cols": 8,
    "rows": 1,
    "cell": 64,

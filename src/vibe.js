@@ -257,6 +257,15 @@
     };
     if (kaoText == null) kaoText = p.kaomoji != null ? String(p.kaomoji) : "( ˘ ᵕ ˘ )";
 
+    // scene: an optional environment behind everything — the banner's habitat.
+    // scene: "https://…" or { url, opacity } (opacity clamped soft; the scene is
+    // atmosphere, never competition for the readout). Allowlisted CDNs, like faces.
+    var scene = null;
+    if (p.scene) {
+      scene = typeof p.scene === "string" ? { url: p.scene } : p.scene;
+      scene = scene.url ? { url: String(scene.url), op: Math.max(0.08, Math.min(0.85, scene.opacity || 0.3)) } : null;
+    }
+
     var kaoLines = kaoText.split("\n");
     var multiline = !faceImg && kaoLines.length > 1, kaoLh = multiline ? 20 : 0;
 
@@ -342,7 +351,7 @@
     var L = {
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG + flagSVG,
       restSVG: readSVG + langSVG + flagSVG,
-      kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, faceBox: faceBox, hasLangs: langs.length > 0,
+      kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, faceBox: faceBox, scene: scene, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson, prevFills: prevFills
     };
@@ -356,6 +365,8 @@
     out.push('<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + L.H + '" role="img" xmlns="http://www.w3.org/2000/svg">');
     out.push('<title>Mood annotation</title><desc>Ambient mood field with a user read and a first-person feel/intent readout</desc>');
     out.push('<style>' + STYLE + '</style>');
+    if (L.scene) out.push('<image href="' + esc(L.scene.url) + '" x="0" y="0" width="' + W + '" height="' + L.H +
+      '" preserveAspectRatio="xMidYMid slice" opacity="' + g(L.scene.op) + '"/>');
     var soft = 1 - L.conson;                                  // consonance: split → diffuse washes (bigger, thinner)
     var sizeMul = (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);     // awe: the field swells while the face shrinks
     out.push('<g opacity="0.5">');
@@ -424,6 +435,7 @@
     var L = layout(p), H = L.H;
     el.innerHTML =
       '<div style="position:relative;width:100%">' +
+      (L.scene ? '<img src="' + esc(L.scene.url) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:' + L.scene.op + ';pointer-events:none" alt="">' : '') +
       '<canvas style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none"></canvas>' +
       '<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + H + '" role="img" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:1;display:block">' +
       '<title>Mood annotation</title><desc>Living mood field with a user read and a first-person feel/intent readout</desc>' +

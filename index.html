@@ -615,7 +615,7 @@ route();
   var host = document.getElementById("b-modules");
   if (!P || !host) return;
   var ALLOW = ["https://cdn.jsdelivr.net/", "https://unpkg.com/", "https://cdnjs.cloudflare.com/", "https://fonts.gstatic.com/"];
-  var S = { face: "kaomoji", name: "vibe-annotations", cadence: "every", flags: true, cues: true, play: true, customLines: "content = https://cdn.jsdelivr.net/gh/you/faces@commit/content.png\ndelighted = https://cdn.jsdelivr.net/gh/you/faces@commit/delighted.png" };
+  var S = { face: "kaomoji", name: "vibe-annotations", cadence: "every", flags: true, cues: true, play: true, scene: "none", sceneUrl: "", sceneOp: 0.3, customLines: "content = https://cdn.jsdelivr.net/gh/you/faces@commit/content.png\ndelighted = https://cdn.jsdelivr.net/gh/you/faces@commit/delighted.png" };
 
   function avatar(mood) {                                      // the narrator's face, per module mood
     var pv = P.PREVIEW[S.face];
@@ -674,8 +674,15 @@ route();
       SNIPPET_FACE: '      face: "' + (c.entries.length ? c.entries[0][1] : "https://…png") + '",\n      kaomoji: "( ˘ ᵕ ˘ )", seems: "...", feel: "...", trying: "...",'
     };
   }
+  function sceneUrl() {
+    if (S.scene === "tidepool") return P.SCENES.tidepool;
+    if (S.scene === "custom") return (S.sceneUrl || "").trim();
+    return "";
+  }
   function snippetText() {
     var popts = (S.play ? [] : ["play: false"]).concat(S.cues ? [] : ["cues: false"]);
+    var su = sceneUrl();
+    if (su) popts.push('scene: { url: "' + su + '", opacity: ' + S.sceneOp + ' }');
     return P.SNIPPET
       .replace("{{SNIPPET_URL}}", P.snippetUrl)
       .replace("{{SNIPPET_FACE}}", faceDef().SNIPPET_FACE)
@@ -758,6 +765,42 @@ route();
     refreshStrip(); refreshCustom(); reseed(["preamble", "facebullet"]); renderNarrators();
   });
   customTa.addEventListener("input", function () { S.customLines = customTa.value; refreshCustom(); reseed(["facebullet"]); });
+
+  // — Environment
+  var cE = card("environment — scene");
+  cE.appendChild(callout("Where are we hanging out? A scene sits behind everything at low opacity — atmosphere, never competition. Your own photo works too, hosted like a face-pack.", { m: "at_peace", e: "1f60c", k: "( ˘ ᵕ ˘ )" }));
+  var scSel = document.createElement("select"); scSel.style.cssText = SEL + "margin:0 0 8px;";
+  [["none", "none (any page background)"], ["tidepool", "the tidepool (first-party)"], ["custom", "custom (your own image URL)"]].forEach(function (o) {
+    var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; scSel.appendChild(op);
+  });
+  cE.appendChild(scSel);
+  var scUrlIn = document.createElement("input");
+  scUrlIn.placeholder = "https://cdn.jsdelivr.net/gh/you/scenes@commit/mine.png";
+  scUrlIn.style.cssText = SEL + "width:100%;margin:0 0 8px;display:none;";
+  cE.appendChild(scUrlIn);
+  var scOpRow = document.createElement("div");
+  scOpRow.style.cssText = "display:none;align-items:center;gap:10px;font-size:13px;color:var(--sub);margin:0 0 8px;";
+  scOpRow.innerHTML = 'opacity <input type="range" min="0.1" max="0.7" step="0.05" value="0.3" style="flex:1;max-width:220px;"> <span>0.3</span>';
+  cE.appendChild(scOpRow);
+  var scPrev = document.createElement("div");
+  scPrev.style.cssText = "display:none;height:52px;border-radius:8px;border:1px solid var(--edge);background-size:cover;background-position:center;";
+  cE.appendChild(scPrev);
+  function refreshScene() {
+    var on = S.scene !== "none";
+    scUrlIn.style.display = S.scene === "custom" ? "block" : "none";
+    scOpRow.style.display = on ? "flex" : "none";
+    var u = sceneUrl();
+    scPrev.style.display = u ? "block" : "none";
+    if (u) { scPrev.style.backgroundImage = "url(" + u + ")"; scPrev.style.opacity = Math.min(1, S.sceneOp * 2.2); }
+    refreshSnippet(); status();
+  }
+  scSel.addEventListener("change", function () { S.scene = scSel.value; refreshScene(); });
+  scUrlIn.addEventListener("input", function () { S.sceneUrl = scUrlIn.value; refreshScene(); });
+  scOpRow.querySelector("input").addEventListener("input", function (e) {
+    S.sceneOp = +e.target.value;
+    scOpRow.querySelector("span").textContent = S.sceneOp;
+    refreshScene();
+  });
 
   // — Cadence
   var c3 = card("when — cadence");

@@ -50,6 +50,13 @@ ok(buildSVG(Object.assign({}, base, { face: { nope: true } })).indexOf("vk") > 0
 let ctr = +/(?:<image class="vk" x=")([0-9.]+)/.exec(fp1)[1];
 ok(ctr > 40, "image faces centre in the face column (x=" + ctr + ", not hugging the left edge)");
 
+console.log("scene: an optional habitat behind everything");
+let sc = buildSVG(Object.assign({}, base, { scene: "https://cdn.jsdelivr.net/gh/u/r@abc/pool.png" }));
+ok(/preserveAspectRatio="xMidYMid slice" opacity="0.3"/.test(sc), "scene string → cover image at default 0.3 opacity");
+ok(sc.indexOf("slice") < sc.indexOf("<ellipse"), "scene renders BEHIND the field");
+ok(/opacity="0.85"/.test(buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png", opacity: 3 } }))), "opacity clamps to 0.85");
+ok(!/slice/.test(buildSVG(base)), "no scene → no habitat image");
+
 console.log("readout rows carry full-text tooltips");
 let tt = buildSVG(Object.assign({}, base, { seems: "an overlong read that will clip", noticing: "the full subtext" }));
 ok(/<title>an overlong read that will clip<\/title>/.test(tt), "[user] row has a <title> tooltip");

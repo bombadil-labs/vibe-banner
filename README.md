@@ -60,6 +60,7 @@ also exported (Node too) — it's the static fallback and the basis for the test
 | `stance` (0–1) | contour firmness: 1 (telling) gives the ovals a definite stroked edge; 0/omitted (asking) keeps the pure gradient falloff |
 | `consonance` (0–1) | per-blob diffusion: 1/omitted → compact, solid ovals; 0 → diffuse washes (bigger, thinner). Plural-at-peace vs. plural-in-tension |
 | `prev` | the previous banner's palette: on mount the columns lerp from it to the current palette over ~2s, then hand off to normal idle. Animation-only; the static fallback ignores it |
+| `scene` | an optional habitat: `"https://…png"` or `{ url, opacity }` (opacity clamped 0.08–0.85, default 0.3) drawn behind everything, cover-fit. Faces are alpha-transparent, so any scene works — a first-party tidepool ships at `assets/scene-tidepool.png`; user photos host like face-packs (allowlisted CDNs) |
 | `field` | power path: hand-author the ovals instead of `palette` |
 
 **Flags** — rare, condition-triggered flourishes, passed as `flag: "<name>"` (a single

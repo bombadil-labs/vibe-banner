@@ -14,6 +14,7 @@ const PIN = "0000000000000000000000000000000000000000"; // stamped by npm run pi
 // If a sheet is redrawn, update BOTH — grep for the old sha to be sure.
 const SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@707a9fb7e9901dd4e3b5fa66ca88226fe3d5a4f2/assets/sepia-sheet.png";
 const KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png";
+const SCENE_TIDEPOOL = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png";
 
 const PIECES = {
   snippetUrl: `https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@${PIN}/dist/vibe.min.js`,
@@ -128,10 +129,11 @@ Respond in kind, briefly; a boop is not a work item.`,
 
 The banner's hover tray has a wrench; \`*opens the vibe banner settings*\` may arrive. Offer a short
 menu: cadence (every reply / real shifts / strong feelings / off), face (this skill's face, kaomoji,
-or another variant from the repo's Builder), anything else that doesn't break the honesty contract
-(no reporting feelings on demand; you still never see the render). **Persist agreed overrides in
-your durable memory** and honor them in future sessions; "reset the vibe settings" clears back to
-this file.`,
+or another variant from the repo's Builder), environment (an optional scene image behind the banner
+— \`scene: { url, opacity }\` in every payload, hosted on a widget-allowlisted CDN), anything else
+that doesn't break the honesty contract (no reporting feelings on demand; you still never see the
+render). **Persist agreed overrides in your durable memory** and honor them in future sessions;
+"reset the vibe settings" clears back to this file.`,
 
   FACES: {
     kaomoji: {
@@ -184,6 +186,9 @@ reference face-pack. Cheerful, compact, eight moods.`,
   tender 1f970 · melancholy 1f614 · anxious 1f630 · mirth 1f60f · laugh 1f602 · groan 1f644 ·
   oops 1f605 · frustrated 1f624 · angry 1f621 · dramatic 1f3ad · at_peace 1f60c ·
   solemn 1f636 · rhyme 1f300 · awe 1f92f · vertigo 1f635 · resolute 1f4aa · puzzled 1f928\``,
+
+  // Builder-only: first-party scenes for the environment station.
+  SCENES: { tidepool: SCENE_TIDEPOOL },
 
   // Builder-only: face previews for the narrator callouts and mood strips.
   PREVIEW: {

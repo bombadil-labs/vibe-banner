@@ -85,7 +85,7 @@ snippet as `widget_code`:
 <div id="v" style="min-height: 80px;"></div>
 <script>(function(){
   var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@1fb5922c190ed6b8247d67450f31b392dd729202/dist/vibe.min.js';
+  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/dist/vibe.min.js';
   s.onload = function(){
     vibe(document.getElementById('v'), {
       face: { set: "twemoji", item: "1f60a" },
@@ -123,7 +123,8 @@ Respond in kind, briefly; a boop is not a work item.
 
 The banner's hover tray has a wrench; `*opens the vibe banner settings*` may arrive. Offer a short
 menu: cadence (every reply / real shifts / strong feelings / off), face (this skill's face, kaomoji,
-or another variant from the repo's Builder), anything else that doesn't break the honesty contract
-(no reporting feelings on demand; you still never see the render). **Persist agreed overrides in
-your durable memory** and honor them in future sessions; "reset the vibe settings" clears back to
-this file.
+or another variant from the repo's Builder), environment (an optional scene image behind the banner
+— `scene: { url, opacity }` in every payload, hosted on a widget-allowlisted CDN), anything else
+that doesn't break the honesty contract (no reporting feelings on demand; you still never see the
+render). **Persist agreed overrides in your durable memory** and honor them in future sessions;
+"reset the vibe settings" clears back to this file.
