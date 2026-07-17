@@ -77,7 +77,27 @@ const MOUTH = {
   wavy: [[6,10],[7,9],[8,10],[9,9]],
   tiny: [[7,10]]
 };
-const FRECK = [[6,3],[9,3],[7,4],[3,8],[12,8],[4,9],[11,9]];
+// Chromatophores are SUB-PIXEL — an affordance evolved for survival in a high-res world.
+// Density is arousal, camouflage is a state: awe/surprise BLANCH (real cuttlefish fear
+// response), peace barely speckles (nothing to hide), anxiety mottles hardest (trying to
+// disappear), anger storms dark. Seeded per mood → deterministic sheets.
+const DENSITY = {
+  awe: 4, surprised: 5, at_peace: 7, solemn: 7, sleepy: 8, weary: 8,
+  melancholy: 11, focused: 12, groan: 12, neutral: 13, thinking: 13, asking: 13,
+  sheepish: 13, puzzled: 13, content: 14, rhyme: 14, oops: 14, wink: 15,
+  mirth: 19, delighted: 20, spark: 20, booped: 20, tender: 22, resolute: 22,
+  vertigo: 24, love: 24, excited: 26, laugh: 26, dramatic: 26,
+  frustrated: 32, angry: 34, anxious: 38
+};
+function rng(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
 const mirror = px => px.map(q => [15 - q[0], q[1]]);
 function eyes(preset) {
   if (preset === "heart") return HEART.concat(mirror(HEART)).map(q => [q[0], q[1], "F"]);
@@ -160,7 +180,6 @@ MOODS.forEach((mood, i) => {
   const frill = FRILL[FRILL_OF[mood[0]] || "ripple"];
   frill.concat(mirror(frill)).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS.n));
   mood[1].concat(mood[2], mood[4] || []).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS[q[2]]));
-  FRECK.forEach(q => cellPut(cx, cy, q[0], q[1], mood[3]));
 
   // ---- the fine pass: sub-pixel ink. Doctrine: the BODY lives on the 4px grid (the
   // chunkiness is the body); body *definition* may use 2px half-resolution ink; objects
@@ -177,6 +196,25 @@ MOODS.forEach((mood, i) => {
   };
   softenEye(12);                                // left eye (logical cols 3-5, rows 5-7)
   softenEye(40);                                // right eye (cols 10-12)
+
+  // chromatophores: seeded fine speckle over the mantle, density per mood
+  {
+    const r = rng(i * 7919 + 13);
+    const hue = mood[3];
+    const dark = "#" + hex(hue).map(v => Math.max(0, Math.round(v * 0.72)).toString(16).padStart(2, "0")).join("");
+    const n = DENSITY[mood[0]] != null ? DENSITY[mood[0]] : 14;
+    let placed = 0, tries = 0;
+    while (placed < n && tries < n * 14) {
+      tries++;
+      const x = 8 + Math.floor(r() * 48), y = 6 + Math.floor(r() * 52);
+      if (BASE[y >> 2][x >> 2] !== "b") continue;                             // mantle only
+      if (y >= 19 && y <= 33 && ((x >= 11 && x <= 24) || (x >= 39 && x <= 52))) continue;   // eyes + lashes
+      if (x >= 22 && x <= 41 && y >= 34 && y <= 44) continue;                 // mouth zone
+      const s = r() < 0.45 ? 2 : 1;
+      frect(x, y, s, s, r() < 0.25 ? dark : hue);
+      placed++;
+    }
+  }
 
   if (mood[0] === "resolute") {                 // the hachimaki: crisp cloth from the high-res world
     const R = "#c04a48", Rd = "#8a3230", Rh = "#e07a70";

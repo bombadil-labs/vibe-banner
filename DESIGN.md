@@ -159,6 +159,15 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
 - **Flag composition.** Grammar-level composition was removed deliberately when the roster
   hit twenty; see the API decision above. Don't reintroduce it as a feature.
 
+- **Sepia's chromatophores are sub-pixel, and density is a signal (v0.9.x).** The
+  maintainer's framing: fine coloration is an affordance the creature evolved for survival
+  in a high-resolution world. Real cuttlefish biology drives the mapping — awe/surprise
+  BLANCH (fear response, ~4 dots), peace barely speckles (nothing to hide), arousal
+  densifies, anxiety mottles hardest of all (~38 dots — trying to disappear), anger storms
+  dark. Seeded per mood, deterministic, mantle-masked (eyes/lashes/mouth excluded). The
+  general sub-pixel doctrine: the body lives on the 4px grid; body definition uses fine
+  ink sparingly (lash-lines); worldly objects (the hachimaki) render at true 1px.
+
 ## The bench
 
 Entered, not admitted. If you take one up, honor the notes.
@@ -166,6 +175,14 @@ Entered, not admitted. If you take one up, honor the notes.
 - **`overwhelmed`** — capacity flooded; fluttering rects falling through the frame.
   Composition hazard: reads confusingly against melancholy's falling motes — differentiate
   by tumble-rotation vs. straight drift before admitting.
+- **Animated face sheets (moving chromatophores)** — the maintainer's musing: coloration
+  that drifts, GIF-style. Technical path if attempted: extend scripts/gen-sepia.js's
+  hand-rolled PNG encoder to APNG (acTL/fcTL/fdAT chunks) rather than writing a GIF-LZW
+  encoder; phase-lock every dot's cycle to one shared period so the loop closes cleanly
+  (the maintainer's explicit caution). BLOCKER to verify first: whether animated images
+  actually animate inside SVG <image> elements per browser — historically inconsistent,
+  and the face renders through a nested-svg crop. Don't build until that's tested on the
+  real surfaces.
 - **`mischief`** — about-to-do-something-playful, distinct from mirth's private amusement.
   Genuinely entered, but every good gesture found so far requires editing the face, which
   the architecture correctly forbids (the kaomoji is caller-supplied opaque text; whole-face
