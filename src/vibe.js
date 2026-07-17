@@ -761,6 +761,7 @@
     var soft = 1 - L.conson;                                   // consonance: 0 soft → today's falloff; grows → diffuse washes
     var kaoFont = "";                                          // resolved lazily for rhyme's canvas ghost
     var spriteFrame = 0;                                       // current sheet frame for animated sprites (base/shimmer/blink)
+    var chromoTick = 0;                                        // the metaball layer redraws every other frame — its motion is slow, half rate is invisible
 
     var dpr = Math.min(root.devicePixelRatio || 1, 2), sx = 1, sy = 1, pxScale = 1;
     function fit() {
@@ -903,7 +904,7 @@
         }
 
         // --- smooth chromatophores: continuous drift in the live palette's colour ---
-        if (chromo && chromoMask) {
+        if (chromo && chromoMask && (++chromoTick % 2 === 0)) {
           var ccw = kaoEl.clientWidth, cch = kaoEl.clientHeight;
           if (ccw > 4 && cch > 4) {
             if (chromo.width !== ccw) { chromo.width = ccw; chromo.height = cch; }
@@ -914,7 +915,7 @@
             // creeps (~0.3x); fully lit streams (1x = the high-energy rate). The fluid
             // layer's tempo now reports the same thing the field's size does.
             var cEng = Math.max(0, Math.min(1, p.engagement == null ? 0.7 : +p.engagement || 0));
-            var cSpd = 0.3 + 0.7 * cEng;
+            var cSpd = 0.15 + 0.35 * cEng;                     // half the old rate: same refresh, less drastic travel
             for (var ci = 0; ci < 7; ci++) {                   // seven roamers — the only camo there is, now that the baked patterns retired
               var crr = mulberry32(L.seed + ci * 7717 + 5);
               var sw1 = (0.11 + crr() * 0.11) * cSpd, sw2 = (0.09 + crr() * 0.1) * cSpd;   // fast enough to SEE at full energy: a body-crossing in seconds
@@ -924,19 +925,28 @@
               // boundary, and crossing the features reads as slipping under them
               var cxp = (0.5 + 0.34 * Math.sin(t * sw1 * 6.28 + cp1) + 0.24 * Math.sin(t * sw1 * 6.28 * 1.618 + cp2)) * ccw;
               var cyp = (0.5 + 0.34 * Math.sin(t * sw2 * 6.28 + cp3) + 0.24 * Math.sin(t * sw2 * 6.28 * 2.414 + cp4)) * cch;
-              var cal = 0.34 + 0.16 * Math.sin(t * 0.8 + ci * 1.7);
               // the spot is an amoeba: three overlapping lobes, each with its own
-              // wandering offset and breathing radius (clamped min/max) — shape mutates
+              // wandering offset and breathing radius (clamped min/max) — shape mutates.
+              // Drawn as a soft FIELD; the threshold pass below turns it into flesh.
               for (var kk = 0; kk < 3; kk++) {
                 var kph = cp1 * (kk + 1) + kk * 2.1;
                 var lox = 0.06 * Math.sin(t * (0.21 + kk * 0.07) + kph) * ccw;
                 var loy = 0.06 * Math.sin(t * (0.17 + kk * 0.09) * 1.618 + kph * 1.3) * cch;
-                var lr = (0.08 + 0.06 * (0.5 + 0.5 * Math.sin(t * (0.23 + kk * 0.11) + kph * 0.7))) * ccw;   // radius breathes 0.08–0.14 of the body
+                var lr = (0.11 + 0.07 * (0.5 + 0.5 * Math.sin(t * (0.23 + kk * 0.11) + kph * 0.7))) * ccw;   // radius breathes 0.11–0.18 of the body
                 var cg = cctx.createRadialGradient(cxp + lox, cyp + loy, 0, cxp + lox, cyp + loy, lr);
-                cg.addColorStop(0, rgba(hueC, cal)); cg.addColorStop(0.62, rgba(hueC, cal * 0.85)); cg.addColorStop(1, rgba(hueC, 0));   // hard-ish core: a patch, not a haze
+                cg.addColorStop(0, rgba(hueC, 0.72)); cg.addColorStop(0.55, rgba(hueC, 0.34)); cg.addColorStop(1, rgba(hueC, 0));
                 cctx.fillStyle = cg; cctx.beginPath(); cctx.arc(cxp + lox, cyp + loy, lr, 0, 6.2832); cctx.fill();
               }
             }
+            // METABALL PASS: remap the accumulated alpha through a soft threshold.
+            // Overlapping tails sum past it and BRIDGE (merge); parting patches thin the
+            // bridge until it snaps (split). Both behaviours from one cheap pixel pass.
+            var mimg2 = cctx.getImageData(0, 0, ccw, cch), mdd = mimg2.data;
+            for (var mi2 = 3; mi2 < mdd.length; mi2 += 4) {
+              var ma = mdd[mi2];
+              mdd[mi2] = ma <= 72 ? 0 : ma >= 124 ? 138 : Math.round((ma - 72) / 52 * 138);   // out: ~0.54 alpha flesh with a 2-3px soft rim
+            }
+            cctx.putImageData(mimg2, 0, 0);
             cctx.globalCompositeOperation = "destination-in";
             cctx.imageSmoothingEnabled = false;                // the mask keeps its chunky 4px edges — spots glide, the silhouette does not
             cctx.drawImage(chromoMask, 0, 0, ccw, cch);
