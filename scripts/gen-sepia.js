@@ -61,6 +61,10 @@ const FRILL_OF = {
   vertigo:"ripple", resolute:"calm", puzzled:"ripple", asking:"ripple", weary:"drooped",
   wink:"ripple", love:"flared"
 };
+// SUB-PIXEL MOUTHS: certain moods trade the chunky block mouth for fine-ink lips drawn
+// in the definition register (like the lashes) — a pressed-thin line reads restraint the
+// 4px grid can't. Table keyed by mood name; add sparingly, the block mouth is the norm.
+const FINE_MOUTH = { groan: "pressed" };
 // left-eye pupil presets (whites: cols 3-5 / 10-12, rows 5-7); right eye mirrors x -> 15-x
 const PUP = {
   w:      [[3,6],[4,7],[5,6]],
@@ -192,7 +196,8 @@ MOODS.forEach((mood, i) => { for (let frame = 0; frame < 3; frame++) {
   frill.concat(mirror(frill)).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS.n));
   const lidL = [[3, 6], [4, 6], [5, 6]];
   const eyePix = blink ? lidL.concat(mirror(lidL)).map(q => [q[0], q[1], "p"]) : mood[1];
-  eyePix.concat(mood[2], mood[4] || []).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS[q[2]]));
+  const mouthPix = FINE_MOUTH[mood[0]] ? [] : mood[2];         // fine-mouth moods draw their lips in the fine pass below
+  eyePix.concat(mouthPix, mood[4] || []).forEach(q => cellPut(cx, cy, q[0], q[1], COLORS[q[2]]));
 
   // ---- the fine pass: sub-pixel ink. Doctrine: the BODY lives on the 4px grid (the
   // chunkiness is the body); body *definition* may use 2px half-resolution ink; objects
@@ -221,6 +226,11 @@ MOODS.forEach((mood, i) => { for (let frame = 0; frame < 3; frame++) {
   // clean cream (plus the whole-body TINT states); the mask cell below still gates
   // where the living colour may travel.
 
+  if (FINE_MOUTH[mood[0]] === "pressed") {      // pressed-thin lips: two real pixels of long-suffering, in the lash register
+    frect(27, 40, 11, 2, COLORS.p);             // the line itself, slightly narrower than a block mouth
+    fpx(26, 41, COLORS.p); fpx(38, 41, COLORS.p);   // corners dip — the jaw is set
+    frect(28, 42, 9, 1, "#c8b6c2");             // soft under-shadow so the line sits IN the face, not on it
+  }
   if (mood[0] === "resolute") {                 // the hachimaki: crisp cloth from the high-res world
     const R = "#c04a48", Rd = "#8a3230", Rh = "#e07a70";
     frect(10, 15, 44, 7, R);                    // band across the brow, wrapping past the body edge
@@ -247,7 +257,8 @@ MOODS.forEach((mood, i) => {
       for (let x = gx * SCALE - 1; x <= gx * SCALE + SCALE; x++)
         if (x >= 0 && x < CELL && y >= 0 && y < CELL) ex[y * CELL + x] = 1;
   };
-  mood[2].forEach(q => mark(q[0], q[1]));                      // the actual mouth, whatever shape this expression wears
+  const mouthCells = FINE_MOUTH[mood[0]] ? [[6, 10], [7, 10], [8, 10], [9, 10]] : mood[2];   // fine mouths reserve only their own thin row
+  mouthCells.forEach(q => mark(q[0], q[1]));                   // the actual mouth, whatever shape this expression wears
   (mood[4] || []).forEach(q => mark(q[0], q[1]));              // extras that sit on the mantle (brows, blush, flower…)
   const okM = (x, y) => {
     if (x < 0 || x >= CELL || y < 0 || y >= CELL) return false;
