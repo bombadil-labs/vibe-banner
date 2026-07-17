@@ -173,7 +173,10 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   The prefix is the standard: every `sendPrompt` the renderer fires starts with
   `[vibe banner] `, and the skill's attunement section tells the reporter to receive such
   messages as gestures (stage directions arriving through the glass), not prompts. New
-  interactions must use it; a bare `sendPrompt` string is a bug.
+  interactions must use it; a bare `sendPrompt` string is a bug. Each message also ends
+  with a trailing blank line (`\n\n`) — the maintainer boop-then-fed in one hover and the
+  two gestures fused into a single run-on string. All sends go through the `say()` helper,
+  which owns both the prefix and the spacing; don't call `sendPrompt` directly.
 
 - **Live scenes are drawn natively in the canvas frame loop, never as animated images
   (v0.12.0).** The maintainer floated GIF backgrounds; the blocker on animated images

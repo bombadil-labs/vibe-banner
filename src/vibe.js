@@ -510,8 +510,11 @@
     // is watched-and-touchable, bending every future read (see DESIGN.md).
     var kaoEl = wrap.querySelector(".vk"), baseFill = [92, 67, 32];
     // Every banner-generated message carries this prefix so it never reads as typed text —
-    // the skill tells the reporter to receive these as gestures, not prompts.
+    // the skill tells the reporter to receive these as gestures, not prompts. Each one also
+    // ends with a blank line: consecutive taps (a boop then a feeding) land as separate
+    // paragraphs instead of fusing into one run-on string.
     var VP = "[vibe banner] ";
+    function say(msg) { root.sendPrompt(VP + msg + "\n\n"); }
     // live scene state: drawn natively in the frame loop below (never an animated image —
     // see DESIGN.md). Ambience runs for everyone; only the click affordances gate on play.
     var live = (L.scene && L.scene.live && L.portrait) ? { ripples: [], feeds: [] } : null;
@@ -537,13 +540,13 @@
           } else {
             clearTimeout(tmr); armed = false; row.style.textDecoration = "";
             var q = String(p.noticing); if (q.length > 60) q = q.slice(0, 57) + "…";
-            root.sendPrompt(VP + '*a flicker at your [note] ("' + q + '") — it doesn\'t quite land*');
+            say('*a flicker at your [note] ("' + q + '") — it doesn\'t quite land*');
           }
         });
       }
       if (kaoEl && p.play !== false) {                         // boop: the face itself is the button
         kaoEl.style.cursor = "pointer";
-        kaoEl.addEventListener("click", function () { root.sendPrompt(VP + "*boop*"); });
+        kaoEl.addEventListener("click", function () { say("*boop*"); });
       }
       if (p.play !== false) {
       var tray = document.createElement("div");                // hover tray, upper LEFT (Claude's own UI owns the upper right)
@@ -555,13 +558,13 @@
         var flav = flavorOf(p.palette, live ? "tidepool" : null) + " flavor*";
         if (live) {                                            // in a tidepool the meal arrives as flakes on the water; the message follows the fall
           live.feeds.push({ t0: null });
-          setTimeout(function () { root.sendPrompt(VP + "*scatters a pinch of claudemeal over the tidepool — " + flav); }, 1400);
-        } else root.sendPrompt(VP + "*sets down a fresh tin of claudemeal — " + flav);
+          setTimeout(function () { say("*scatters a pinch of claudemeal over the tidepool — " + flav); }, 1400);
+        } else say("*sets down a fresh tin of claudemeal — " + flav);
       });
       var sb = document.createElement("button");               // the wrench: asks the reporter to open settings talk
       sb.textContent = "🔧"; sb.title = "vibe settings"; sb.style.cssText = BTN;
       sb.addEventListener("click", function () {
-        root.sendPrompt(VP + "*opens the settings*");
+        say("*opens the settings*");
       });
       tray.appendChild(fb); tray.appendChild(sb); wrap.appendChild(tray);
       wrap.addEventListener("mouseenter", function () { tray.style.opacity = "0.75"; });
