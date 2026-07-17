@@ -19,9 +19,9 @@ let n = buildSVG(Object.assign({}, base, { noticing: "peripheral" }));
 ok(/viewBox="0 0 680 132"/.test(n), "4-row banner is H=132");
 ok(/\[note\]/.test(n) && (n.match(/<text /g) || []).length === 5, "[note] present, 5 <text>");
 
-console.log("oversized kaomoji squeeze into the face column");
-ok(!/textLength/.test(buildSVG(base)), "compact face → no squeeze");
-ok(/textLength="138" lengthAdjust="spacingAndGlyphs"/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/" }))), "wide single-line face → squeezed to the column");
+console.log("oversized kaomoji squeeze into the window");
+ok(!/textLength/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ˘ ᵕ ˘ )" }))), "compact face → no squeeze");
+ok(/textLength="111" lengthAdjust="spacingAndGlyphs"/.test(buildSVG(Object.assign({}, base, { kaomoji: "( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/" }))), "wide single-line face → squeezed to the window (95px side + small overhang)");
 let wideML = buildSVG(Object.assign({}, base, { kaomoji: "✧\n( ﾟ∀ﾟ)ｱﾊﾊ\\/\\/\\/\\/\\/\\/\\/\\/\n✧" }));
 ok((wideML.match(/textLength/g) || []).length === 1, "multi-line bloom: only the wide line squeezes");
 
@@ -48,7 +48,7 @@ ok(/viewBox="448 192 64 64"/.test(buildSVG(Object.assign({}, base, { face: { set
 ok(/class="txt fk vk"/.test(buildSVG(Object.assign({}, base, { face: { set: "unknown-set", item: "x" } }))), "unknown set → falls back to kaomoji");
 ok(buildSVG(Object.assign({}, base, { face: { nope: true } })).indexOf("vk") > 0, "malformed face → falls back to kaomoji, no crash");
 let ctr = +/(?:<image class="vk" x=")([0-9.]+)/.exec(fp1)[1];
-ok(ctr > 40, "image faces centre in the face column (x=" + ctr + ", not hugging the left edge)");
+ok(ctr === 27.5, "image faces centre in the window (x=" + ctr + " → centre 55.5 in the 95px window at x=8)");
 
 console.log("scene: a framed portrait window on the left");
 let sc = buildSVG(Object.assign({}, base, { scene: "https://cdn.jsdelivr.net/gh/u/r@abc/pool.png" }));
@@ -57,7 +57,9 @@ ok(/opacity="0.5"><image/.test(sc), "window default opacity 0.5");
 ok(sc.indexOf("clipPath") < sc.indexOf("<ellipse"), "window renders BEHIND the field");
 ok(/stroke="#8a7a86"/.test(sc), "the window has its quiet frame");
 ok(/cx="265"/.test(sc) && /cx="397"/.test(sc) && /cx="530"/.test(sc), "field columns cede the left side to the window");
-ok(/cx="150"/.test(buildSVG(base)) && !/clipPath/.test(buildSVG(base)), "no scene → classic layout, no window");
+let noSc = buildSVG(base);
+ok(/stroke="#8a7a86"/.test(noSc) && /fill-opacity="0.07"/.test(noSc) && !/clipPath/.test(noSc), "no scene → the EMPTY window still draws (the window is the layout)");
+ok(/cx="265"/.test(noSc), "columns sit rightward even without a scene");
 ok(/opacity="0.95"><image/.test(buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png", opacity: 3 } }))), "opacity clamps to 0.95");
 
 console.log("empty window: scene {} or true renders the frame with no image");
@@ -86,10 +88,10 @@ ok((long.match(/<title>carefully verify every single one/g) || []).length === 2,
 console.log("three-column field");
 let f = buildSVG(Object.assign({}, base, { palette: ["#7d8fb8", "#d99a5e", "#6fa39c"] }));
 ok((f.match(/<ellipse /g) || []).length === 3, "always exactly three ovals");
-ok(/cx="150"/.test(f) && /cx="340"/.test(f) && /cx="530"/.test(f), "columns pinned wide at x=150/340/530");
+ok(/cx="265"/.test(f) && /cx="397"/.test(f) && /cx="530"/.test(f), "columns pinned at x=265/397/530 (right of the window)");
 
 console.log("engagement is deflationary (size only, columns fixed)");
-const rx = (svg) => +/rx="([0-9.]+)"/.exec(svg)[1];
+const rx = (svg) => +/<ellipse[^>]*?rx="([0-9.]+)"/.exec(svg)[1];   // ellipse rx, not the window rect's corner radius
 let e0 = rx(buildSVG(Object.assign({}, base, { engagement: 0 })));
 let e5 = rx(buildSVG(Object.assign({}, base, { engagement: 0.5 })));
 let e9 = rx(buildSVG(Object.assign({}, base, { engagement: 0.9 })));
@@ -111,7 +113,7 @@ console.log("flags render (static markers)");
 ok(/<circle/.test(buildSVG(Object.assign({}, base, { flag: "spark" }))), "spark adds a light-bulb");
 ok(/rotate\(/.test(buildSVG(Object.assign({}, base, { flag: "excited" }))), "excited adds rotated sparkles");
 ok(/scale\(0\.62\)/.test(buildSVG(Object.assign({}, base, { flag: "awe" }))), "awe shrinks the face hard in the still frame too");
-ok(/translate\(79 /.test(buildSVG(Object.assign({}, base, { flag: "awe", face: "https://cdn.jsdelivr.net/gh/u/r@abc/m.png" }))), "image-face poses pivot on the image centre, not the text anchor");
+ok(/translate\(55\.5 /.test(buildSVG(Object.assign({}, base, { flag: "awe", face: "https://cdn.jsdelivr.net/gh/u/r@abc/m.png" }))), "image-face poses pivot on the window centre (55.5)");
 
 console.log("removed params are ignored, no crash");
 ok(buildSVG(Object.assign({}, base, { spread: 0.9, turbulence: 0.9, conviction: 0.3, history: [{ v: .4 }] })).startsWith("<svg"), "legacy params ignored");
@@ -119,14 +121,15 @@ ok(buildSVG(Object.assign({}, base, { spread: 0.9, turbulence: 0.9, conviction: 
 console.log("stance: declarative gains a contour, asking keeps the open falloff");
 let st0 = buildSVG(base);
 let st1 = buildSVG(Object.assign({}, base, { stance: 1 }));
-ok(!/stroke-opacity/.test(st0.split("<text")[0]), "stance omitted → no oval stroke (today's look)");
+ok(!/<ellipse[^>]*stroke-opacity/.test(st0), "stance omitted → no oval stroke (today's look)");
 ok(/stroke-opacity="0.55"/.test(st1), "stance 1 → definite oval edge");
 
 console.log("consonance: split → diffuse washes (bigger, thinner); omitted = compact");
 let c1 = buildSVG(base);
 let c0 = buildSVG(Object.assign({}, base, { consonance: 0 }));
 ok(rx(c0) > rx(c1), "consonance 0 spreads the ovals (rx " + rx(c0) + " > " + rx(c1) + ")");
-ok(+/opacity="([0-9.]+)"\/>/.exec(c0)[1] < +/opacity="([0-9.]+)"\/>/.exec(c1)[1], "consonance 0 thins the washes");
+const elOp = (svg) => +/<ellipse[^>]*?" opacity="([0-9.]+)"/.exec(svg)[1];   // the ellipses' opacity, not the window's
+ok(elOp(c0) < elOp(c1), "consonance 0 thins the washes");
 
 console.log("prev is animation-only: static fallback ignores it, no crash");
 ok(buildSVG(Object.assign({}, base, { prev: ["#a06a6a"] })).startsWith("<svg"), "prev ignored in static");
@@ -152,7 +155,7 @@ let ft = buildSVG(Object.assign({}, base, { flag: "solemn" }));
 ok(/>\[solemn\]<\/text>/.test(ft), "solemn → '[solemn]' bottom-left");
 ok(/>\[at peace\]<\/text>/.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "at_peace displays as '[at peace]'");
 ok(/>\[angry\]<\/text>/.test(buildSVG(Object.assign({}, base, { angry: true, puzzled: true }))), "legacy multi-flag payload captions the winner");
-ok(/viewBox="0 0 680 119"/.test(ft), "flag caption adds bottom padding (H=119)");
+ok(/viewBox="0 0 680 107"/.test(ft), "flag caption lives in the window — no bottom padding (H=107)");
 
 console.log("new-flag static markers");
 ok(/🌸|🌼|✿|❀|🌷/.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "at_peace scatters blossoms");

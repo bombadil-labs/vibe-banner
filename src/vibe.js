@@ -339,25 +339,25 @@
     var langs = normalizeLangs(p.languages);
     var topExtent = Math.max(kaoH, rightH) / 2;
     var bottomExtent = Math.max(kaoH / 2, rightH / 2);
-    var langPad = (langs.length || activeFlag) ? 12 : 0;       // breathing room for the bottom traces ([flag] left, [Reasoned in] right)
+    var langPad = langs.length ? 12 : 0;                       // breathing room for [Reasoned in] only — the flag caption lives inside the window now
     var H = Math.round(PAD + topExtent + bottomExtent + PAD) + langPad;
     var coreCy = PAD + topExtent, dyField = coreCy - DEFAULT_MID;
-    var portrait = null;                                       // the scene's window: a square on the left, face centred within
-    if (scene) {
-      var pside = Math.min(H - 12, 140);
-      portrait = { x: 8, y: (H - pside) / 2, s: pside };
-    }
-    var faceCy = portrait ? portrait.y + portrait.s / 2 : coreCy;   // faces centre in the window when there is one
+    // THE WINDOW IS THE LAYOUT: every face lives in a framed square block on the left,
+    // scene or no scene. A scene just decides what's visible through it (v0.16.0 — the
+    // classic un-windowed layout is retired).
+    var pside = Math.min(H - 12, 140);
+    var portrait = { x: 8, y: (H - pside) / 2, s: pside };
+    var faceCy = portrait.y + portrait.s / 2;                  // faces centre in the window, always
     var kaoAbs = kaoLines.map(function (_, i) { return faceCy - kaoH / 2 + kaoAscent + i * kaoLh; });
     var rightAbs = lines.map(function (_, i) { return coreCy - rightH / 2 + 11 + i * ROW_GAP; });
 
     // blobs carry base geometry + seeded vertical params; the time-varying part happens in mount/buildSVG.
-    // With a portrait window, the field cedes the left side: columns squeeze rightward.
+    // The field cedes the left side to the window: columns sit rightward.
     var PORTRAIT_COLX = [265, 397, 530];
     var blobs = (usesCols ? cols : p.field).map(function (c, i) {
       var v = vcol[i] || vcol[i % 3];
       return {
-        cx: (portrait && usesCols) ? PORTRAIT_COLX[i] : c.cx,
+        cx: usesCols ? PORTRAIT_COLX[i] : c.cx,
         cyBase: (c.cy == null ? DEFAULT_MID : c.cy) + dyField,
         rx: (c.rx == null ? COL_RX : c.rx) * mult, ry: (c.ry == null ? COL_RY : c.ry) * mult,
         op: c.op == null ? COL_OP : c.op, fill: c.fill, pool: c.pool || null,
@@ -368,17 +368,13 @@
     // text SVG fragments. Oversized faces get squeezed into the face column (the readout
     // starts at TEXT_X) instead of running underneath it — exuberant single-line kaomoji
     // compress; the skill's guidance is that big feelings bloom tall, not long.
-    var kaoMaxW = TEXT_X - FACE_X - 10;
+    var kaoMaxW = Math.min(TEXT_X - FACE_X - 10, portrait.s + 16);       // text faces get a small symmetric overhang past the frame; hard squeeze beyond
     function fit(line, size) { return estW(line, size) > kaoMaxW ? ' textLength="' + kaoMaxW + '" lengthAdjust="spacingAndGlyphs"' : ''; }
     var kaoSVG, faceBox = null;
-    var kaoX = portrait
-      ? portrait.x + Math.max(5, (portrait.s - Math.min(estW(kaoLines[0] || "", multiline ? 15 : 19), kaoMaxW)) / 2)
-      : FACE_X;                                                          // text faces centre in the window; otherwise hug the left as always
+    var kaoX = portrait.x + Math.max(5, (portrait.s - Math.min(estW(kaoLines[0] || "", multiline ? 15 : 19), kaoMaxW)) / 2);   // text faces centre in the window
     if (faceImg) {
       var iy = faceCy - faceImg.h / 2;
-      var ix = portrait
-        ? portrait.x + (portrait.s - faceImg.w) / 2
-        : FACE_X + Math.max(0, (kaoMaxW - faceImg.w) / 2);               // centre the image in the window, else in the face column
+      var ix = portrait.x + (portrait.s - faceImg.w) / 2;                // centre the image in the window
       faceBox = { x: ix, y: iy, w: faceImg.w, h: faceImg.h };            // authoritative banner-space box — getBBox on a nested sprite svg reports sheet coords, never use it
       if (faceImg.cellW && faceImg.cellH) {                    // spritesheet: crop one cell via a nested viewport
         var col = faceImg.index % faceImg.cols, rowI = Math.floor(faceImg.index / faceImg.cols);
@@ -407,21 +403,19 @@
       });
       langSVG = '<text x="' + (W - 12) + '" y="' + g(H - 7) + '" text-anchor="end" class="txt fl">' + parts + '</text>';
     }
-    var flagSVG = activeFlag                                   // caption: inside the window's bottom-left corner when there is one, else banner bottom-left
-      ? (portrait
-        ? '<text x="' + (portrait.x + 7) + '" y="' + g(portrait.y + portrait.s - 7) + '" class="txt fl">[' + esc(activeFlag.replace("_", " ")) + ']</text>'
-        : '<text x="12" y="' + g(H - 7) + '" class="txt fl">[' + esc(activeFlag.replace("_", " ")) + ']</text>')
+    var flagSVG = activeFlag                                   // caption: inside the window's bottom-left corner
+      ? '<text x="' + (portrait.x + 7) + '" y="' + g(portrait.y + portrait.s - 7) + '" class="txt fl">[' + esc(activeFlag.replace("_", " ")) + ']</text>'
       : "";
-    var sceneSVG = "";
-    if (scene) {                                               // the window itself: clipped image (or a faint empty interior) + a quiet frame
-      var frameRect = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="none" stroke="#8a7a86" stroke-opacity="0.45" stroke-width="1.5"/>';
-      if (scene.url) {
-        var cid = "vscn" + (++SCENE_IDS);
-        sceneSVG = '<defs><clipPath id="' + cid + '"><rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10"/></clipPath></defs>' +
-          '<g clip-path="url(#' + cid + ')" opacity="' + g(scene.op) + '"><image href="' + esc(scene.url) + '" x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" preserveAspectRatio="xMidYMid slice"/></g>' + frameRect;
-      } else {
-        sceneSVG = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="#8a7a86" fill-opacity="0.07"/>' + frameRect;
-      }
+    // the window itself, always: clipped image when a scene is set, else the faint empty
+    // interior — either way the frame draws, because the window is the layout
+    var frameRect = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="none" stroke="#8a7a86" stroke-opacity="0.45" stroke-width="1.5"/>';
+    var sceneSVG;
+    if (scene && scene.url) {
+      var cid = "vscn" + (++SCENE_IDS);
+      sceneSVG = '<defs><clipPath id="' + cid + '"><rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10"/></clipPath></defs>' +
+        '<g clip-path="url(#' + cid + ')" opacity="' + g(scene.op) + '"><image href="' + esc(scene.url) + '" x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" preserveAspectRatio="xMidYMid slice"/></g>' + frameRect;
+    } else {
+      sceneSVG = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="#8a7a86" fill-opacity="0.07"/>' + frameRect;
     }
 
     var L = {
@@ -442,7 +436,7 @@
     out.push('<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + L.H + '" role="img" xmlns="http://www.w3.org/2000/svg">');
     out.push('<title>Mood annotation</title><desc>Ambient mood field with a user read and a first-person feel/intent readout</desc>');
     out.push('<style>' + STYLE + '</style>');
-    if (L.scene) out.push(L.sceneSVG);
+    out.push(L.sceneSVG);                                     // the window draws on every banner
     var soft = 1 - L.conson;                                  // consonance: split → diffuse washes (bigger, thinner)
     var sizeMul = (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);     // awe: the field swells while the face shrinks
     out.push('<g opacity="0.5">');
@@ -496,7 +490,7 @@
     if (L.rhyme) out.push('<g opacity="0.12" transform="translate(14,6)">' + L.kaoSVG + '</g>');   // the echo of the face, behind-ish and offset
     var kao = L.kaoSVG;                                        // constant-pose flags transform the face in the still frame too
     var pvx = L.faceBox ? L.faceBox.x + L.faceBox.w / 2
-      : L.portrait ? L.portrait.x + L.portrait.s / 2 : 46;     // pivot on the face's real centre (window centre for portrait text faces)
+      : L.portrait.x + L.portrait.s / 2;                       // pivot on the face's real centre (window centre for text faces)
     if (L.awe) kao = '<g transform="translate(' + g(pvx) + ' ' + g(L.coreCy + 5) + ') scale(0.62) rotate(-3) translate(' + g(-pvx) + ' ' + g(-L.coreCy) + ')">' + kao + '</g>';
     else if (L.solemn) kao = '<g transform="translate(' + g(pvx) + ' ' + g(L.coreCy + 3) + ') rotate(4) translate(' + g(-pvx) + ' ' + g(-L.coreCy) + ')">' + kao + '</g>';
     out.push(kao + L.restSVG + '</svg>');
@@ -512,7 +506,7 @@
     var L = layout(p, { overlay: true }), H = L.H;
     el.innerHTML =
       '<div style="position:relative;width:100%">' +
-      (L.scene ? '<svg viewBox="0 0 ' + W + ' ' + L.H + '" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none" xmlns="http://www.w3.org/2000/svg">' + L.sceneSVG + '</svg>' : '') +
+      '<svg viewBox="0 0 ' + W + ' ' + L.H + '" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none" xmlns="http://www.w3.org/2000/svg">' + L.sceneSVG + '</svg>' +
       '<canvas style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none"></canvas>' +
       '<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + H + '" role="img" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:1;display:block">' +
       '<title>Mood annotation</title><desc>Living mood field with a user read and a first-person feel/intent readout</desc>' +
@@ -547,7 +541,7 @@
     var ov = document.createElement("div");
     ov.style.cssText = "position:absolute;z-index:2;display:flex;flex-direction:column;justify-content:center;pointer-events:none;" +
       "left:" + g(TEXT_X / W * 100) + "%;right:1.2%;top:2%;bottom:" +
-      ((L.hasLangs || (L.caption && !L.portrait)) ? g(14 / L.H * 100) + "%" : "2%") + ";";   // clearance for the bottom traces; a windowed flag pill needs none
+      (L.hasLangs ? g(14 / L.H * 100) + "%" : "2%") + ";";     // clearance for [Reasoned in]; the flag pill lives in the window
     var pn = document.createElement("div");
     pn.className = "vo vo-panel";
     L.oItems.forEach(function (it) {
@@ -578,9 +572,8 @@
     if (L.flagName) {                                          // the flag caption as a pill, tucked into the window's bottom-left corner
       fpill = document.createElement("div");
       fpill.className = "vo";
-      fpill.style.cssText = "position:absolute;z-index:2;pointer-events:none;" + (L.portrait
-        ? "left:" + g((L.portrait.x + 6) / W * 100) + "%;top:" + g((L.portrait.y + L.portrait.s - 21) / L.H * 100) + "%;"
-        : "left:1.8%;bottom:3.5%;");
+      fpill.style.cssText = "position:absolute;z-index:2;pointer-events:none;" +
+        "left:" + g((L.portrait.x + 6) / W * 100) + "%;top:" + g((L.portrait.y + L.portrait.s - 21) / L.H * 100) + "%;";
       fpill.innerHTML = '<span class="pill">' + esc(L.flagName.replace("_", " ")) + '</span>';
       wrap.appendChild(fpill);
     }

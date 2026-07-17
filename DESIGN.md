@@ -168,6 +168,16 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   general sub-pixel doctrine: the body lives on the 4px grid; body definition uses fine
   ink sparingly (lash-lines); worldly objects (the hachimaki) render at true 1px.
 
+- **The window IS the layout (v0.16.0).** The maintainer's escalating series of scene
+  requests turned out to be one request: the face always lives in the framed square
+  block on the banner's left — scene set or not. With no scene the window renders
+  empty (frame + faint interior); `scene` only decides what's visible through it. The
+  classic un-windowed layout is retired: columns always sit at 265/397/530, faces
+  always centre in the window, the flag pill always sits in the window's corner. Text
+  faces get a small symmetric overhang allowance (`portrait.s + 16`) before the hard
+  squeeze — parens are airy and a slight poke past the frame reads fine; crushing
+  every ordinary kaomoji to the frame width does not.
+
 - **Banner-generated messages carry the `[vibe banner]` prefix (v0.12.0).** Without it, a
   boop lands in the chat as if the user typed the word "boop" — provenance is invisible.
   The prefix is the standard: every `sendPrompt` the renderer fires starts with

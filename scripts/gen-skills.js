@@ -313,7 +313,7 @@ const CATALOG = {
     bundle: PIECES.snippetUrl,
     payload_notes: {
       face: "one union: kaomoji string | image URL | sprite slice {url,cellW,cellH,cols,rows,index} | KnownFace {set,item}",
-      scene: "{ url, opacity (0.15-0.95, default 0.5), live? } — a framed portrait window on the banner's left, face centred inside; {} or true gives an empty window (frame only, no view)",
+      scene: "{ url, opacity (0.15-0.95, default 0.5), live? } — fills the framed portrait window on the banner's left (face centred inside). The window always draws; without a scene it renders empty (frame only)",
       flag: "a single optional string; one per banner at most"
     }
   },
