@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>sepia parity</title>
+<style>:root{--font-sans:sans-serif;--font-mono:monospace;--font-voice:serif}</style>
+</head><body>
+<script src="dist/vibe.min.js"></script>
+<script>
+window.CHECK = function () {
+  var B = window.vibe.buildSVG;
+  var base = { kaomoji: "( ˶ˆ ꒳ ˆ˵ )", seems: "a", feel: "b", trying: "c", palette: ["#7d8fb8"] };
+  var out = {};
+  var v = B(Object.assign({}, base, { face: { set: "sepia", item: "vertigo" } }));
+  out.vertigoViewBox = /viewBox="64 192 64 64"/.test(v);
+  var l = B(Object.assign({}, base, { face: { set: "sepia", item: "love" } }));
+  out.loveViewBox = /viewBox="448 192 64 64"/.test(l);
+  out.sheetSha = /41350578a7aeb17ceb53ff561b4b3321d05573e7\/assets\/sepia-sheet\.png/.test(v);
+  out.neutralIsCell0 = /viewBox="0 0 64 64"/.test(B(Object.assign({}, base, { face: { set: "sepia", item: "neutral" } })));
+  out.unknownFallsBack = /class="txt fk vk"/.test(B(Object.assign({}, base, { face: { set: "sepia-nope", item: "x" } })));
+  var ok = true;
+  var basics = B(base);
+  ok = ok && basics.indexOf("<svg") === 0 && /viewBox="0 0 680 107"/.test(basics);
+  var flags = ["angry","solemn","awe","vertigo","at_peace","puzzled","laugh","tender"];
+  flags.forEach(function (f) { var s = B(Object.assign({}, base, { flag: f })); ok = ok && s.indexOf("<svg") === 0 && s.slice(-6) === "</svg>"; });
+  out.coreStillPass = ok;
+  return JSON.stringify(out);
+};
+</script></body></html>

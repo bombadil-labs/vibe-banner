@@ -135,6 +135,13 @@
   // to an allowlisted CDN. "kip" is the repo's own mascot — items are mood names.
   var KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png";
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
+  // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
+  // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@41350578a7aeb17ceb53ff561b4b3321d05573e7/assets/sepia-sheet.png";
+  var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
+    "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
+    "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
+    "awe", "vertigo", "resolute", "puzzled", "asking", "weary", "wink", "love"];
   var FACE_SETS = {
     "noto-animated": function (item) { return { url: "https://fonts.gstatic.com/s/e/notoemoji/latest/" + encodeURIComponent(item) + "/512.gif" }; },
     "noto": function (item) { return { url: "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@v2.047/png/128/emoji_u" + encodeURIComponent(item) + ".png" }; },
@@ -142,6 +149,10 @@
     "kip": function (item) {
       var i = KIP_MOODS[item]; if (i == null) i = Math.max(0, Math.min(7, parseInt(item, 10) || 0));
       return { url: KIP_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 1, index: i };
+    },
+    "sepia": function (item) {
+      var i = SEPIA_MOODS.indexOf(item); if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
+      return { url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 4, index: i };
     }
   };
 

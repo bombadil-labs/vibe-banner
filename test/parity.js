@@ -42,6 +42,9 @@ let kf1 = buildSVG(Object.assign({}, base, { face: { set: "noto-animated", item:
 ok(/fonts\.gstatic\.com\/s\/e\/notoemoji\/latest\/1f60a\/512\.gif/.test(kf1), "KnownFace noto-animated resolves the gstatic URL");
 let kf2 = buildSVG(Object.assign({}, base, { face: { set: "kip", item: "puzzled" } }));
 ok(/kip-sheet\.png/.test(kf2) && /viewBox="128 0 64 64"/.test(kf2), "KnownFace kip:puzzled → sheet cell 2");
+let kf3 = buildSVG(Object.assign({}, base, { face: { set: "sepia", item: "vertigo" } }));
+ok(/sepia-sheet\.png/.test(kf3) && /viewBox="64 192 64 64"/.test(kf3), "KnownFace sepia:vertigo → index 25, col 1 row 3");
+ok(/viewBox="448 192 64 64"/.test(buildSVG(Object.assign({}, base, { face: { set: "sepia", item: "love" } }))), "sepia:love → the last cell (31)");
 ok(/class="txt fk vk"/.test(buildSVG(Object.assign({}, base, { face: { set: "unknown-set", item: "x" } }))), "unknown set → falls back to kaomoji");
 ok(buildSVG(Object.assign({}, base, { face: { nope: true } })).indexOf("vk") > 0, "malformed face → falls back to kaomoji, no crash");
 let ctr = +/(?:<image class="vk" x=")([0-9.]+)/.exec(fp1)[1];
