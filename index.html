@@ -787,7 +787,7 @@ route();
     var u = sceneUrl();
     (pv.strip || []).forEach(function (it) {
       var cell = document.createElement("span");
-      cell.style.cssText = "position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--edge);background:rgba(138,122,134,0.06);";   // a fixed square, every face kind
+      cell.style.cssText = "position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;min-width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--edge);background:rgba(138,122,134,0.06);";   // a fixed square, every face kind — flex-basis AND min-width pinned, or the wrapping flex row collapses it
       if (u) {
         var bg = document.createElement("span");
         bg.style.cssText = "position:absolute;inset:0;background-image:url(" + u + ");background-size:cover;background-position:center;image-rendering:pixelated;opacity:" + Math.min(1, S.sceneOp * 1.4) + ";";
