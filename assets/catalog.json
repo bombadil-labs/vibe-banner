@@ -1,7 +1,7 @@
 {
   "what": "Machine-readable catalog of the vibe-annotations ecosystem: face-packs, first-party scenes, skill variants, site surfaces. Fetched by Claude during settings conversations.",
   "renderer": {
-    "bundle": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/dist/vibe.min.js",
+    "bundle": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e7aed200a60a0716f4ff91223803988645c23875/dist/vibe.min.js",
     "payload_notes": {
       "face": "one union: kaomoji string | image URL | sprite slice {url,cellW,cellH,cols,rows,index} | KnownFace {set,item}",
       "scene": "{ url, opacity (0.15-0.95, default 0.5), live? } — a framed portrait window on the banner's left, face centred inside",
@@ -130,20 +130,20 @@
   },
   "scenes": {
     "tidepool": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e7aed200a60a0716f4ff91223803988645c23875/assets/scene-tidepool.png",
       "live": "tidepool",
       "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
     },
     "night": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/assets/scene-night.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e7aed200a60a0716f4ff91223803988645c23875/assets/scene-night.png",
       "blurb": "indigo sky, stars, a crescent, one dark hill"
     },
     "glade": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/assets/scene-glade.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e7aed200a60a0716f4ff91223803988645c23875/assets/scene-glade.png",
       "blurb": "mossy forest light with shafts and fireflies"
     },
     "study": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0000000000000000000000000000000000000000/assets/scene-study.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e7aed200a60a0716f4ff91223803988645c23875/assets/scene-study.png",
       "blurb": "lamplight, a shelf of books, a warm desk with a mug"
     }
   },
