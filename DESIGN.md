@@ -189,6 +189,18 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   channel; everything clips to the portrait window. Custom user scenes stay still — live
   behavior only ships first-party, because it's code, and code only enters via this repo.
 
+- **The readout is an HTML overlay in the live banner (v0.14.0).** SVG text rows fought
+  every long line for twenty releases — clipping, tooltips-as-apology, manual goal
+  splitting. In mount, the readout now renders as an HTML panel over the canvas: pill
+  labels (`user` / `mood` / `note` / `goal`), values that wrap naturally in the layout
+  engine, a barely-there frosted scrim (blur 2.5px, ≤0.32 alpha — **the ovals must stay
+  visible through it**), a light/dark text-halo for legibility, and a scroll only past
+  the height cap (rightH ≤160). Banner height is estimated from wrapped rows, so long
+  reports grow the banner instead of losing words. Word caps in the skill remain as
+  register guidance ("a glance, not a paragraph"), no longer as data-loss warnings.
+  buildSVG keeps the classic SVG rows — it is the reduced-motion/no-canvas fallback and
+  the parity target; the overlay is mount-only (`layout(p, {overlay:true})`).
+
 ## The bench
 
 Entered, not admitted. If you take one up, honor the notes.

@@ -232,7 +232,7 @@
     "puzzled", "mirth", "melancholy", "tender", "at_peace"];
 
   /* ---- shared layout: everything static & animated both need ---- */
-  function layout(p) {
+  function layout(p, o) {
     var seed = seedOf(p);
     var usesCols = !(p.field && p.field.length);
     var cols = usesCols ? fieldFromPalette(p.palette) : p.field;
@@ -314,6 +314,23 @@
     var kaoAscent = multiline ? 14 : 15, kaoDescent = 6;
     var kaoH = faceImg ? faceImg.h : kaoAscent + (kaoLines.length - 1) * kaoLh + kaoDescent;
     var rightH = 11 + (nRows - 1) * ROW_GAP + 6;
+    // Overlay mode (mount only): the readout leaves SVG for an HTML panel that wraps
+    // naturally — pill labels, no clipping. Height comes from an estimate of the wrapped
+    // rows, capped; past the cap the panel scrolls. buildSVG keeps the classic SVG rows.
+    var oItems = null;
+    if (o && o.overlay) {
+      oItems = [{ lbl: "user", val: String(p.seems), cls: "fr" }, { lbl: "mood", val: String(p.feel), cls: "fw" }];
+      if (p.noticing) oItems.push({ lbl: "note", val: String(p.noticing), cls: "fr", key: "note" });
+      oItems.push({ lbl: "goal", val: goal, cls: "fg" });
+      var availTxt = W - TEXT_X - 22, estH = 0;
+      oItems.forEach(function (it) {
+        var fs = it.cls === "fw" ? 13.9 : it.cls === "fr" ? 12.3 : 12.9;
+        var rows = Math.max(1, Math.ceil((estW(it.val, fs) + it.lbl.length * 6.2 + 20) / availTxt));
+        estH += rows * 18;
+      });
+      estH += (oItems.length - 1) * 6 + 14;
+      rightH = Math.min(160, Math.max(64, estH));
+    }
     var langs = normalizeLangs(p.languages);
     var topExtent = Math.max(kaoH, rightH) / 2;
     var bottomExtent = Math.max(kaoH / 2, rightH / 2);
@@ -399,6 +416,7 @@
     var L = {
       H: H, coreCy: coreCy, blobs: blobs, textSVG: kaoSVG + readSVG + langSVG + flagSVG,
       restSVG: readSVG + langSVG + flagSVG, sceneSVG: sceneSVG, portrait: portrait,
+      mountSVG: kaoSVG + langSVG + flagSVG, oItems: oItems, caption: !!activeFlag,
       kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, faceBox: faceBox, scene: scene, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson, prevFills: prevFills
@@ -480,16 +498,50 @@
     var canOK = root.document && document.createElement("canvas").getContext;
     if (reduce || !canOK) { el.innerHTML = buildSVG(p); return; }
 
-    var L = layout(p), H = L.H;
+    var L = layout(p, { overlay: true }), H = L.H;
     el.innerHTML =
       '<div style="position:relative;width:100%">' +
       (L.scene ? '<svg viewBox="0 0 ' + W + ' ' + L.H + '" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none" xmlns="http://www.w3.org/2000/svg">' + L.sceneSVG + '</svg>' : '') +
       '<canvas style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none"></canvas>' +
       '<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + H + '" role="img" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:1;display:block">' +
       '<title>Mood annotation</title><desc>Living mood field with a user read and a first-person feel/intent readout</desc>' +
-      '<style>' + STYLE + '</style>' + L.textSVG + '</svg>' +
+      '<style>' + STYLE + '</style>' + L.mountSVG + '</svg>' +
       '</div>';
     var wrap = el.firstChild, cv = wrap.querySelector("canvas"), ctx = cv.getContext("2d");   // querySelector, not firstChild — with a scene the first child is the scene svg
+    // The readout: an HTML overlay in a real layout engine. Pill labels, natural wrap
+    // (no more clipped lines), a barely-there frosted panel for legibility — the ovals
+    // stay visible through it — and a scroll only past the height cap.
+    var OV_CSS =
+      ".vo{line-height:1.35;color:#5c4320;text-shadow:0 0 3px rgba(255,248,236,0.95),0 0 7px rgba(255,248,236,0.65)}" +
+      ".vo .row{margin:0.14em 0}" +
+      ".vo .pill{display:inline-block;font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.7em;padding:0.1em 0.62em 0.14em;border-radius:1em;background:rgba(69,49,24,0.62);color:#f6ead0;margin-right:0.5em;letter-spacing:0.04em;vertical-align:0.12em;text-shadow:none}" +
+      ".vo .fr{font-family:var(--font-voice,Georgia,serif);font-style:italic;font-size:0.93em}" +
+      ".vo .fw{font-family:var(--font-voice,Georgia,serif);font-style:italic;font-size:1.06em}" +
+      ".vo .fg{font-family:var(--font-sans,ui-sans-serif,system-ui,sans-serif);font-size:0.98em}" +
+      ".vo-panel{pointer-events:auto;max-height:100%;overflow-y:auto;padding:0.35em 0.75em 0.4em;border-radius:10px;" +
+      "background:rgba(255,250,240,0.30);backdrop-filter:blur(2.5px);-webkit-backdrop-filter:blur(2.5px);box-shadow:inset 0 0 0 1px rgba(90,70,50,0.10)}" +
+      "@media (prefers-color-scheme:dark){.vo{color:#f6ead0;text-shadow:0 0 3px rgba(36,26,6,0.95),0 0 7px rgba(36,26,6,0.7)}" +
+      ".vo .pill{background:rgba(216,197,160,0.26);color:#f6ead0}" +
+      ".vo-panel{background:rgba(30,24,16,0.30);box-shadow:inset 0 0 0 1px rgba(246,234,208,0.10)}}" +
+      ".vdrama .vo{font-family:var(--font-voice,Georgia,serif)}" +
+      ".vdrama .vo .fr,.vdrama .vo .fw,.vdrama .vo .fg{font-weight:600;letter-spacing:0.04em}" +
+      ".vdrama .vo .pill{text-transform:uppercase;letter-spacing:0.18em}";
+    var ovStyle = document.createElement("style"); ovStyle.textContent = OV_CSS; wrap.appendChild(ovStyle);
+    if (L.dramatic) wrap.className = "vdrama";
+    var ov = document.createElement("div");
+    ov.style.cssText = "position:absolute;z-index:2;display:flex;flex-direction:column;justify-content:center;pointer-events:none;" +
+      "left:" + g(TEXT_X / W * 100) + "%;right:1.2%;top:2%;bottom:" +
+      ((L.hasLangs || L.caption) ? g(14 / L.H * 100) + "%" : "2%") + ";";
+    var pn = document.createElement("div");
+    pn.className = "vo vo-panel";
+    L.oItems.forEach(function (it) {
+      var row = document.createElement("div");
+      row.className = "row" + (it.key === "note" ? " vr-note" : "");
+      row.title = it.val;
+      row.innerHTML = '<span class="pill">' + esc(it.lbl) + '</span><span class="' + it.cls + '">' + esc(it.val) + '</span>';
+      pn.appendChild(row);
+    });
+    ov.appendChild(pn); wrap.appendChild(ov);
     if (L.vertigo) {                                           // Droste: the banner inside its own banner, depth hard-capped at one (flags omitted inside)
       var mini = document.createElement("div");
       mini.style.cssText = "position:absolute;right:8px;bottom:" + (L.hasLangs ? 20 : 6) + "px;width:22%;z-index:2;pointer-events:none;opacity:0.92;" +
@@ -599,6 +651,7 @@
       var w = wrap.clientWidth, h = wrap.clientHeight; if (!w || !h) return;
       cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
       sx = cv.width / W; sy = cv.height / H;
+      ov.style.fontSize = g(w / W * 13.2) + "px";               // overlay text tracks the banner's rendered scale, like the SVG text used to
     }
     fit();
     var ro = root.ResizeObserver ? new ResizeObserver(fit) : null; if (ro) ro.observe(wrap);

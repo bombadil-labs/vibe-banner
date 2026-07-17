@@ -37,7 +37,10 @@ also exported (Node too) — it's the static fallback and the basis for the test
 
 ## What maps to what
 
-**Readout** (crisp SVG text):
+**Readout** — in the live banner this renders as an **HTML overlay**: pill labels, text
+that wraps naturally instead of clipping (the banner grows to fit; a scroll appears only
+past a height cap), over a barely-there frosted panel the ovals stay visible through.
+The static fallback keeps crisp SVG rows:
 
 | input | shows as | notes |
 |---|---|---|
