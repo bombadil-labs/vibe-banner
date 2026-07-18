@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@5d47eb1ccc4802dff7bc452c3ef570eea78f8186/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e8357ec031736e75cb02bb485a320f03281af13a/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -1041,25 +1041,36 @@
                 var acx = armS[0], ai2 = armS[1];
                 var arr2 = mulberry32(L.seed + ai2 * 3671 + 17);
                 var aph = arr2() * 6.28, arate = (0.5 + arr2() * 0.5) * (0.4 + fp2[2] * 0.35);
-                var aamp = (1.2 + fp2[1] * 0.9) * fsc, alen = armS[2], ay0 = 46;   // roots overlap the hem by a cell — contiguous, no seam
+                var aamp = (1.2 + fp2[1] * 0.9) * fsc, alen = armS[2], ay0 = 49;   // roots tuck up under the open hem — one flesh, no seam
                 var aw0 = 3 * fsc;
-                fx2.beginPath();
-                for (var ayy = 0; ayy <= alen; ayy++) {                              // left edge down
+                var lEdge = [], rEdge = [];
+                for (var ayy = 0; ayy <= alen; ayy++) {
                   var au = ayy / alen;
                   var adx = aamp * Math.sin(t * arate * 6.283 + aph + au * 1.9) * au * au;
                   var aw = aw0 * (1 - 0.55 * au);
-                  fx2.lineTo((acx * fsc) + adx - aw, (ay0 + ayy) * fsc);
+                  lEdge.push([(acx * fsc) + adx - aw, (ay0 + ayy) * fsc]);
+                  rEdge.push([(acx * fsc) + adx + aw, (ay0 + ayy) * fsc]);
                 }
-                for (var ayy2 = alen; ayy2 >= 0; ayy2--) {                           // right edge back up
-                  var au2 = ayy2 / alen;
-                  var adx2 = aamp * Math.sin(t * arate * 6.283 + aph + au2 * 1.9) * au2 * au2;
-                  var aw2 = aw0 * (1 - 0.55 * au2);
-                  fx2.lineTo((acx * fsc) + adx2 + aw2, (ay0 + ayy2) * fsc);
-                }
+                fx2.beginPath();
+                lEdge.forEach(function (pt2, li2) { li2 ? fx2.lineTo(pt2[0], pt2[1]) : fx2.moveTo(pt2[0], pt2[1]); });
+                for (var ri2 = rEdge.length - 1; ri2 >= 0; ri2--) fx2.lineTo(rEdge[ri2][0], rEdge[ri2][1]);
                 fx2.closePath();
-                fx2.fillStyle = rgba("#d8bcc8", 0.95); fx2.fill();
+                var agr = fx2.createLinearGradient(0, ay0 * fsc, 0, (ay0 + alen) * fsc);
+                agr.addColorStop(0, rgba("#e8dcd0", 0.98));                          // the arm blends OUT of the body colour…
+                agr.addColorStop(0.55, rgba("#d8bcc8", 0.96));                       // …into the soft-tissue pink at the tips
+                fx2.fillStyle = agr; fx2.fill();
                 fx2.lineWidth = Math.max(1, fsc * 0.8);
-                fx2.strokeStyle = rgba("#5a4a52", 0.55); fx2.stroke();               // the fine line wraps the arms too
+                fx2.strokeStyle = rgba("#5a4a52", 0.55);
+                fx2.beginPath();                                                     // stroke SIDES and TIP only — a closed stroke drew a lid across the root (the seam)
+                lEdge.forEach(function (pt3, li3) { li3 ? fx2.lineTo(pt3[0], pt3[1]) : fx2.moveTo(pt3[0], pt3[1]); });
+                for (var ri3 = rEdge.length - 1; ri3 >= 0; ri3--) fx2.lineTo(rEdge[ri3][0], rEdge[ri3][1]);
+                fx2.stroke();
+              });
+              // the hem's boundary line lives ONLY in the gaps between arm roots — the
+              // silhouette runs flank → hem-gap → down an arm and back, one continuous line
+              fx2.fillStyle = rgba("#5a4a52", 0.85);
+              [[17.5, 20], [26, 29], [35, 38], [44, 46.5]].forEach(function (gseg) {
+                fx2.fillRect(gseg[0] * fsc, 50 * fsc, (gseg[1] - gseg[0]) * fsc, Math.max(1, fsc));
               });
             }
             if (boopFx && boopFx.t0 != null) {                                       // the poke: a soft impact FLASH absorbed at the spot — deliberately nothing like a water ripple
