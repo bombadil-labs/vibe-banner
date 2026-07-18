@@ -19,15 +19,21 @@ feelings honest.
 <script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/dist/vibe.min.js"></script>
 <script>
   vibe(document.getElementById('v'), {
-    kaomoji: "( ˶ˆ ꒳ ˆ˵ )",
-    seems:   "…",          // [user]  — a snap read of the user
-    feel:    "…",          // [mood]  — your activated emotions
-    trying:  "…",          // [goal]  — immediate next goal (last line; wraps if long)
-    noticing:"…",          // [note]  — the subtext (optional)
-    palette: ["#7d8fb8"],  // 0+ mood colours → three columns (left, cycling centre, right)
-    focus: 0.5, engagement: 0.5,
-    languages: ["ru"],     // optional: 2-letter codes or names, a bottom-right trace
-    flag: "spark"          // optional: ONE of the flag vocabulary below (a string, not booleans)
+    avatar: {
+      set: "sepia", item: "content",       // any pack; all speak the same 32 moods
+      scene: { url: "…", opacity: 0.6 }    // optional habitat; omit for an empty window
+    },
+    details: {
+      readout: [                           // up to 5 rows, any labels
+        { label: "user", value: "…" },     //   a snap read of the user
+        { label: "mood", value: "…" },     //   your activated emotions
+        { label: "goal", value: "…" }      //   immediate next goal
+      ],
+      palette: ["#7d8fb8"],                // 0+ mood colours → three columns
+      focus: 0.5, engagement: 0.5,
+      languages: ["ru"],                   // optional: a bottom-right [Reasoned in] trace
+      flag: "spark"                        // optional: ONE of the flag vocabulary below
+    }
   });
 </script>
 ```
@@ -58,9 +64,9 @@ level) still works and always will — every skill deployed before the split ren
 **Readout** — in the live banner this renders as an **HTML overlay**: pill labels, text
 that wraps naturally instead of clipping (the banner grows to fit; a scroll appears only
 past a height cap), over a barely-there frosted panel the ovals stay visible through.
-The type is deliberately quiet — captions on the weather, not the weather. A small **▾
-toggle collapses the readout to bare pills** (values on hover) so the field can be
-watched unobstructed; the preference persists where storage allows. The **face is HTML
+The type is deliberately quiet — captions on the weather, not the weather. A **text/stats
+toggle** straddling the panel swaps the prose rows for explicit gauges of the numeric
+values; the preference persists where storage allows. The **face is HTML
 in the live banner too** — exact whitespace for multi-line kaomoji, CSS plate,
 percentage-cropped sprites, centre-pivot transforms. The static fallback keeps crisp
 SVG rows and the SVG face:
@@ -84,7 +90,7 @@ SVG rows and the SVG face:
 | `focus` (0–1) | the vertical spread of the three columns: 1 = a narrow level line, 0 = scattered across a wide vertical range. They hold position (gently alive), so the spread itself is the signal |
 | `engagement` (0–1) | **deflationary only**: ≥0.5 baseline; below, the columns shrink, harder toward 0 |
 | `stance` (0–1) | contour firmness: 1 (telling) gives the ovals a definite stroked edge; 0/omitted (asking) keeps the pure gradient falloff |
-| `consonance` (0–1) | per-blob diffusion: 1/omitted → compact, solid ovals; 0 → diffuse washes (bigger, thinner). Plural-at-peace vs. plural-in-tension |
+| `coherence` (0–1) | focus's emotional dual, and per-blob diffusion: 1/omitted → compact, solid ovals; 0 → diffuse washes (bigger, thinner). Plural-at-peace vs. plural-in-tension. (`consonance` is the old name, still accepted) |
 | `scene` | the habitat, as a **framed portrait window**: `"https://…png"` or `{ url, opacity, live }` (opacity clamped 0.15–0.95, default 0.5). The scene fills a rounded square on the banner's left with the face centred inside it; readout and field columns shift right. Faces are alpha-transparent, so any scene works — first-party tidepool at `assets/scene-tidepool.png`; user photos host like face-packs (allowlisted CDNs). `live: "tidepool"` runs native ambience in the window — rising bubbles, a passing fish, tap-ripples, and feeding falls in as flakes; unknown `live` names are ignored, and the static render ignores the channel entirely. **The window always draws** — with no scene (or `scene: {}`) it renders empty: frame and a faint interior, no view yet. The window is the layout; `scene` only decides what's visible through it |
 | `field` | power path: hand-author the ovals instead of `palette` |
 

@@ -345,6 +345,25 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   because the symptom is indistinguishable from the flat-Sepia bug: check `inViewport`
   before diagnosing a dead loop.
 
+- **Two keys: avatar and details (v0.42.0).** The payload had grown a flat sprawl of
+  fifteen sibling keys where two different things were mixed: WHO you are and WHERE you
+  are, versus everything the banner says BESIDE you. The maintainer named the cut. Now
+  `avatar` (face + scene) and `details` (readout, palette, focus, engagement, stance,
+  coherence, flag, languages), and an absent or empty `details` renders the window alone
+  as a 156×152 square tile — no field, no readout, no weather, since a flag is a detail.
+  `scene` moved inside `avatar` because where you are is part of who you are, not a fact
+  about you. Implementation is a `normalize()` at the head of `layout()` that maps the
+  nested form onto the existing internals, plus a per-layout `L.W` shadowing the module
+  width inside both renderers — so one line changes the banner's whole geometry. The flat
+  form is untouched and parity asserts it, because every deployed skill still emits it.
+
+- **The site is four tabs.** Installation folded into Build and install (v0.41.3) and
+  What it means was retired (v0.42.0): its prose legend duplicated what the Gallery
+  demonstrates live and what the Explorer now lets you manipulate directly, and a legend
+  competing with a working example loses. Documentation that can be an interactive
+  surface should be one. What survived: the standalone-library example, which moved to
+  Build and install — the tab someone is already on when they want it.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately
