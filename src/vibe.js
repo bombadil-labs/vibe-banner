@@ -1029,7 +1029,7 @@
                 // below the brow, the fin's OUTER edge follows only ~20% of the body's
                 // tuck: the membrane holds nearly its brow-level width while the mantle
                 // narrows away beneath it (fading closed over the last few cells)
-                var tuckFill = fy > 31 ? 0.8 * (flankX(fy) - 6) * (fy > 42 ? (46 - fy) / 4 : 1) : 0;
+                var tuckFill = fy > 31 ? 0.8 * (flankX(fy) - 6) * (fp2[0] / 5.5) * (fy > 42 ? (46 - fy) / 4 : 1) : 0;   // scaled by POSTURE width: flared holds its flare, tucked truly tucks
                 var wdt = Math.max(0, baseW * prof * sagF + wv + tuckFill);
                 seamPts.push([axc, fy * fsc]);
                 edgePts.push([axc + fdir2 * wdt, fy * fsc]);
@@ -1077,6 +1077,21 @@
                 agr.addColorStop(0, rgba("#e8dcd0", 0.98));                          // the arm blends OUT of the body colour…
                 agr.addColorStop(0.55, rgba("#d8bcc8", 0.96));                       // …into the soft-tissue pink at the tips
                 fx2.fillStyle = agr; fx2.fill();
+                if (chromo) {                                                        // the camo travels down EACH LEG independently — a flush wandering along this
+                  var lEng = Math.max(0, Math.min(1, p.engagement == null ? 0.7 : +p.engagement || 0));   // arm on its own quasi-periodic clock, never one blob stamped across the skirt
+                  var lSpd = (0.1 + 0.25 * lEng) * 6.283;
+                  var lw1 = 0.35 + arr2() * 0.3, lph1 = arr2() * 6.28, lph2 = arr2() * 6.28;
+                  var lpos = Math.max(0.05, Math.min(0.95, 0.5 + 0.33 * Math.sin(t * lSpd * lw1 + lph1) + 0.22 * Math.sin(t * lSpd * lw1 * 1.618 + lph2)));
+                  var lgy0 = (ay0 + (lpos - 0.28) * alen) * fsc, lgy1 = (ay0 + (lpos + 0.28) * alen) * fsc;
+                  var lhue = (p.palette && p.palette[0]) || "#b89ab0";
+                  var lg2 = fx2.createLinearGradient(0, lgy0, 0, lgy1);
+                  lg2.addColorStop(0, rgba(lhue, 0)); lg2.addColorStop(0.5, rgba(lhue, 0.48)); lg2.addColorStop(1, rgba(lhue, 0));
+                  fx2.beginPath();
+                  lEdge.forEach(function (pt4, li4) { li4 ? fx2.lineTo(pt4[0], pt4[1]) : fx2.moveTo(pt4[0], pt4[1]); });
+                  for (var ri4 = rEdge.length - 1; ri4 >= 0; ri4--) fx2.lineTo(rEdge[ri4][0], rEdge[ri4][1]);
+                  fx2.closePath();
+                  fx2.fillStyle = lg2; fx2.fill();
+                }
                 fx2.lineWidth = Math.max(1, fsc * 0.8);
                 fx2.strokeStyle = rgba("#5a4a52", 0.55);
                 fx2.beginPath();                                                     // stroke SIDES and TIP only — a closed stroke drew a lid across the root (the seam)
