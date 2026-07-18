@@ -15,7 +15,8 @@ const zlib = require("zlib");
 
 const COLORS = {
   o: "#4a3a44", b: "#e8dcd0", n: "#d8bcc8", W: "#f8f4ec", p: "#2a2230",
-  s: "#ffd76a", F: "#e88aa0", d: "#9ec7e8", R: "#c04a48", G: "#cfc2d6", m: "#8f8698"
+  s: "#ffd76a", F: "#e88aa0", d: "#9ec7e8", R: "#c04a48", G: "#cfc2d6", m: "#8f8698",
+  A: "#a5761f"                                                 // dark amber — RULE: no yellow pupils; anything in the eye must read against the whites
 };
 // The body must say "cuttlefish" without a caption: a mantle taller than it is wide,
 // fin frills running the full flanks, and a skirt of arms where a chin would be.
@@ -102,6 +103,18 @@ function drawEyes(out, lp, rp, blink) {
   [[8, lp, false], [19, rp, true]].forEach(spec => {
     const bx = spec[0], preset = spec[1], mir = spec[2];
     const x0 = bx - 1, x1 = bx + 5, y0 = 9, y1 = 16;           // socket ring bounds; whites bx..bx+4, rows 10-15
+    if (preset === "mask") {                                   // the opera half-mask, held up on a stick: a gilt plate over one eye — it never blinks
+      for (let y = y0 - 1; y <= y1 + 1; y++) for (let x = x0 - 1; x <= x1 + 1; x++) out.push([x, y, "s"]);
+      for (let x = x0 - 1; x <= x1 + 1; x++) out.push([x, y0 - 1, "o"], [x, y1 + 1, "o"]);
+      for (let y = y0 - 1; y <= y1 + 1; y++) out.push([x0 - 1, y, "o"], [x1 + 1, y, "o"]);
+      for (let y = 12; y <= 13; y++) for (let x = bx + 1; x <= bx + 3; x++) out.push([x, y, "p"]);   // the eyehole
+      [[x1 + 1, y1 + 2], [x1 + 2, y1 + 3], [x1 + 2, y1 + 4], [x1 + 3, y1 + 5], [x1 + 3, y1 + 6]].forEach(q => out.push([q[0], q[1], "o"]));   // the stick, angled off to the side
+      return;
+    }
+    if (preset === "slit") {                                   // groan: eyes narrowed to flat suffering slits — one thick bar, no ring, no whites
+      for (let y = 12; y <= 13; y++) for (let x = x0; x <= x1; x++) out.push([x, y, "p"]);
+      return;
+    }
     if (blink) {
       // a blink compresses the WHOLE socket, outline included — not a lid framed
       // inside an open ring (the maintainer's catch). One full-width stroke at the
@@ -122,7 +135,7 @@ function drawEyes(out, lp, rp, blink) {
     for (let y = 10; y <= 15; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
     if (preset === "heart" || preset === "star") {
       (preset === "heart" ? HEARTR : STARR).forEach(q =>
-        out.push([bx + (mir ? 4 - q[0] : q[0]), 10 + q[1], preset === "heart" ? "F" : "s"]));
+        out.push([bx + (mir ? 4 - q[0] : q[0]), 10 + q[1], preset === "heart" ? "F" : "A"]));   // star glints in dark amber (no yellow pupils)
       return;
     }
     PUPR[preset].forEach(q => {
@@ -141,6 +154,13 @@ const MOUTH = {}; Object.keys(MOUTH16).forEach(k => { MOUTH[k] = up2(MOUTH16[k])
 MOUTH.smile = [[12,19],[13,20],[14,21],[15,21],[16,21],[17,21],[18,20],[19,19]];   // real arcs, 2px grid
 MOUTH.frown = [[12,21],[13,20],[14,19],[15,19],[16,19],[17,19],[18,20],[19,21]];
 MOUTH.wavy  = [[12,20],[13,21],[14,20],[15,19],[16,20],[17,21],[18,20],[19,19]];
+// THE GUFFAW (v0.33.0): laugh's frame 1 is not a blink — it's the mouth thrown wide.
+// The renderer cycles the two feature frames fast for laugh, and the face HA-HA-HAs.
+const GUFFAW = [];
+for (let x = 13; x <= 18; x++) GUFFAW.push([x, 18, "p"]);
+for (let y = 19; y <= 22; y++) for (let x = 12; x <= 19; x++) GUFFAW.push([x, y, "p"]);
+for (let x = 13; x <= 18; x++) GUFFAW.push([x, 23, "p"]);
+[[14,22],[15,22],[16,22],[17,22]].forEach(q => GUFFAW.push([q[0], q[1], "F"]));   // a flash of tongue
 // Chromatophores are SUB-PIXEL — an affordance evolved for survival in a high-res world.
 // Density is arousal, camouflage is a state: awe/surprise BLANCH (real cuttlefish fear
 // response), peace barely speckles (nothing to hide), anxiety mottles hardest (trying to
@@ -167,6 +187,16 @@ const X16 = {
   mote: [[2,3,"d"],[13,10,"d"]]
 };
 const X = {}; Object.keys(X16).forEach(k => { X[k] = up2(X16[k]); });
+// ---- MARKS: the props that used to be flag weather (v0.33.0, the maintainer's call).
+// The anger vein, the bulb, the ?, the !, the grawlix — these are functions of THIS
+// avatar's moods, baked into the features layer. Another face may answer the same
+// moods with entirely different props; that freedom is the point. 32-grid coords.
+const VEIN = up2([[10,0],[11,1],[15,0],[14,1],[10,4],[11,3],[15,4],[14,3]].map(q => [q[0], q[1], "R"]));   // 💢: four radiating ticks with a hollow heart, upper right
+const BULB = [[24,2,"s"],[25,2,"s"],[23,3,"s"],[26,3,"s"],[23,4,"s"],[26,4,"s"],[24,5,"s"],[25,5,"s"],
+  [24,3,"W"],[25,3,"W"],[24,4,"W"],[25,4,"W"],[24,6,"m"],[25,6,"m"],[24,7,"m"],[25,7,"m"]];              // the idea-bulb, floating beside the tip
+const QMARK = up2([[12,0],[13,0],[11,1],[14,1],[14,2],[13,3],[13,5]].map(q => [q[0], q[1], "p"]));        // one clear question, hanging close
+const EXCL = [[26,2,"R"],[27,2,"R"],[26,3,"R"],[27,3,"R"],[26,4,"R"],[27,4,"R"],[26,6,"R"],[27,6,"R"]];  // the startled !
+const GRAWLIX = up2([[1,1],[3,1],[2,2],[1,3],[3,3],[12,1],[14,1],[13,2],[12,3],[14,3]].map(q => [q[0], q[1], "R"]));   // crossed curses flanking the crown
 // A mood is a RECIPE, not a drawing: [name, eyes-preset (or [left,right]), mouth-name,
 // chromatophore hue, extras?]. Eyes and mouth are components that draw themselves;
 // fins (posture code) and spots (live layer) are the renderer's components.
@@ -179,26 +209,26 @@ const MOODS = [
   ["sheepish",   "side",             "wavy",  "#d99a8a", X.sweat],
   ["booped",     "wide",             "open",  "#e88aa0", X.boop],
   ["thinking",   ["dot","uptiny"],   "sm",    "#8f9ac0"],
-  ["spark",      "star",             "smile", "#ffd76a"],
+  ["spark",      "star",             "smile", "#ffd76a", BULB],
   ["excited",    "star",             "open",  "#ffb84a", X.sparkles],
   ["surprised",  "wide",             "open",  "#b79ad0"],
   ["tender",     "heart",            "smile", "#e8a0b0"],
   ["melancholy", "down",             "flat",  "#8f96a8", X.mote],
   ["anxious",    "dot",              "wavy",  "#7a8296", X.sweat],
   ["mirth",      "happy",            "smile", "#e0b060"],
-  ["laugh",      "cross",            "open",  "#ffd24a"],
-  ["groan",      "closed",           "frown", "#9a9488"],
-  ["oops",       "wide",             "open",  "#d98a6a", X.sweat],
-  ["frustrated", "dot",              "flat",  "#a05050", X.brows],
-  ["angry",      "dot",              "frown", "#c04040", X.brows],
-  ["dramatic",   "wide",             "smile", "#b0413e", X.bowtie],
+  ["laugh",      "cross",            "open",  "#ffd24a"],   // guffaw: the blink frame carries the wide-open mouth; the renderer cycles them
+  ["groan",      "slit",             "frown", "#9a9488", X.sweat],
+  ["oops",       "wide",             "open",  "#d98a6a", X.sweat.concat(EXCL)],
+  ["frustrated", "dot",              "flat",  "#a05050", X.brows.concat(VEIN)],
+  ["angry",      "dot",              "frown", "#c04040", X.brows.concat(GRAWLIX)],
+  ["dramatic",   ["wide","mask"],    "smile", "#b0413e", X.bowtie],
   ["at_peace",   "closed",           "smile", "#8fae8f", X.flower],
   ["solemn",     "closed",           "flat",  "#8a8f9a"],
   ["rhyme",      "w",                "sm",    "#9a8fae", X.ghost],
   ["awe",        "uptiny",           "open",  "#5a6a8a"],
   ["vertigo",    "spiral",           "wavy",  "#b79ad0"],
   ["resolute",   "steely",           "sm",    "#e0994e"],   // steely narrowed eyes + tight fine-mouth; headband drawn in the fine pass
-  ["puzzled",    ["dot","uptiny"],   "tiny",  "#c0b08a"],
+  ["puzzled",    ["dot","uptiny"],   "tiny",  "#c0b08a", QMARK],
   ["asking",     "uptiny",           "sm",    "#9ac0b0"],
   ["weary",      "down",             "flat",  "#8b93a0"],
   ["wink",       ["happy","closed"], "smile", "#e0a877"],
@@ -260,11 +290,12 @@ MOODS.forEach((mood, i) => {
   // renderer OVER the wandering colour
   for (let frame = 0; frame < 2; frame++) {
     const cx = colX, cy = rowY + (1 + frame) * FRAME_ROWS * CELL;
-    const blink = frame === 1;
+    const blink = frame === 1 && mood[0] !== "laugh";           // laugh's frame 1 is the guffaw beat, not a blink — the eyes stay crinkled
     const eyeSpec = mood[1], pair = Array.isArray(eyeSpec) ? eyeSpec : [eyeSpec, eyeSpec];
     const feat = [];
     drawEyes(feat, pair[0], pair[1], blink);
-    if (!FINE_MOUTH[mood[0]]) feat.push(...MOUTH[mood[2]].map(q => [q[0], q[1], "p"]));
+    if (mood[0] === "laugh" && frame === 1) feat.push(...GUFFAW);
+    else if (!FINE_MOUTH[mood[0]]) feat.push(...MOUTH[mood[2]].map(q => [q[0], q[1], "p"]));
     feat.push(...(mood[4] || []));
     feat.forEach(q => cellPut(cx, cy, q[0], q[1], COLORS[q[2]]));
 
