@@ -723,13 +723,14 @@
     // its own listener below, gated on sendPrompt as ever.
     if (kaoEl && fm && fm.kind === "sprite" && fm.anim && fm.anim.ink && p.play !== false) {
       kaoEl.addEventListener("click", function (e) {
+        e.stopPropagation();                                   // a boop is HERS — it must not also ripple the water behind her
         var br2 = kaoEl.getBoundingClientRect();
         boopFx = {
           t0: null,
           cx: br2.width ? (e.clientX - br2.left) / br2.width * 64 : 32,
           cy: br2.height ? (e.clientY - br2.top) / br2.height * 64 : 32
         };
-        inkBursts.push({ t0: null, s: 0.8 });
+        inkBursts.push({ t0: null, s: 0.85 });
       });
     }
     if (live && p.play !== false) {                            // tap the water, get ripples
@@ -758,9 +759,9 @@
           }
         });
       }
-      if (kaoEl && p.play !== false) {                         // boop: the face itself is the button
+      if (kaoEl && p.play !== false) {                         // boop: the face itself is the button — and it intercepts, never rippling the water through her
         kaoEl.style.cursor = "pointer";
-        kaoEl.addEventListener("click", function () { say("*boop*"); });
+        kaoEl.addEventListener("click", function (e) { e.stopPropagation(); say("*boop*"); });
       }
       if (p.play !== false) {
       var tray = document.createElement("div");                // hover tray, upper LEFT (Claude's own UI owns the upper right)
@@ -919,7 +920,7 @@
           if (inkBursts.length > 4) inkBursts.splice(0, inkBursts.length - 4);
           inkBursts.forEach(function (b, bi2) {
             if (b.t0 == null) b.t0 = t;                        // boop bursts late-bind their clock
-            var iage = t - b.t0; if (iage < 0 || iage > 2.4) return;
+            var iage = t - b.t0; if (iage < 0 || iage > 4.5) return;
             var pr2 = mulberry32(L.seed + bi2 * 977 + 29);
             var ptw = L.portrait, pss = ptw.s;
             ctx.save();
@@ -931,13 +932,18 @@
             ctx.arcTo(ptw.x, ptw.y, ptw.x + pss, ptw.y, 10);
             ctx.closePath(); ctx.clip();
             var fb2 = fm.box, iox = fb2.x + fb2.w * 0.2, ioy = fb2.y + fb2.h * 0.88;
-            for (var ik = 0; ik < 8; ik++) {
-              var ia = Math.PI * (0.6 + pr2() * 0.7);          // a leftish-down fan from the siphon
-              var ispd = (14 + pr2() * 26) * b.s;
-              var idist = ispd * (1 - Math.exp(-iage * 1.6));  // jet, then drift
-              var ixp = iox + Math.cos(ia) * idist, iyp = ioy + Math.sin(ia) * idist * 0.7 + iage * 3;
-              var irad = (2.5 + iage * 6) * (0.6 + pr2() * 0.7) * b.s;
-              var ial = Math.max(0, 0.5 * b.s * (1 - iage / 2.4));
+            var baseAng = pr2() * 6.2832;                      // each burst sprays in its own randomized direction
+            // lifecycle: JET (fast, dense) → EXPAND + LINGER (the cloud hangs in the
+            // water, slowly swelling and drifting) → DISSOLVE (thins away by 4.5s)
+            var ial0 = iage < 0.4 ? 0.6 : iage < 2.6 ? 0.45 : 0.45 * (1 - (iage - 2.6) / 1.9);
+            for (var ik = 0; ik < 14; ik++) {
+              var ia = baseAng + (pr2() - 0.5) * 1.1;          // a fan around the burst's own direction
+              var ispd = (12 + pr2() * 30) * b.s;
+              var idist = ispd * (1 - Math.exp(-iage * 1.5));  // jet, then hang
+              var ixp = iox + Math.cos(ia) * idist + Math.sin(iage * 0.7 + ik) * iage * 1.2;   // lingering cloud sways with the water
+              var iyp = ioy + Math.sin(ia) * idist * 0.75 + iage * 2.2;
+              var irad = (2.5 + iage * 5.5 + pr2() * 3) * b.s;
+              var ial = Math.max(0, ial0 * b.s * (0.5 + pr2() * 0.5));
               var ig2 = ctx.createRadialGradient(ixp, iyp, 0, ixp, iyp, irad);
               ig2.addColorStop(0, rgba("#3b2c26", ial)); ig2.addColorStop(1, rgba("#3b2c26", 0));
               ctx.fillStyle = ig2; ctx.beginPath(); ctx.arc(ixp, iyp, irad, 0, 6.2832); ctx.fill();
