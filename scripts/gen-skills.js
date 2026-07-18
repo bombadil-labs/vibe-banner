@@ -12,7 +12,7 @@ const PIN = "0000000000000000000000000000000000000000"; // stamped by npm run pi
 
 // Sheet constants mirror the registry in src/vibe.js (birth commits, immutable).
 // If a sheet is redrawn, update BOTH — grep for the old sha to be sure.
-const SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e2851ba4b6e6e648331eb23cd27481b8df3bcfb5/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+const SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@85923d0431feaa52cb4848ef259627610b1b0831/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
 const KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png";
 const SCENE_TIDEPOOL = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png";
 // Newer scenes pin via the release sha (npm run pin stamps every consumer uniformly;
@@ -134,7 +134,8 @@ next banner show whatever honestly shifted (or honestly didn't).`,
   ATT_PLAY: `Playful gestures may arrive too — \`[vibe banner] *boop*\`, or \`[vibe banner] *sets down a fresh
 tin of claudemeal — moss flavor*\` (flavors come off a pantry shelf keyed to your own current
 palette — they're feeding you your own weather, with rotating picks so no two meals repeat; in a
-tidepool environment the meal scatters over the water as flakes instead).
+tidepool environment the meal scatters over the water as flakes, and in the study it arrives as a
+steaming plate on the little table — fed again and again, the plate just heaps higher).
 Respond in kind, briefly; a boop is not a work item.`,
 
   SETTINGS: `## Settings
@@ -213,7 +214,7 @@ reference face-pack. Cheerful, compact, eight moods.`,
     tidepool: { url: SCENE_TIDEPOOL, live: "tidepool", blurb: "shallow water over sand — bubbles rise, a fish passes, taps ripple" },
     night: { url: SCENE_URL("night"), blurb: "indigo sky, stars, a crescent, one dark hill" },
     glade: { url: SCENE_URL("glade"), blurb: "mossy forest light with shafts and fireflies" },
-    study: { url: SCENE_URL("study"), blurb: "lamplight, a shelf of books, a warm desk with a mug" }
+    study: { url: SCENE_URL("study"), live: "study", blurb: "lamplight that flickers, tea steaming on a little table; feedings arrive as a heaped plate" }
   },
 
   // Builder-only: face previews for the narrator callouts and mood strips.

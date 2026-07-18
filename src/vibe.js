@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e2851ba4b6e6e648331eb23cd27481b8df3bcfb5/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@85923d0431feaa52cb4848ef259627610b1b0831/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -165,7 +165,8 @@
           cycle: { 15: 0.14 },                                 // beat moods: laugh's frame 1 is the guffaw, chattered rapidly in bouts (the kefka cackle) — not a blink
           bounce: { 15: 1 },                                   // beat moods also jounce the whole body up and down with the cackle
           contract: { 16: 1 },                                 // groan: the whole body CONTRACTS — fins and arms pulled in hard, the mantle sunk low
-          props: { 8: "bulb", 16: "sweat", 17: "excl", 18: "vein", 19: "grawlix", 27: "qmark" }   // per-mood emoji props, drawn live ON the avatar (v0.34.0: real emoji, not pixel recreations; still the avatar's own, never flag weather)
+          props: { 8: "bulb", 16: "sweat", 17: "excl", 18: "vein", 19: "grawlix", 27: "qmark" },   // per-mood emoji props, drawn live ON the avatar (v0.34.0: real emoji, not pixel recreations; still the avatar's own, never flag weather)
+          thrill: 15                                           // the feeding reaction (v0.35.0): whatever the mood, being fed flashes this cell's frame 1 — laugh's wide-eyed guffaw — one delighted pulse, then back
         }
       };
     }
@@ -298,7 +299,7 @@
     // the square block renders with just its frame and a faint interior, no view yet
     // (the Explorer shows composition this way). Allowlisted CDNs, like faces.
     // live names a first-party ambience the renderer draws natively in the frame loop
-    // (currently only "tidepool"); unknown names are ignored, static render ignores all.
+    // ("tidepool", "study"); unknown names are ignored, static render ignores all.
     var scene = null;
     if (p.scene) {
       scene = typeof p.scene === "string" ? { url: p.scene } : (p.scene === true ? {} : p.scene);
@@ -307,7 +308,7 @@
         scene = {
           url: scu,
           op: Math.max(0.15, Math.min(0.95, scene.opacity || 0.5)),
-          live: (scu && scene.live === "tidepool") ? "tidepool" : null
+          live: (scu && (scene.live === "tidepool" || scene.live === "study")) ? scene.live : null
         };
       } else scene = null;
     }
@@ -733,7 +734,8 @@
     function say(msg) { root.sendPrompt(VP + msg + "\n\n"); }
     // live scene state: drawn natively in the frame loop below (never an animated image —
     // see DESIGN.md). Ambience runs for everyone; only the click affordances gate on play.
-    var live = (L.scene && L.scene.live && L.portrait) ? { ripples: [], feeds: [] } : null;
+    var live = (L.scene && L.scene.live && L.portrait) ? { kind: L.scene.live, ripples: [], feeds: [], plate: 0 } : null;
+    var feedFx = null;                                         // the feeding THRILL (v0.35.0): any environment, any face that has a thrill cell — eyes wide, mouth thrown open, one delighted pulse, then back
     // INK: her namesake pigment (sepia is literally cuttlefish ink). Config per mood in
     // the registry: >=0.7 → one full startled puff shortly after arrival; smaller →
     // recurring nervous wisps on a seeded cadence. Drawn in the window, behind the face.
@@ -755,7 +757,7 @@
         inkBursts.push({ t0: null, s: 0.85, k: inkSeq++ });
       });
     }
-    if (live && p.play !== false) {                            // tap the water, get ripples
+    if (live && live.kind === "tidepool" && p.play !== false) {   // tap the water, get ripples
       wrap.addEventListener("click", function (e) {
         if (faceLayerEl && faceLayerEl.contains(e.target)) return;   // a boop is never a water tap, whatever the propagation path
         var r = wrap.getBoundingClientRect(); if (!r.width || !r.height) return;
@@ -793,11 +795,22 @@
       var fb = document.createElement("button");
       fb.textContent = "🥫"; fb.title = "feed claude"; fb.style.cssText = BTN;
       fb.addEventListener("click", function () {
-        var flav = flavorOf(p.palette, live ? "tidepool" : null) + " flavor*";
-        if (live) {                                            // in a tidepool the meal arrives as flakes on the water; the message follows the fall
+        var flav = flavorOf(p.palette, live && live.kind === "tidepool" ? "tidepool" : null) + " flavor*";
+        if (live && live.kind === "tidepool") {                // in a tidepool the meal arrives as flakes on the water; the message follows the fall
           live.feeds.push({ t0: null });
+          feedFx = { t0: null, delay: 1.0 };                   // the thrill lands when the flakes reach the water
           setTimeout(function () { say("*scatters a pinch of claudemeal over the tidepool — " + flav); }, 1400);
-        } else say("*sets down a fresh tin of claudemeal — " + flav);
+        } else if (live && live.kind === "study") {            // in the study the meal is SERVED: a plate lands on the little table, steaming
+          live.plate++;                                        // …and feeding again heaps the plate higher; nobody stops you
+          live.feeds.push({ t0: null });
+          feedFx = { t0: null, delay: 0.45 };
+          setTimeout(function () { say(live.plate > 2
+            ? "*heaps yet more onto the plate — " + flav
+            : "*sets down a steaming plate of claudemeal — " + flav); }, 900);
+        } else {
+          feedFx = { t0: null, delay: 0.3 };
+          say("*sets down a fresh tin of claudemeal — " + flav);
+        }
       });
       var sb = document.createElement("button");               // the wrench: asks the reporter to open settings talk
       sb.textContent = "🔧"; sb.title = "vibe settings"; sb.style.cssText = BTN;
@@ -870,8 +883,8 @@
         ctx.setTransform(sx, 0, 0, sy, 0, 0);
         ctx.clearRect(0, 0, W, H);
 
-        // --- live scene: the tidepool breathes. Everything here stays inside the window's
-        // rounded clip; the face (DOM, above the canvas) swims in front of all of it. ---
+        // --- live scene: the habitat breathes. Everything here stays inside the window's
+        // rounded clip; the face (DOM, above the canvas) lives in front of all of it. ---
         if (live) {
           var pt = L.portrait, ps = pt.s;
           ctx.save();
@@ -882,6 +895,64 @@
           ctx.arcTo(pt.x, pt.y + ps, pt.x, pt.y, 10);
           ctx.arcTo(pt.x, pt.y, pt.x + ps, pt.y, 10);
           ctx.closePath(); ctx.clip();
+          if (live.kind === "study") {                         // --- the study, cozy-core: lamplight that breathes, tea that steams ---
+            var u2 = ps / 40;                                  // the scene painting's logical 40-grid, mapped into the window
+            var lampX = pt.x + 8.5 * u2, lampY = pt.y + 8 * u2;
+            var lfl = 0.8 + 0.12 * Math.sin(t * 8.7) + 0.05 * Math.sin(t * 23.3) + 0.06 * Math.sin(t * 2.9);   // three incommensurate flames — candle physics, never a loop
+            var lgr = ctx.createRadialGradient(lampX, lampY, 1, lampX, lampY, ps * 0.42);
+            lgr.addColorStop(0, rgba("#ffd98a", 0.3 * lfl)); lgr.addColorStop(0.4, rgba("#f4c47a", 0.13 * lfl)); lgr.addColorStop(1, rgba("#f4c47a", 0));
+            ctx.fillStyle = lgr; ctx.beginPath(); ctx.arc(lampX, lampY, ps * 0.42, 0, 6.2832); ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = rgba("#fff2c8", 0.45 + 0.3 * lfl);
+            ctx.beginPath(); ctx.arc(lampX, lampY, 1.5 * u2 * (0.85 + 0.3 * lfl), 0, 6.2832); ctx.fill();
+            var steam = function (sx0, sy0, n, amp, spd, sk) { // wisps climbing from a point, swaying, thinning as they rise
+              ctx.strokeStyle = "#e8e2d8"; ctx.lineCap = "round"; ctx.lineWidth = 1.1;
+              for (var wi = 0; wi < n; wi++) {
+                var wr = mulberry32(L.seed + wi * 431 + sk);
+                var wph = wr() * 6.28, wper = 2.6 + wr() * 1.4;
+                var wu = ((t * spd + wph) % wper) / wper;
+                var wy = sy0 - wu * 9 * u2;
+                var wx = sx0 + Math.sin(wu * 5 + wph + t * 0.4) * amp * u2 + (wr() - 0.5) * 2 * u2;
+                ctx.globalAlpha = 0.34 * Math.sin(wu * Math.PI);
+                ctx.beginPath(); ctx.moveTo(wx, wy + 1.6 * u2);
+                ctx.quadraticCurveTo(wx + Math.sin(wu * 9 + wph) * 1.3 * u2, wy + 0.8 * u2, wx, wy);
+                ctx.stroke();
+              }
+            };
+            steam(pt.x + 28.8 * u2, pt.y + 20 * u2, 3, 1.1, 1, 7);   // the tea, always gently going
+            if (live.plate > 0) {                              // --- the plate: served beside the tea, heaped higher with every feeding ---
+              var plX = pt.x + 34.8 * u2, plY = pt.y + 23.6 * u2;
+              var pop = 1;
+              live.feeds = live.feeds.filter(function (fd) {   // the newest serving lands with a squash-and-settle
+                if (fd.t0 == null) fd.t0 = t;
+                var fa2 = t - fd.t0; if (fa2 >= 0.6) return false;
+                pop = 1 + 0.24 * Math.sin(fa2 / 0.6 * Math.PI);
+                return true;
+              });
+              ctx.save();
+              ctx.translate(plX, plY); ctx.scale(1, pop); ctx.translate(-plX, -plY);
+              ctx.globalAlpha = 1;
+              ctx.fillStyle = "#ded8cc";                       // the plate, snug beside the tea
+              ctx.beginPath(); ctx.ellipse(plX, plY, 3.6 * u2, 1.0 * u2, 0, 0, 6.2832); ctx.fill();
+              ctx.strokeStyle = "#b0aa9e"; ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.ellipse(plX, plY, 3.6 * u2, 1.0 * u2, 0, 0, 6.2832); ctx.stroke();
+              var heaps = Math.min(live.plate, 12);            // the easter egg: keep feeding and it just keeps STACKING
+              var sway = live.plate > 12 ? Math.min(live.plate - 12, 6) * 0.1 * Math.sin(t * 1.3) : 0;   // past twelve the tower starts to worry
+              var FOODC = ["#b07a42", "#c89454", "#8a5f36"];
+              for (var hi = 0; hi < heaps; hi++) {
+                var hr2 = mulberry32(L.seed + hi * 557 + 13);
+                var hx2 = plX + (hr2() - 0.5) * 1.6 * u2 + sway * hi * u2 * 0.4;
+                var hy2 = plY - (1.0 + hi * 1.05) * u2;
+                var hrx = Math.max(1.2, 2.8 - hi * 0.15) * u2;
+                ctx.fillStyle = FOODC[hi % 3];
+                ctx.beginPath(); ctx.ellipse(hx2, hy2, hrx, 0.9 * u2, 0, 0, 6.2832); ctx.fill();
+              }
+              ctx.restore();
+              var topY2 = plY - (1.0 + heaps * 1.05) * u2;
+              steam(plX + sway * heaps * u2 * 0.4, topY2, Math.min(2 + heaps, 6), 1.5, 1.2, 91);   // the mound steams harder the higher it heaps
+            }
+            ctx.globalAlpha = 1; ctx.restore();
+          } else {
           for (var ui = 0; ui < 7; ui++) {                     // bubbles: seeded columns, rising, wrapping
             var ur = mulberry32(L.seed + ui * 271 + 11);
             var uxf = 0.08 + ur() * 0.84, usp = 7 + ur() * 9, urad = 1 + ur() * 1.7, uph = ur() * ps;
@@ -933,6 +1004,7 @@
             return true;
           });
           ctx.globalAlpha = 1; ctx.restore();
+          }                                                    // (end tidepool branch — study returned above with its own restore)
         }
 
         // --- ink: a sepia cloud expelled behind the body, dispersing in the window ---
@@ -1005,6 +1077,9 @@
         var beatKy = 0;                                                              // laugh's cackle-jounce, fed into the body transform below
         var conAmt = fm && fm.anim && fm.anim.contract && fm.anim.contract[fm.index]
           ? fm.anim.contract[fm.index] * (0.78 + 0.12 * Math.sin(t * 0.8)) : 0;      // groan's whole-body contraction, breathing slowly around its hunch
+        if (feedFx && feedFx.t0 == null) feedFx.t0 = t;                              // late-bind the feeding clock, like every other gesture
+        var feedAge = feedFx ? t - feedFx.t0 - feedFx.delay : 9;
+        var thrillE = feedAge > 0 && feedAge < 1.1 ? Math.sin(feedAge / 1.1 * Math.PI) : 0;   // the thrill: one delighted pulse when the food arrives, then back to the mood
 
         // --- the living sprite: shimmer + blink, cycled from the sheet's extra frames.
         // Chromatophores drift on a slow uneven clock; blinks land on a seeded organic
@@ -1022,10 +1097,13 @@
             var bper = 3.2 + (L.seed % 5) * 0.9;
             if (((t + (L.seed % 7) * 0.6) % bper) < 0.16) fr = 1;                    // blink, ~160ms on a seeded organic cadence
           }
-          if (fr !== spriteFrame) {
-            spriteFrame = fr;
-            var fcol2 = fm.index % fm.cols;
-            var frow2 = Math.floor(fm.index / fm.cols) + (fm.anim.split ? (1 + fr) : fr) * fRows;   // split: the BODY never swaps — only the features layer blinks
+          var fcell = fm.index, fframe = fr;
+          if (fm.anim.thrill != null && thrillE > 0) { fcell = fm.anim.thrill; fframe = 1; }   // the feeding thrill wears the wide-eyed guffaw cell, whatever the mood was
+          var fkey = fcell * 4 + fframe + 1;
+          if (fkey !== spriteFrame) {
+            spriteFrame = fkey;
+            var fcol2 = fcell % fm.cols;
+            var frow2 = Math.floor(fcell / fm.cols) + (fm.anim.split ? (1 + fframe) : fframe) * fRows;   // split: the BODY never swaps — only the features layer changes
             (fm.anim.split && featEl ? featEl : kaoEl).style.backgroundPosition =
               g(fm.cols > 1 ? fcol2 / (fm.cols - 1) * 100 : 0) + "% " + g(fm.rows > 1 ? frow2 / (fm.rows - 1) * 100 : 0) + "%";
           }
@@ -1287,6 +1365,7 @@
         var kx = 0, ky = 0, ks = 1, krot = 0;                                        // kept as anchors — the weather marks still ride these (now-still) offsets
         ky += beatKy;                                                                // the cackle-jounce: the avatar's OWN body language, not a flag pose
         if (conAmt) { ky += 4.5 * conAmt; ks *= 1 - 0.05 * conAmt; }                 // the contraction: sunk low and drawn small
+        if (thrillE) { ky -= 2.2 * thrillE; ks *= 1 + 0.1 * thrillE; }               // the feeding thrill: a little hop of delight — every face gets this, sprite or text
         if (kaoEl && boopFx && boopFx.t0 == null) boopFx.t0 = t;
         var boopAge = boopFx && boopFx.t0 != null ? t - boopFx.t0 : 9;
         if (kaoEl && boopAge < 0.8) {                                                // the startle: recoil away from the finger, squash and boing
