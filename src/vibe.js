@@ -403,7 +403,7 @@
     laugh: "1f602", groan: "1f62b", oops: "1f62c", frustrated: "1f624", angry: "1f620",
     dramatic: "1f3ad", at_peace: "1f60c", solemn: "1f636", rhyme: "1f3b5", awe: "1f632",
     vertigo: "1f635", resolute: "1f4aa", puzzled: "1f615", asking: "2753", weary: "1f629",
-    wink: "1f609", love: "1f60d"
+    wink: "1f609", love: "1f60d", working: "1f6e0"
   };
   // The animated set is faces-and-a-few-objects only; every mood above resolves there
   // EXCEPT the musical note, so rhyme borrows whimsy's upside-down face. (Audited by

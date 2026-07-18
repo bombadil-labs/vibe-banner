@@ -277,5 +277,21 @@ ok(/sepia-sheet/.test(buildSVG({ avatar: { set: "sepia", item: "working" } })), 
 let ringOnly = Object.keys(M.moods).filter((k) => { const p = M.moods[k].paths; return p && p.every((x) => !x.p || x.p === "ring") && !M.moods[k].flash; });
 ok(ringOnly.length <= 10, "the swarm is not all circles: " + ringOnly.length + " moods are a plain ring with no flash (was 20)");
 
+console.log("\nevery mood resolves in every pack that advertises it");
+const MOODS_ALL = ["neutral","content","delighted","focused","sleepy","sheepish","booped","thinking",
+  "spark","excited","surprised","tender","melancholy","anxious","mirth","laugh","groan","oops",
+  "frustrated","angry","dramatic","at_peace","solemn","rhyme","awe","vertigo","resolute","puzzled",
+  "asking","weary","wink","love","working"];
+let noArt = MOODS_ALL.filter((m) => !M.moods[m]);
+ok(!noArt.length, "motes has a formation for all " + MOODS_ALL.length + " moods" + (noArt.length ? " — missing " + noArt : ""));
+let badEmoji = MOODS_ALL.filter((m) => {
+  let s = buildSVG(Object.assign({}, base, { face: { set: "twemoji", item: m } }));
+  let u = (s.match(/72x72\/([^"]+)\.png/) || [])[1];
+  return !u || !/^[0-9a-f]{4,5}(-[0-9a-f]{4,5})*$/.test(u);   // a mood name leaking through = a 404 image
+});
+ok(!badEmoji.length, "twemoji maps every mood to real codepoints" + (badEmoji.length ? " — leaking " + badEmoji : ""));
+let sepiaIdx = MOODS_ALL.map((m) => { let s = buildSVG(Object.assign({}, base, { face: { set: "sepia", item: m } })); return /sepia-sheet/.test(s); });
+ok(sepiaIdx.every(Boolean), "sepia renders a cell for every mood (via fallback where art is pending)");
+
 console.log(fails ? "\nFAILED (" + fails + ")" : "\nALL PASS");
 process.exit(fails ? 1 : 0);
