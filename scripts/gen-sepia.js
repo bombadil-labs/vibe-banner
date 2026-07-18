@@ -31,13 +31,12 @@ const COLORS = {
 // that lands flush on the arm cluster. PROFILE[row] = leftmost column (right mirrors);
 // null = no body. The hem's bottom edge stays open for the renderer-drawn arms.
 const PROFILE = [
-  null, null,                                                  // rows 0-1: water
-  12, 10, 9, 8, 7, 6, 5, 5,                                    // rows 2-9: the dome, rounding out
-  4, 4, 4, 4, 4, 4,                                            // rows 10-15: widest — the eye band
-  5, 5, 5,                                                     // rows 16-18: the taper begins
-  6, 6, 6,                                                     // rows 19-21
-  7, 7, 7,                                                     // rows 22-24
-  8                                                            // row 25: the hem — flush with the outer arms
+  null,                                                        // row 0: water
+  13, 10, 8, 6, 5, 4, 4,                                       // rows 1-7: a fast flare — the crown blooms open
+  3, 3, 3, 3, 3, 3, 3, 3,                                      // rows 8-15: the CROWN — drastically wide, built to hold the eyes
+  4, 5, 6,                                                     // rows 16-18: a decisive shoulder-in
+  7, 7, 8, 8, 9, 9,                                            // rows 19-24: the long elongated sweep
+  10                                                           // row 25: a narrow hem — the arms take over from here
 ];
 const BASE = [];
 for (let y = 0; y < 32; y++) {
