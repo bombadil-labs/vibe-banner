@@ -123,15 +123,6 @@
   }
 
   // sparkle base geometry (excited), shared by static SVG + animated canvas
-  function sparkleData(H, seed) {
-    var rnd = mulberry32(seed), u = function (lo, hi) { return lo + rnd() * (hi - lo); };
-    var zones = [[44, 636, 5, 18, 4], [44, 616, H - 18, H - 7, 4], [10, 46, 28, 106, 1], [646, 674, 28, 106, 1]];
-    var out = [];
-    zones.forEach(function (z) {
-      for (var k = 0; k < z[4]; k++) out.push({ cx: u(z[0], z[1]), cy: u(z[2], z[3]), s: u(6, 10), rot: u(0, 360), ry: u(0.18, 0.30), op: u(0.28, 0.42) });
-    });
-    return out;
-  }
 
   // at_peace flower garnish: a few blossoms scattered in the margins (static positions, seeded)
   var PEACE_GLYPHS = ["🌸", "🌼", "✿", "❀", "🌷"];
@@ -159,6 +150,116 @@
     return out;
   }
 
+  // THE CANONICAL MOODS (v0.44.0). One vocabulary, declared once, shared by every pack:
+  // Sepia's sheet order, the emoji map, Motes' formations, and the skill text all read
+  // from here. A pack that supports fewer declares its own subset and falls back.
+  var MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
+    "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
+    "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
+    "awe", "vertigo", "resolute", "puzzled", "asking", "weary", "wink", "love"];
+
+  // ── MOTES ─────────────────────────────────────────────────────────────────────────
+  // The first avatar with NO SHEET. Sepia and Kip are spritesheets — art, pinned by hash,
+  // rotated on every redraw. Motes is a swarm of glowing particles drawn entirely in code,
+  // so its "art" is this table and nothing ships as an image at all. That's the general
+  // affordance this release opens: a face may be PROCEDURAL, and the renderer will hand it
+  // a canvas instead of looking for cells.
+  //
+  // A mood is a FORMATION, not a drawing. Seven base shapes compose with five numbers:
+  //   r     spread, as a fraction of the window's half-size
+  //   dy    vertical offset (negative = riding high)
+  //   spin  orbit rate, signed per ring
+  //   jit   restlessness — how much each mote refuses to sit still
+  //   ord   1 = a clean ring, 0 = scattered chaos
+  // Everything else falls out. The swarm has no silhouette to get wrong, which is exactly
+  // why it survived when the siphonophore (same idea, fixed anatomy) did not.
+  var MOTE_N = 64;
+  var M_ORBIT = "orbit", M_TIGHT = "tight", M_RISE = "rise", M_FALL = "fall",
+      M_WIDE = "wide", M_LINE = "line", M_FACE = "face", M_SPIRAL = "spiral", M_TWIN = "twin";
+  var MOTE_FORM = {
+    neutral:    { f: M_ORBIT,  r: 0.62, dy: 0,     spin: 0.16, jit: 0.30, ord: 0.85 },
+    content:    { f: M_ORBIT,  r: 0.58, dy: 0.02,  spin: 0.20, jit: 0.28, ord: 0.90 },
+    delighted:  { f: M_RISE,   r: 0.70, dy: -0.05, spin: 0.40, jit: 0.55, ord: 0.60 },
+    focused:    { f: M_TIGHT,  r: 0.26, dy: 0,     spin: 0.75, jit: 0.14, ord: 0.95 },
+    sleepy:     { f: M_LINE,   r: 0.66, dy: 0.30,  spin: 0.05, jit: 0.12, ord: 0.70 },
+    sheepish:   { f: M_ORBIT,  r: 0.44, dy: 0.14,  spin: 0.14, jit: 0.34, ord: 0.55 },
+    booped:     { f: M_WIDE,   r: 0.86, dy: -0.04, spin: 0.60, jit: 0.90, ord: 0.20 },
+    thinking:   { f: M_ORBIT,  r: 0.52, dy: -0.03, spin: 0.34, jit: 0.24, ord: 0.80 },
+    spark:      { f: M_TIGHT,  r: 0.22, dy: -0.10, spin: 1.10, jit: 0.30, ord: 0.95 },
+    excited:    { f: M_RISE,   r: 0.80, dy: -0.08, spin: 0.55, jit: 0.75, ord: 0.45 },
+    surprised:  { f: M_WIDE,   r: 0.92, dy: -0.06, spin: 0.20, jit: 0.55, ord: 0.35 },
+    tender:     { f: M_TWIN,   r: 0.46, dy: 0.04,  spin: 0.14, jit: 0.20, ord: 0.85 },
+    melancholy: { f: M_FALL,   r: 0.56, dy: 0.16,  spin: 0.08, jit: 0.22, ord: 0.60 },
+    anxious:    { f: M_WIDE,   r: 0.74, dy: 0.02,  spin: 0.30, jit: 0.95, ord: 0.18 },
+    mirth:      { f: M_RISE,   r: 0.60, dy: 0,     spin: 0.45, jit: 0.50, ord: 0.65 },
+    laugh:      { f: M_RISE,   r: 0.76, dy: -0.02, spin: 0.60, jit: 0.85, ord: 0.40 },
+    groan:      { f: M_FALL,   r: 0.50, dy: 0.26,  spin: 0.06, jit: 0.18, ord: 0.55 },
+    oops:       { f: M_WIDE,   r: 0.80, dy: -0.02, spin: 0.70, jit: 0.85, ord: 0.25 },
+    frustrated: { f: M_TIGHT,  r: 0.36, dy: 0,     spin: 0.90, jit: 0.70, ord: 0.60 },
+    angry:      { f: M_TIGHT,  r: 0.32, dy: 0,     spin: 1.30, jit: 0.95, ord: 0.70 },
+    dramatic:   { f: M_ORBIT,  r: 0.78, dy: -0.04, spin: 0.26, jit: 0.30, ord: 0.92 },
+    at_peace:   { f: M_ORBIT,  r: 0.66, dy: 0.04,  spin: 0.07, jit: 0.10, ord: 0.95 },
+    solemn:     { f: M_LINE,   r: 0.70, dy: 0.10,  spin: 0.04, jit: 0.08, ord: 0.88 },
+    rhyme:      { f: M_TWIN,   r: 0.58, dy: 0,     spin: 0.24, jit: 0.26, ord: 0.80 },
+    awe:        { f: M_WIDE,   r: 0.96, dy: -0.10, spin: 0.10, jit: 0.22, ord: 0.55 },
+    vertigo:    { f: M_SPIRAL, r: 0.72, dy: 0,     spin: 0.85, jit: 0.45, ord: 0.75 },
+    resolute:   { f: M_TIGHT,  r: 0.30, dy: 0,     spin: 0.30, jit: 0.08, ord: 0.98 },
+    puzzled:    { f: M_ORBIT,  r: 0.56, dy: -0.02, spin: -0.28, jit: 0.45, ord: 0.45 },
+    asking:     { f: M_ORBIT,  r: 0.50, dy: -0.06, spin: 0.20, jit: 0.30, ord: 0.70 },
+    weary:      { f: M_FALL,   r: 0.62, dy: 0.22,  spin: 0.05, jit: 0.14, ord: 0.50 },
+    wink:       { f: M_FACE,   r: 0.62, dy: 0,     spin: 0.18, jit: 0.24, ord: 0.90 },
+    love:       { f: M_FACE,   r: 0.60, dy: 0.02,  spin: 0.12, jit: 0.18, ord: 0.92 }
+  };
+  // Palette drives colour directly — the reporter's own hues, so a Motes banner is tinted
+  // by the same values that tint the field. No per-mood colour table needed.
+  function moteTarget(i, n, t, F, cx, cy, R, seed) {
+    var TAU = 6.28318, a, rad, u, ring;
+    var chaos = mulberry32(seed + i * 977);
+    var cx2 = chaos(), cy2 = chaos();
+    var jx = (cx2 - 0.5) * (1 - F.ord) * R * 1.9;
+    var jy = (cy2 - 0.5) * (1 - F.ord) * R * 1.7;
+    var oy = cy + F.dy * R * 2;
+    switch (F.f) {
+      case M_TIGHT:
+        a = (i / n) * TAU * 5 + t * F.spin; rad = R * F.r * (0.35 + 0.65 * ((i % 5) / 4));
+        return [cx + Math.cos(a) * rad + jx * 0.4, oy + Math.sin(a) * rad + jy * 0.4];
+      case M_RISE:
+        u = ((t * (0.35 + F.spin * 0.5) + i * 0.137) % 1);
+        return [cx + ((i % 11) - 5) * R * 0.17 + Math.sin(t * 2 + i) * R * 0.05 + jx * 0.5,
+                oy + R * 0.9 - u * R * 2.0];
+      case M_FALL:
+        u = ((t * 0.16 + i * 0.113) % 1);
+        return [cx + ((i % 9) - 4) * R * 0.20 + Math.sin(t * 0.6 + i) * R * 0.07 + jx * 0.5,
+                oy - R * 0.7 + u * R * 1.7];
+      case M_WIDE:
+        return [cx + Math.sin(i * 12.9898 + t * F.spin) * R * F.r * 1.15 + jx,
+                oy + Math.cos(i * 78.233 + t * F.spin * 0.86) * R * F.r * 0.95 + jy];
+      case M_LINE:
+        u = i / n;
+        return [cx + (u - 0.5) * R * F.r * 2.3 + Math.sin(t * 0.5 + i) * R * 0.05,
+                oy + Math.sin(u * 7 + t * 0.4) * R * 0.10 + jy * 0.4];
+      case M_SPIRAL:
+        u = i / n; a = u * TAU * 2.2 + t * F.spin; rad = R * F.r * (0.15 + 0.85 * u);
+        return [cx + Math.cos(a) * rad, oy + Math.sin(a) * rad * 0.9];
+      case M_TWIN:
+        ring = i % 2; a = (i / n) * TAU * 3 + t * F.spin * (ring ? -1 : 1);
+        rad = R * F.r * 0.55;
+        return [cx + (ring ? 1 : -1) * R * 0.34 + Math.cos(a) * rad + jx * 0.4,
+                oy + Math.sin(a) * rad * 0.9 + jy * 0.4];
+      case M_FACE:                                             // a face is a temporary consensus of the parts
+        if (i < 12) { a = (i / 12) * TAU + t * 0.5; rad = R * 0.13;
+          return [cx - R * 0.40 + Math.cos(a) * rad, oy - R * 0.30 + Math.sin(a) * rad * 0.9]; }
+        if (i < 24) { a = ((i - 12) / 12) * TAU - t * 0.5; rad = R * 0.13;
+          return [cx + R * 0.40 + Math.cos(a) * rad, oy - R * 0.30 + Math.sin(a) * rad * 0.9]; }
+        u = (i - 24) / (n - 24); a = Math.PI * 0.17 + u * Math.PI * 0.66;
+        return [cx + Math.cos(a) * R * 0.66, oy + R * 0.20 + Math.sin(a) * R * 0.36];
+      default:                                                 // M_ORBIT
+        ring = i % 2; a = (i / n) * TAU * 3 + t * F.spin * (ring ? -1 : 1);
+        rad = R * F.r * (ring ? 0.62 : 1);
+        return [cx + Math.cos(a) * rad + jx, oy + Math.sin(a) * rad * 0.84 + jy];
+    }
+  }
+
   // KnownFace registry: face: { set, item } resolves here. Every entry is version-pinned
   // to an allowlisted CDN. "kip" is the repo's own mascot — items are mood names.
   var KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png";
@@ -166,10 +267,7 @@
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
   var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
-  var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
-    "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
-    "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
-    "awe", "vertigo", "resolute", "puzzled", "asking", "weary", "wink", "love"];
+  var SEPIA_MOODS = MOODS;                                     // Sepia covers the whole vocabulary
   // ONE VOCABULARY FOR EVERY FACE (v0.41.0, the maintainer's call): the emoji packs used
   // to take raw codepoints, so a skill's face vocabulary changed shape depending on which
   // pack you picked. Now every pack speaks Sepia's 32 moods — the reporter always names a
@@ -195,6 +293,9 @@
     return MOOD_EMOJI[k] || k;                                 // unknown → pass through: raw codepoints still work
   }
   var FACE_SETS = {
+    "motes": function (item) {                                 // no url: this face is code
+      return { proc: "motes", item: MOTE_FORM[item] ? item : "content" };
+    },
     "twemoji": function (item) { return { url: "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/" + encodeURIComponent(emojiFor(item)) + ".png" }; },
     "kip": function (item) {
       var i = KIP_MOODS[item]; if (i == null) i = Math.max(0, Math.min(7, parseInt(item, 10) || 0));
@@ -287,12 +388,39 @@
     }).filter(function (e) { return e && e.name; });
   }
 
-  /* The contract is ONE flag per banner. If a payload sets several, the highest-priority
-   * one renders and the rest are dropped — ordered so the state whose absence would most
-   * misrepresent the moment wins. Deterministic, documented, no composition. */
-  var FLAG_PRIORITY = ["angry", "solemn", "awe", "vertigo", "dramatic", "laugh", "anxious",
-    "surprised", "excited", "spark", "rhyme", "resolute", "oops", "frustrated", "groan",
-    "puzzled", "mirth", "melancholy", "tender", "at_peace"];
+  /* WEATHER, not flags (v0.44.0, the maintainer's call). The old vocabulary was twenty
+   * names that were mostly EMOTIONS — and emotions are the avatar's job now that avatars
+   * are properly expressive. What the banner can say that a face cannot is what the ROOM
+   * is doing: its light, its air, its pressure. So the list collapses to seven weathers,
+   * named for the phenomenon rather than the feeling. One per banner, as ever.
+   *
+   * The thirteen retired names still resolve (below) so deployed skills degrade into the
+   * nearest weather instead of silently rendering nothing. */
+  var WEATHER = ["storm", "spotlight", "hush", "fog", "glow", "bloom", "converge"];
+  var WEATHER_ALIAS = {                                        // old flag → the weather that carried it
+    angry: "storm", frustrated: "storm",
+    dramatic: "spotlight",
+    solemn: "hush", melancholy: "hush",
+    anxious: "fog", vertigo: "fog",
+    tender: "glow", mirth: "glow",
+    at_peace: "bloom", awe: "bloom",
+    resolute: "converge",
+    // these were pure face-work; the avatar owns them, so they bring no weather at all
+    spark: null, excited: null, surprised: null, laugh: null,
+    groan: null, oops: null, puzzled: null, rhyme: null
+  };
+  function weatherOf(p) {
+    var raw = p.weather != null ? p.weather : p.flag;
+    if (typeof raw === "string") {
+      if (WEATHER.indexOf(raw) >= 0) return raw;
+      if (Object.prototype.hasOwnProperty.call(WEATHER_ALIAS, raw)) return WEATHER_ALIAS[raw];
+      return null;                                             // unknown names are ignored, never fatal
+    }
+    for (var i = 0; i < WEATHER.length; i++) if (p[WEATHER[i]]) return WEATHER[i];
+    var keys = Object.keys(WEATHER_ALIAS);                     // legacy boolean payloads
+    for (var j = 0; j < keys.length; j++) if (p[keys[j]]) return WEATHER_ALIAS[keys[j]];
+    return null;
+  }
 
   /* ---- shared layout: everything static & animated both need ---- */
   // TWO KEYS (v0.42.0, the maintainer's cut): a banner is an AVATAR — who you are and
@@ -334,10 +462,8 @@
     var env = VR_MIN + (VR_MAX - VR_MIN) * (1 - focus);        // vertical band width (focused → narrow, scattered → wide)
     var stance = p.stance == null ? 0 : clamp01(p.stance, 0);  // 0 asking (pure falloff, today's look) → 1 telling (defined edge)
     var conson = clamp01(p.coherence != null ? p.coherence : p.consonance, 1);   // v0.41.0: coherence is the emotional dual of focus; consonance still accepted                     // 1 integrated (compact, solid) → 0 split (diffuse washes); omitted = 1
-    var activeFlag = null;                                     // the contract: flag?: string — exactly one of FLAG_PRIORITY, or none
-    if (typeof p.flag === "string") { if (FLAG_PRIORITY.indexOf(p.flag) >= 0) activeFlag = p.flag; }  // unknown strings are ignored
-    else for (var fi = 0; fi < FLAG_PRIORITY.length; fi++) { if (p[FLAG_PRIORITY[fi]]) { activeFlag = FLAG_PRIORITY[fi]; break; } }  // legacy boolean payloads: highest priority wins
-    if (square) activeFlag = null;                             // a bare tile has no weather — a flag is a detail
+    var activeFlag = weatherOf(p);                             // the contract: weather?: one of WEATHER, or none
+    if (square) activeFlag = null;                             // a bare tile has no weather — weather is a detail
 
     var vr = mulberry32(seed + 7);
     var vdir = vr() < 0.5 ? -1 : 1;                            // outer ovals together, centre opposite → a clear up/down/up (never a straight slope)
@@ -349,14 +475,14 @@
     // Legacy payloads may still pass kaomoji: separately — it also serves as fallback text
     // and seed material when the face is an image. Images fetch browser-side (URL-only
     // payload cost) and must live on a widget-allowlisted CDN.
-    var faceImg = null, kaoText = null, fRaw = p.face;
+    var faceImg = null, faceProc = null, kaoText = null, fRaw = p.face;
     if (typeof fRaw === "string") {
       if (/^https?:\/\//.test(fRaw)) faceImg = { url: fRaw };
       else kaoText = fRaw;
     } else if (fRaw && fRaw.set && FACE_SETS[fRaw.set]) {
-      faceImg = FACE_SETS[fRaw.set](String(fRaw.item == null ? "" : fRaw.item));
-      if (fRaw.w) faceImg.w = fRaw.w;
-      if (fRaw.h) faceImg.h = fRaw.h;
+      var resolved = FACE_SETS[fRaw.set](String(fRaw.item == null ? "" : fRaw.item));
+      if (resolved.proc) faceProc = resolved;                  // procedural: the renderer hands it a canvas
+      else { faceImg = resolved; if (fRaw.w) faceImg.w = fRaw.w; if (fRaw.h) faceImg.h = fRaw.h; }
     } else if (fRaw && fRaw.url) faceImg = fRaw;
     if (faceImg) faceImg = {
       url: String(faceImg.url),
@@ -463,7 +589,27 @@
     // starts at TEXT_X) instead of running underneath it — exuberant single-line kaomoji
     // compress; the skill's guidance is that big feelings bloom tall, not long.
     var kaoSVG, faceBox = null, textPivot = null, faceMeta = null;
-    if (faceImg) {
+    if (faceProc) {
+      // A procedural face owns the whole window. The STATIC render evaluates the same
+      // formation at t=0 and emits it as circles, so the fallback is the real creature
+      // holding still rather than a placeholder — one source of truth for both paths.
+      var pr = Math.min(portrait.s, 140) * 0.42;
+      var pcx = portrait.x + portrait.s / 2, pcy = faceCy;
+      var F = MOTE_FORM[faceProc.item] || MOTE_FORM.content;
+      var hue = fieldFromPalette(p.palette);
+      var dots = [];
+      for (var mi = 0; mi < MOTE_N; mi++) {
+        var tg = moteTarget(mi, MOTE_N, 0, F, pcx, pcy, pr, seed);
+        var mc = hue[mi % hue.length].fill;
+        dots.push('<circle cx="' + g(tg[0]) + '" cy="' + g(tg[1]) + '" r="' + g(2.4 + (mi % 3) * 0.5) +
+          '" fill="' + mc + '" opacity="0.85"/>');
+        dots.push('<circle cx="' + g(tg[0]) + '" cy="' + g(tg[1]) + '" r="' + g(6 + (mi % 3)) +
+          '" fill="' + mc + '" opacity="0.13"/>');
+      }
+      kaoSVG = '<g class="vk">' + dots.join("") + '</g>';
+      faceBox = { x: portrait.x, y: portrait.y, w: portrait.s, h: portrait.s };
+      faceMeta = { kind: "proc", proc: faceProc.proc, item: faceProc.item, box: faceBox };
+    } else if (faceImg) {
       var iy = faceCy - faceImg.h / 2;
       var ix = portrait.x + (portrait.s - faceImg.w) / 2;                // centre the image in the window
       faceMeta = faceImg.cellW && faceImg.cellH
@@ -556,14 +702,14 @@
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson
     };
-    FLAG_PRIORITY.forEach(function (f) { L[f] = f === activeFlag; });
+    WEATHER.forEach(function (f) { L[f] = f === activeFlag; });
     return L;
   }
 
   /* ---- static SVG (fallback + node tests): identical grammar, no motion ---- */
   function buildSVG(p) {
     var L = layout(p), W = L.W, out = [];
-    out.push('<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + L.H + '" role="img" xmlns="http://www.w3.org/2000/svg">');
+    out.push('<svg width="100%"' + (L.spotlight ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + L.H + '" role="img" xmlns="http://www.w3.org/2000/svg">');
     out.push('<title>Mood annotation</title><desc>Ambient mood field with a user read and a first-person feel/intent readout</desc>');
     out.push('<style>' + STYLE + '</style>');
     out.push(L.sceneSVG);                                     // the window draws on every banner
@@ -576,44 +722,42 @@
     out.push('<defs><clipPath id="' + wrid + '"><path clip-rule="evenodd" d="M0 0H' + W + 'V' + L.H + 'H0Z' +
       'M' + (wpt.x + 10) + ' ' + wpt.y + 'h' + wpi + 'a10 10 0 0 1 10 10v' + wpi + 'a10 10 0 0 1-10 10h-' + wpi + 'a10 10 0 0 1-10-10v-' + wpi + 'a10 10 0 0 1 10-10z"/></clipPath></defs><g clip-path="url(#' + wrid + ')">');
     var soft = 1 - L.conson;                                  // consonance: split → diffuse washes (bigger, thinner)
-    var sizeMul = (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);     // awe: the field swells while the face shrinks
+    var sizeMul = (1 + 0.22 * soft) * (L.bloom ? 1.18 : 1);     // awe: the field swells while the face shrinks
     out.push('<g opacity="0.5">');
     L.blobs.forEach(function (b) {
       var cy = b.cyBase + b.bias * L.env;                     // vertical position set by focus
       var fill = b.fill, opMul = (1 - 0.4 * soft);
-      if (L.solemn) fill = lerpHex(fill, grayLum(fill), 0.7); // solemn: the field desaturates
-      if (L.awe) { fill = lerpHex(fill, darken(fill, 0.72), 0.3); opMul *= 1.3; }  // awe: deeper = denser, never vanishing into a dark page
+      if (L.hush) fill = lerpHex(fill, grayLum(fill), 0.7); // solemn: the field desaturates
+      if (L.bloom) { fill = lerpHex(fill, darken(fill, 0.72), 0.3); opMul *= 1.3; }  // awe: deeper = denser, never vanishing into a dark page
       var edge = L.stance > 0                                  // stance: declarative → a definite contour; asking keeps the open falloff
         ? ' stroke="' + darken(fill, 0.66) + '" stroke-opacity="' + g(0.55 * L.stance) + '" stroke-width="1.5"' : '';
       out.push('<ellipse cx="' + g(b.cx) + '" cy="' + g(cy) + '" rx="' + g(b.rx * sizeMul) + '" ry="' + g(b.ry * sizeMul) + '" fill="' + fill + '" opacity="' + g(Math.min(0.9, b.op * opMul)) + '"' + edge + '/>');
     });
     out.push('</g>');
-    if (L.solemn) {                                            // one dim pass + a single steady ember, low in the frame
+    if (L.hush) {                                            // one dim pass + a single steady ember, low in the frame
       out.push('<rect x="0" y="0" width="' + W + '" height="' + L.H + '" fill="#2a2622" opacity="0.14"/>');
       out.push('<ellipse cx="' + (W - 52) + '" cy="' + (L.H - 12) + '" rx="13" ry="9" fill="#e8a45f" opacity="0.18"/>' +
         '<circle cx="' + (W - 52) + '" cy="' + (L.H - 12) + '" r="2.6" fill="#ffbf72" opacity="0.85"/>');
     }
-    if (L.dramatic) {
+    if (L.spotlight) {
       out.push('<defs><radialGradient id="drsp" cx="6.8%" cy="50%" r="72%">' +
         '<stop offset="0%" stop-color="#08080f" stop-opacity="0"/><stop offset="52%" stop-color="#08080f" stop-opacity="0.16"/><stop offset="100%" stop-color="#08080f" stop-opacity="0.46"/></radialGradient></defs>' +
         '<rect x="0" y="0" width="' + W + '" height="' + L.H + '" fill="url(#drsp)"/>');
     }
     var glow = [];
     // (the spark bulb left the weather in v0.33.0 — marks like it are the avatar's own props now, baked into its sheet)
-    if (L.excited) sparkleData(L.H, L.seed).forEach(function (st) { for (var a = 0; a < 3; a++) glow.push('<ellipse cx="' + st.cx.toFixed(1) + '" cy="' + st.cy.toFixed(1) + '" rx="' + st.s.toFixed(1) + '" ry="' + (st.s * st.ry).toFixed(2) + '" fill="#f7e3a8" opacity="' + st.op.toFixed(2) + '" transform="rotate(' + (st.rot + 60 * a).toFixed(1) + ' ' + st.cx.toFixed(1) + ' ' + st.cy.toFixed(1) + ')"/>'); });
-    if (L.at_peace) {                                          // stillness as a positive state: a soft halo below the face, blossoms in the margins
+    if (L.bloom) {                                          // stillness as a positive state: a soft halo below the face, blossoms in the margins
       glow.push('<ellipse cx="' + g(L.portrait.x + L.portrait.s + 28) + '" cy="' + g(L.coreCy + 16) + '" rx="36" ry="15" fill="#ffe9bd" opacity="0.28"/>');
       peaceData(L.H, L.seed).forEach(function (f) {
         glow.push('<text x="' + f.x.toFixed(1) + '" y="' + f.y.toFixed(1) + '" font-size="' + f.s.toFixed(1) + '" opacity="' + f.op.toFixed(2) + '">' + f.g + '</text>');
       });
     }
-    if (L.resolute) resoluteData(L.H, L.seed).forEach(function (r) {  // concentration lines held faint
+    if (L.converge) resoluteData(L.H, L.seed).forEach(function (r) {  // concentration lines held faint
       var dx = (L.portrait.x + L.portrait.s + 28) - r.x, dy = L.coreCy - r.y;   // lines converge toward the margin point beside her
       glow.push('<line x1="' + r.x.toFixed(1) + '" y1="' + r.y.toFixed(1) + '" x2="' + (r.x + dx * r.len).toFixed(1) + '" y2="' + (r.y + dy * r.len).toFixed(1) + '" stroke="#4a3c26" stroke-opacity="' + (0.16 * r.op).toFixed(3) + '" stroke-width="1.2"/>');
     });
     if (glow.length) out.push('<g opacity="0.9">' + glow.join("") + '</g>');
     out.push('</g>');                                          // close the full-bleed weather clip
-    if (L.rhyme) out.push('<g opacity="0.25" transform="translate(-25,0)" pointer-events="none">' + L.kaoSVG + '</g>');   // the echo: the face's exact replica, 25px left (outside the clip so it shows over the window)
     out.push(L.kaoSVG + L.restSVG + '</svg>');                 // flags never pose the face (v0.31.0) — a flag is banner weather; the face is the avatar's
     return out.join("");
   }
@@ -629,7 +773,7 @@
       '<div style="position:relative;width:100%">' +
       '<svg viewBox="0 0 ' + W + ' ' + L.H + '" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none" xmlns="http://www.w3.org/2000/svg">' + L.sceneSVG + '</svg>' +
       '<canvas style="position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none"></canvas>' +
-      '<svg width="100%"' + (L.dramatic ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + H + '" role="img" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:1;display:block">' +
+      '<svg width="100%"' + (L.spotlight ? ' class="drama"' : '') + ' viewBox="0 0 ' + W + ' ' + H + '" role="img" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:1;display:block">' +
       '<title>Mood annotation</title><desc>Living mood field with a user read and a first-person feel/intent readout</desc>' +
       '<style>' + STYLE + '</style>' + L.mountSVG + '</svg>' +
       '</div>';
@@ -677,7 +821,7 @@
       "@media (prefers-color-scheme:dark){.vft{color:#f6ead0;background:rgba(14,10,4,0.66);text-shadow:0 1px 1px rgba(14,10,4,0.6)}}" +   // near-black: 0.45 amber dissolved into star-speckled scenes
       ".vdrama .vft{font-family:var(--font-voice,Georgia,serif)}";
     var ovStyle = document.createElement("style"); ovStyle.textContent = OV_CSS; wrap.appendChild(ovStyle);
-    if (L.dramatic) wrap.classList.add("vdrama");
+    if (L.spotlight) wrap.classList.add("vdrama");
     var ov = document.createElement("div");
     ov.style.cssText = "position:absolute;z-index:2;display:flex;flex-direction:column;justify-content:center;pointer-events:none;" +
       "left:" + g(TEXT_X / W * 100) + "%;right:1.2%;top:2%;bottom:" +
@@ -783,16 +927,6 @@
       fpill.innerHTML = '<span class="pill">' + esc(L.flagName.replace("_", " ")) + '</span>';
       wrap.appendChild(fpill);
     }
-    if (L.vertigo) {                                           // Droste: the banner inside its own banner, depth hard-capped at one (flags omitted inside)
-      var mini = document.createElement("div");
-      mini.style.cssText = "position:absolute;right:8px;bottom:" + (L.hasLangs ? 20 : 6) + "px;width:22%;z-index:2;pointer-events:none;opacity:0.92;" +
-        "border:1px solid rgba(128,120,104,0.45);border-radius:6px;overflow:hidden";   // framed, so it reads as the banner recurring, not a smudge
-      mini.innerHTML = buildSVG({
-        kaomoji: p.kaomoji, face: p.face, readout: L.readout,
-        palette: p.palette, field: p.field, focus: p.focus, engagement: p.engagement
-      });
-      wrap.appendChild(mini);
-    }
     // Attunement + play: only where the host injects sendPrompt (Claude surfaces). Absent it
     // (plain web, the gallery), none of this exists. Mount-only; the static fallback is inert.
     //
@@ -806,13 +940,19 @@
     // sprites crop with percentage background math (no nested-svg atlas, no getBBox
     // lies); transforms pivot on the element's own centre, as CSS intends. The static
     // fallback (buildSVG) keeps the SVG face.
-    var fm = L.faceMeta, kaoEl = null, featEl = null, faceLayerEl = null, baseFill = [92, 67, 32];
+    var fm = L.faceMeta, kaoEl = null, featEl = null, faceLayerEl = null, procC = null, baseFill = [92, 67, 32];
     if (fm) {
       var faceLayer = document.createElement("div");
       faceLayer.style.cssText = "position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;" +
         "left:" + g(L.portrait.x / W * 100) + "%;top:" + g(L.portrait.y / L.H * 100) + "%;" +
         "width:" + g(L.portrait.s / W * 100) + "%;height:" + g(L.portrait.s / L.H * 100) + "%;";
-      if (fm.kind === "text") {
+      if (fm.kind === "proc") {                               // procedural: one canvas, filled by code, owning the whole window
+        kaoEl = document.createElement("div");
+        kaoEl.style.cssText = "width:100%;height:100%;position:relative;";
+        procC = document.createElement("canvas");
+        procC.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
+        kaoEl.appendChild(procC);
+      } else if (fm.kind === "text") {
         kaoEl = document.createElement("span");
         kaoEl.className = "vft" + (fm.multiline ? " vftm" : "");
         kaoEl.textContent = fm.lines.join("\n");
@@ -921,24 +1061,6 @@
     // 25% alpha, non-interactive, mirroring every action — transform, sprite frames, and
     // the fin/chromatophore canvases blitted each frame. A verse and its rhyme.
     var echoKao = null, echoFeat = null, echoFins = null, echoChromo = null, echoTint = null;
-    if (L.rhyme && kaoEl && faceLayerEl) {
-      var echoLayer = document.createElement("div");
-      echoLayer.style.cssText = faceLayerEl.style.cssText;
-      echoLayer.style.left = g((L.portrait.x - 25) / W * 100) + "%";
-      echoLayer.style.opacity = "0.25";
-      echoLayer.style.zIndex = "1";                            // behind the original — an echo never leads
-      echoLayer.style.pointerEvents = "none";
-      echoKao = kaoEl.cloneNode(true);
-      echoKao.style.pointerEvents = "none";
-      echoKao.style.cursor = "";
-      echoLayer.appendChild(echoKao);
-      wrap.insertBefore(echoLayer, faceLayerEl);
-      var eCvs = echoKao.querySelectorAll("canvas");
-      if (finC) echoFins = eCvs[0] || null;                    // children were appended finC → chromo → featEl → tintC; the clone preserves order
-      if (chromo) echoChromo = eCvs[finC ? 1 : 0] || null;
-      if (tintC) echoTint = eCvs[(finC ? 1 : 0) + (chromo ? 1 : 0)] || null;
-      echoFeat = featEl ? echoKao.querySelector("div") : null;
-    }
     // Every banner-generated message carries this prefix so it never reads as typed text —
     // the skill tells the reporter to receive these as gestures, not prompts. Each one also
     // ends with a blank line: consecutive taps (a boop then a feeding) land as separate
@@ -949,6 +1071,7 @@
     // see DESIGN.md). Ambience runs for everyone; only the click affordances gate on play.
     var live = (L.scene && L.scene.live && L.portrait) ? { kind: L.scene.live, ripples: [], feeds: [], plate: 0 } : null;
     var feedFx = null;                                         // the feeding THRILL (v0.35.0): any environment, any face that has a thrill cell — eyes wide, mouth thrown open, one delighted pulse, then back
+    var moteState = null;                                      // per-mote physics, rebuilt when the canvas resizes
     var groanT0 = 0, conReset = false;                         // the contraction cycle's clock; a boop or a feeding sends her back to relaxed
     // INK: her namesake pigment (sepia is literally cuttlefish ink). Config per mood in
     // the registry: >=0.7 → one full startled puff shortly after arrival; smaller →
@@ -1051,9 +1174,8 @@
 
     var env = L.env;
     var B = L.blobs;
-    var stars = L.excited ? sparkleData(H, L.seed).map(function (s, i) { return { s: s, tw: 1.6 + (i % 4) * 0.6, ph: i * 1.3, rs: (0.04 + (i % 5) * 0.022) * (i % 2 ? 1 : -1) }; }) : [];
-    var flowers = L.at_peace ? peaceData(H, L.seed) : [];
-    var resLines = L.resolute ? resoluteData(H, L.seed) : [];
+    var flowers = L.bloom ? peaceData(H, L.seed) : [];
+    var resLines = L.converge ? resoluteData(H, L.seed) : [];
     var soft = 1 - L.conson;                                   // consonance: 0 soft → today's falloff; grows → diffuse washes
     var kaoFont = "";                                          // resolved lazily for rhyme's canvas ghost
     var spriteFrame = 0;                                       // current sheet frame for animated sprites (base/shimmer/blink)
@@ -1311,22 +1433,6 @@
         }
 
         // --- timed envelopes shared by field + face ---
-        var laughB = 1, lLt = 0, lCyc = 0, laughKp = 0;
-        if (L.laugh) {
-          lLt = t % 4.6; lCyc = Math.floor(t / 4.6);
-          var lenv = (lLt < 1.5) ? Math.exp(-lLt * 1.7) * Math.sin(lLt * 13) : 0;
-          laughB = 1 + 0.15 * lenv; laughKp = Math.max(0, lenv);
-        }
-        var groanGr = 0;
-        if (L.groan) { var gt = t % 5; groanGr = gt < 0.5 ? gt / 0.5 : (gt < 1.8 ? 1 : (gt < 2.6 ? 1 - (gt - 1.8) / 0.8 : 0)); }
-        var oopsE = 0, oopsOsc = 0;
-        if (L.oops) {
-          var ot = t % 4.5;
-          if (ot < 0.1) { oopsE = ot / 0.1; oopsOsc = oopsE; }
-          else if (ot < 1.4) { var od = ot - 0.1, oenv = Math.exp(-od * 3.4); oopsE = oenv; oopsOsc = oenv * Math.cos(od * 22); }
-        }
-        var surP = L.surprised ? Math.exp(-((t % 2.2) / 2.2) * 6) : 0;   // a quick startle every 2.2s
-        var frP = L.frustrated ? 0.5 + 0.5 * Math.sin(t * 2.2) : 0;
 
         var beatKy = 0, beatKw = 0;                                                  // laugh's belly-heave: vertical jounce + chest-wide width pulse
         // groan's LONG contraction cycle (v0.36.0): the act itself is the show — deadpan
@@ -1378,6 +1484,54 @@
             var frow2 = Math.floor(fcell / fm.cols) + (fm.anim.split ? (1 + fframe) : fframe) * fRows;   // split: the BODY never swaps — only the features layer changes
             (fm.anim.split && featEl ? featEl : kaoEl).style.backgroundPosition =
               g(fm.cols > 1 ? fcol2 / (fm.cols - 1) * 100 : 0) + "% " + g(fm.rows > 1 ? frow2 / (fm.rows - 1) * 100 : 0) + "%";
+          }
+        }
+
+        // --- MOTES: the procedural avatar. Springs toward the mood's formation, trails
+        // rather than clears (the smear is what makes a mood CHANGE read as motion), and
+        // takes its colour straight from the reporter's palette. Boop scatters it; a
+        // feeding pulls it into a delighted rise. ---
+        if (procC && fm.proc === "motes") {
+          var pw = kaoEl.clientWidth, ph2 = kaoEl.clientHeight;
+          if (pw > 4 && ph2 > 4) {
+            if (procC.width !== pw) { procC.width = pw; procC.height = ph2; moteState = null; }
+            var mx = procC.getContext("2d");
+            var mR = Math.min(pw, ph2) * 0.46, mcx = pw / 2, mcy = ph2 / 2;
+            if (!moteState) {
+              moteState = [];
+              for (var q = 0; q < MOTE_N; q++) moteState.push({ x: mcx, y: mcy, vx: 0, vy: 0, ph: (q * 2.39) % 6.283 });
+            }
+            var mMood = fm.item;
+            if (thrillE > 0.25) mMood = "delighted";           // fed: the swarm leaps before it settles
+            var MF = MOTE_FORM[mMood] || MOTE_FORM.content;
+            var mPal = L.blobs.length ? L.blobs.map(function (b2) { return b2.fill; }) : ["#b89ab0"];
+            mx.globalCompositeOperation = "source-over";
+            mx.fillStyle = "rgba(0,0,0,0.24)";                 // trail decay: the swarm smears where it has been
+            mx.globalCompositeOperation = "destination-out";
+            mx.fillRect(0, 0, pw, ph2);
+            mx.globalCompositeOperation = "lighter";
+            for (var mi2 = 0; mi2 < MOTE_N; mi2++) {
+              var ms = moteState[mi2];
+              var mt = moteTarget(mi2, MOTE_N, t, MF, mcx, mcy, mR, L.seed);
+              if (boopAge < 0.8) {                             // the poke throws them outward, then they re-gather
+                var bev2 = Math.exp(-boopAge * 3.2);
+                mt[0] += (ms.x - mcx) * bev2 * 1.5;
+                mt[1] += (ms.y - mcy) * bev2 * 1.5;
+              }
+              ms.vx += (mt[0] - ms.x) * 0.055; ms.vy += (mt[1] - ms.y) * 0.055;
+              ms.vx *= 0.85; ms.vy *= 0.85;
+              ms.x += ms.vx + Math.sin(t * 1.6 + ms.ph) * MF.jit;
+              ms.y += ms.vy + Math.cos(t * 1.4 + ms.ph * 1.3) * MF.jit;
+              var mcol = mPal[mi2 % mPal.length];
+              var tw2 = 0.6 + 0.4 * Math.sin(t * 2.4 + ms.ph);
+              var mrad = Math.max(1.2, mR * 0.052) * tw2;
+              mx.fillStyle = mcol;
+              mx.globalAlpha = 0.15 * tw2;
+              mx.beginPath(); mx.arc(ms.x, ms.y, mrad * 2.6, 0, 6.2832); mx.fill();
+              mx.globalAlpha = 0.85 * tw2;
+              mx.beginPath(); mx.arc(ms.x, ms.y, mrad * 0.6, 0, 6.2832); mx.fill();
+            }
+            mx.globalAlpha = 1; mx.globalCompositeOperation = "source-over";
           }
         }
 
@@ -1709,15 +1863,14 @@
 
         // --- the field: three columns holding a seeded vertical band set by focus ---
         B.forEach(function (b, bi) {
-          var ox = 2.2 * Math.sin(0.45 * t + b.phase) + oopsOsc * 10;                // columns hold their focus positions; a hair of life + oops jolt
-          var oy = b.bias * env + 1.6 * Math.sin(0.5 * t + b.phase) + groanGr * 9;   // vertical position from focus, gently alive
-          var br = (1 + 0.05 * Math.sin(0.7 * t + b.phase)) * laughB * (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);
+          var ox = 2.2 * Math.sin(0.45 * t + b.phase);                              // columns hold their focus positions, a hair alive
+          var oy = b.bias * env + 1.6 * Math.sin(0.5 * t + b.phase);
+          var br = (1 + 0.05 * Math.sin(0.7 * t + b.phase)) * (1 + 0.22 * soft) * (L.bloom ? 1.18 : 1);
           var fill = b.fill;
           if (b.pool) { var per = 6, f = (t / per) % b.pool.length, i0 = Math.floor(f), fr = f - i0; fill = lerpHex(b.pool[i0], b.pool[(i0 + 1) % b.pool.length], fr * fr * (3 - 2 * fr)); }  // centre cycles smoothly
-          if (L.frustrated) fill = lerpHex(fill, "#7a1616", frP * 0.5);              // frustrated: ovals pulse dark red and back
-          if (L.solemn) fill = lerpHex(fill, grayLum(fill), 0.7);                    // solemn: the field desaturates
+          if (L.hush) fill = lerpHex(fill, grayLum(fill), 0.7);                    // solemn: the field desaturates
           var bop = b.op;
-          if (L.awe) { fill = lerpHex(fill, darken(fill, 0.72), 0.3); bop = Math.min(0.9, bop * 1.3); }  // awe: deeper = denser, never vanishing into a dark page
+          if (L.bloom) { fill = lerpHex(fill, darken(fill, 0.72), 0.3); bop = Math.min(0.9, bop * 1.3); }  // awe: deeper = denser, never vanishing into a dark page
           ctx.globalAlpha = 0.5;
           ellipse(b.cx + ox, b.cyBase + oy, b.rx * br, b.ry * br, fill, bop, soft);
           if (L.stance > 0) {                                                        // stance: declarative → the ovals gain a definite edge
@@ -1729,12 +1882,12 @@
 
         // --- full-frame dim: max-pooled across contributors so stacked washes never sum toward mud ---
         var dimC = null;
-        if (L.solemn) dimC = ["#2a2622", 0.14];
-        if (L.anxious) { var axA = 0.12 + 0.06 * Math.sin(t * 0.9); if (!dimC || axA > dimC[1]) dimC = ["#5f6675", axA]; }
-        if (L.angry) { if (!dimC || 0.62 > dimC[1]) dimC = ["#050408", 0.62]; }
+        if (L.hush) dimC = ["#2a2622", 0.14];
+        if (L.fog) { var axA = 0.12 + 0.06 * Math.sin(t * 0.9); if (!dimC || axA > dimC[1]) dimC = ["#5f6675", axA]; }
+        if (L.storm) { if (!dimC || 0.62 > dimC[1]) dimC = ["#050408", 0.62]; }
         if (dimC) { ctx.fillStyle = rgba(dimC[0], dimC[1]); ctx.fillRect(0, 0, W, H); }
 
-        if (L.angry) {                                                               // storm: red underglow + lightning (its dim is pooled above)
+        if (L.storm) {                                                               // storm: red underglow + lightning (its dim is pooled above)
           var ug = ctx.createRadialGradient(W / 2, cyC, 20, W / 2, cyC, W * 0.6);
           ug.addColorStop(0, rgba("#3a0a0a", 0.5)); ug.addColorStop(1, rgba("#3a0a0a", 0));
           ctx.fillStyle = ug; ctx.fillRect(0, 0, W, H);
@@ -1750,7 +1903,7 @@
           }
           // (the grawlix curses left the storm in v0.33.0 — they're the avatar's own props now, baked into its sheet)
         }
-        if (L.dramatic) {
+        if (L.spotlight) {
           var dx = faceCX, dy = faceMidY, fl = 0.94 + 0.06 * Math.sin(t * 5.5) + 0.03 * Math.sin(t * 11);
           var pool = ctx.createRadialGradient(dx, dy - 4, 6, dx, dy, 168);
           pool.addColorStop(0, rgba("#fff2cf", 0.5 * fl)); pool.addColorStop(0.5, rgba("#ffe6a8", 0.16 * fl)); pool.addColorStop(1, rgba("#ffe6a8", 0));
@@ -1762,47 +1915,14 @@
         // (the spark bulb, the 💢 vein, the groan sweat drop, the oops "!", and the ?-cloud
         // all left the weather in v0.33.0 — a mark is a prop the AVATAR wears, baked per-mood
         // into its own sheet, free to differ per face; the banner keeps only true climate)
-        if (stars.length) {
-          ctx.strokeStyle = "#f7e3a8"; ctx.lineCap = "round";
-          stars.forEach(function (o) {
-            var s = o.s, k = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(o.tw * t + o.ph)), base = s.rot * Math.PI / 180 + o.rs * t;
-            ctx.globalAlpha = s.op * k; ctx.lineWidth = 1.4;
-            for (var a = 0; a < 3; a++) {
-              var ang = base + a * Math.PI / 3;
-              ctx.beginPath();
-              ctx.moveTo(s.cx - Math.cos(ang) * s.s, s.cy - Math.sin(ang) * s.s);
-              ctx.lineTo(s.cx + Math.cos(ang) * s.s, s.cy + Math.sin(ang) * s.s);
-              ctx.stroke();
-            }
-          });
-          ctx.globalAlpha = 1;
-        }
         // --- diffuse atmospheric flags ---
-        if (L.tender) {
+        if (L.glow) {
           var twa = 0.15 + 0.05 * Math.sin(0.9 * t);
           var tg = ctx.createRadialGradient(W / 2, cyC, Math.min(W, H) * 0.34, W / 2, cyC, W * 0.58);
           tg.addColorStop(0, rgba("#e8a48f", 0)); tg.addColorStop(0.72, rgba("#e6a090", twa * 0.45)); tg.addColorStop(1, rgba("#e09a84", twa));
           ctx.fillStyle = tg; ctx.fillRect(0, 0, W, H);
         }
-        if (L.surprised) {                                                           // halo bloom off the face (kept from awe)
-          var acx = faceCX, acy = faceMidY, per2 = 4.4;
-          [0, 0.5].forEach(function (ph) {
-            var tt = ((t / per2 + ph) % 1), r = 26 + tt * 210, aa = 0.22 * Math.max(0, 1 - tt);
-            var ag = ctx.createRadialGradient(acx, acy, r * 0.72, acx, acy, r * 1.1);
-            ag.addColorStop(0, rgba("#efe6c8", 0)); ag.addColorStop(0.5, rgba("#efe6c8", aa)); ag.addColorStop(1, rgba("#efe6c8", 0));
-            ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(acx, acy, r * 1.1, 0, 6.2832); ctx.fill();
-          });
-        }
-        if (L.melancholy) {
-          ctx.fillStyle = "#9aa2b4";
-          for (var mi = 0; mi < 9; mi++) {
-            var mx = 34 + mi * (W - 68) / 8 + 7 * Math.sin(t * 0.3 + mi), my = ((mi * 47 + t * (7 + (mi % 3) * 4)) % (H + 20)) - 10;
-            ctx.globalAlpha = 0.32 * (0.5 + 0.5 * Math.sin(t * 0.5 + mi));
-            ctx.beginPath(); ctx.arc(mx, my, 2.3, 0, 6.2832); ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-        }
-        if (L.anxious) {                                                             // cold dread: rolling wisps + a tightening vignette (its breathing dim is pooled above)
+        if (L.fog) {                                                             // cold dread: rolling wisps + a tightening vignette (its breathing dim is pooled above)
           for (var fi = 0; fi < 11; fi++) {
             var fsp = 8 + (fi % 4) * 7;
             var fx = ((t * fsp + fi * 150) % (W + 460)) - 230;
@@ -1814,22 +1934,12 @@
           av.addColorStop(0, rgba("#3a4050", 0)); av.addColorStop(1, rgba("#3a4050", 0.22 + 0.08 * Math.sin(t * 0.7)));  // edges creep in
           ctx.fillStyle = av; ctx.fillRect(0, 0, W, H);
         }
-        if (L.mirth) {
-          ctx.fillStyle = "#f2e0ac";
-          for (var bi = 0; bi < 10; bi++) {
-            var bp = 2.0 + (bi % 4) * 0.5, bt = ((t + bi * 0.53) % bp) / bp;
-            var bx2 = 24 + bi * (W - 48) / 9 + 5 * Math.sin(t * 0.6 + bi), by2 = (H - 8) - bt * (H - 20);
-            ctx.globalAlpha = 0.4 * Math.sin(bt * Math.PI);
-            ctx.beginPath(); ctx.arc(bx2, by2, 1.6 + bt * 2, 0, 6.2832); ctx.fill();
-          }
-          ctx.globalAlpha = 1;
-        }
         // (laugh's yellow asterisk-burst left the weather in v0.36.0 — laughter marks are
         // the avatar's own now, flicking off her flanks with each HA; the field's gentle
         // laughB breathing is all the room keeps)
         // (rhyme's canvas ghost retired in v0.40.0 — the echo is a live DOM replica now,
         // 25px left at 25% alpha, mirroring every action; see the echo sync above)
-        if (L.resolute) {                                                            // 集中線: ignition flare, then held faint — drawn after washes so it reads inside storms
+        if (L.converge) {                                                            // 集中線: ignition flare, then held faint — drawn after washes so it reads inside storms
           var rt = t % 6, flare = rt < 0.7 ? (rt < 0.15 ? rt / 0.15 : 1 - 0.72 * ((rt - 0.15) / 0.55)) : 0.28;
           ctx.lineCap = "round"; ctx.lineWidth = 2;            // bolder — they were barely visible (the maintainer's note)
           resLines.forEach(function (r) {
@@ -1838,13 +1948,13 @@
             ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + dx * ln, r.y + dy * ln); ctx.stroke();
           });
         }
-        if (L.solemn) {                                                              // one small warm ember, steady, low in the frame
+        if (L.hush) {                                                              // one small warm ember, steady, low in the frame
           var eg = ctx.createRadialGradient(W - 52, H - 12, 1, W - 52, H - 12, 15);
           eg.addColorStop(0, rgba("#ffbf72", 0.5)); eg.addColorStop(0.5, rgba("#e8a45f", 0.18)); eg.addColorStop(1, rgba("#e8a45f", 0));
           ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(W - 52, H - 12, 15, 0, 6.2832); ctx.fill();
           ctx.fillStyle = rgba("#ffbf72", 0.85); ctx.beginPath(); ctx.arc(W - 52, H - 12, 2.6, 0, 6.2832); ctx.fill();
         }
-        if (L.at_peace) {                                                            // stillness as a positive state: a soft halo below the face, blossoms at rest
+        if (L.bloom) {                                                            // stillness as a positive state: a soft halo below the face, blossoms at rest
           var pg = ctx.createRadialGradient(faceCX, faceMidY + 16, 4, faceCX, faceMidY + 16, 42);
           pg.addColorStop(0, rgba("#ffe9bd", 0.30)); pg.addColorStop(0.6, rgba("#ffe9bd", 0.12)); pg.addColorStop(1, rgba("#ffe9bd", 0));
           ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(faceCX, faceMidY + 16, 42, 0, 6.2832); ctx.fill();

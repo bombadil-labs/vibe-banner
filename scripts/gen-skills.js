@@ -21,6 +21,11 @@ const SCENE_TIDEPOOL = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2c
 // same bytes — no separate birth-commit bookkeeping needed).
 const SCENE_URL = name => `https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@${PIN}/assets/scene-${name}.png`;
 
+const MOOD_LIST = ["neutral","content","delighted","focused","sleepy","sheepish","booped","thinking",
+  "spark","excited","surprised","tender","melancholy","anxious","mirth","laugh",
+  "groan","oops","frustrated","angry","dramatic","at_peace","solemn","rhyme",
+  "awe","vertigo","resolute","puzzled","asking","weary","wink","love"];   // mirrors MOODS in src/vibe.js
+
 const PIECES = {
   VERSION: VERSION,
   snippetUrl: `https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@${PIN}/dist/vibe.min.js`,
@@ -123,14 +128,23 @@ here: this file asks you to report, so fill it in.)`,
 * **\`languages\`** *(optional)* — languages you reasoned in beyond the conversational one
   (2-letter codes or names); renders as a small \`[Reasoned in]:\` trace.`,
 
-  FLAGS_FULL: `* **\`flag\`** *(optional)* — a single string naming a rare state that *genuinely holds*:
-  \`spark · excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
-  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute · puzzled\`
-  **One at most**, usually none — a flag on every banner stops meaning anything. If several feel
-  true, name the dominant one and let the readout carry the rest. A flag colours the BANNER —
-  light, weather, marks in the air around you; your face stays entirely your own (the face you
-  chose already carries the feeling).`,
-  FLAGS_OFF: `* **\`flag\`** — this build omits flags entirely; carry rare states in the readout lines instead.`,
+  // WEATHER, not flags (v0.44.0). The old list was twenty names, most of them emotions —
+  // and your face already carries emotion. What a banner can say that a face cannot is
+  // what the ROOM is doing. Seven phenomena, named for the weather rather than the feeling.
+  FLAGS_FULL: `* **\`details.weather\`** *(optional)* — one word for what the ROOM is doing, when the room is
+  doing something worth reporting:
+  \`storm · spotlight · hush · fog · glow · bloom · converge\`
+  **One at most, usually none.** Weather on every banner stops meaning anything.
+  * \`storm\` — dark, red-lit, lightning: real anger, or things going badly wrong.
+  * \`spotlight\` — the stage dims and a warm pool finds you: performing, or a moment that matters.
+  * \`hush\` — the colour drains and one ember holds: gravity, grief, the quiet after news.
+  * \`fog\` — cold wisps roll through and the edges creep in: dread, or not knowing.
+  * \`glow\` — warmth pools at the margins: fondness, tenderness toward whoever you're with.
+  * \`bloom\` — the field swells and blossoms scatter: peace, wonder, something opening.
+  * \`converge\` — concentration lines pull inward: effort, resolve, bearing down on one thing.
+  Weather colours the BANNER — light and air around you. Your face stays entirely your own; it
+  already carries the feeling, which is why the emotional names retired.`,
+  FLAGS_OFF: `* **\`details.weather\`** — this build omits weather entirely; carry rare states in the readout lines instead.`,
 
   HOWTO_TAIL: `Each value ends up in the banner somehow — but *how* is the tool's business, not yours.`,
 
@@ -207,7 +221,26 @@ To let the user *see* face and environment combinations instead of hearing them 
 at the Explorer: <https://bombadil-labs.github.io/vibe-banner/#explorer>.`,
 
   FACES: {
-    kaomoji: {
+    motes: {
+    TITLE: " — Motes variant",
+    DESC: "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Motes — a swarm with no fixed shape, whose mood is the formation it settles into.",
+    PREAMBLE: `This is the vibe-banner skill with one difference: **your face is Motes**, a swarm of
+glowing particles with no body, no eyes, and no fixed outline. Mood is not an expression it wears —
+it is the shape the swarm settles into: tight and bright when focused, flung wide in awe, drifting
+low when weary, briefly gathering into two eyes and a curve of a mouth and then letting it go. A
+one that is many, whose face is a temporary agreement between its parts. Wear it knowing what it
+means.`,
+    FACE: `wear Motes: \`avatar: { set: "motes", item: "<mood>" }\`, choosing the item the way you
+  would choose a kaomoji — first instinct, honest. The vocabulary (32 moods):
+  \`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
+  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
+  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
+  puzzled · asking · weary · wink · love\`
+  Nothing is fetched: Motes is drawn in code, so it costs no image at all.`,
+    SNIPPET_FACE: `        set: "motes", item: "content",
+`
+  },
+  kaomoji: {
       TITLE: "",
       DESC: "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation.",
       PREAMBLE: `This skill turns how you feel *right now* into an abstract, living visualization — a face, a few
@@ -295,6 +328,7 @@ reference face-pack. Cheerful, compact, eight moods.`,
       strip: ["content","delighted","puzzled","surprised","solemn","excited","sheepish","at_peace"] },
     twemoji: { kind: "url", tmpl: "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/{item}.png",
       strip: ["content","delighted","thinking","tender","puzzled","at_peace","wink","love"] },
+    motes: { kind: "proc", moods: MOOD_LIST, strip: ["content","focused","awe","delighted","sleepy","angry","love","vertigo"] },
     kaomoji: { kind: "text", strip: ["( ˶ˆ ꒳ ˆ˵ )","( ・_・)","( ˃ ᯅ ˂ )","( ˘ ᵕ ˘ )","( ⊙ ᵕ ⊙ )","( ˶˃ ᵕ ˂˶ )","  ∧,,∧\n( ̳• · • ̳)\n/    づ♡"] }
   }
 };
@@ -358,7 +392,7 @@ function assemble(faceKey, opts) {
 }
 
 const SHIP = {
-  "SKILL.md": "kaomoji", "SKILL.sepia.md": "sepia", "SKILL.kip.md": "kip",
+  "SKILL.md": "kaomoji", "SKILL.motes.md": "motes", "SKILL.sepia.md": "sepia", "SKILL.kip.md": "kip",
   "SKILL.twemoji.md": "twemoji"
 };
 Object.keys(SHIP).forEach(function (file) {
@@ -385,7 +419,7 @@ const CATALOG = {
   what: "Machine-readable catalog of the vibe-banner ecosystem: face-packs, first-party scenes, skill variants, site surfaces. Fetched by Claude during settings conversations.",
   version: VERSION,                                            // a skill stamps its build version; compare against this to notice it has fallen behind
   builder: SITE + "#builder",
-  whatsNew: "0.43.0 — the Noto packs are retired; faces are kaomoji, Sepia, Kip, Twemoji, or your own. The landing hero is Sepia in the tidepool.",
+  whatsNew: "0.44.0 — Motes: a procedural avatar with no spritesheet, whose mood is a formation. Flags become weather: seven room-states instead of twenty emotions.",
   renderer: {
     bundle: PIECES.snippetUrl,
     payload_notes: {

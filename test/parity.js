@@ -46,6 +46,16 @@ ok(/class="txt fk vk"/.test(av), "avatar as a bare string → kaomoji");
 let avScene = buildSVG({ avatar: { set: "sepia", item: "content", scene: { url: "https://cdn.jsdelivr.net/gh/u/r@abc/p.png" } } });
 ok(/vscn\d+/.test(avScene), "avatar.scene fills the window");
 
+console.log("Motes: a procedural avatar — no sheet, formations from the mood table");
+let mo = buildSVG(Object.assign({}, base, { face: { set: "motes", item: "content" } }));
+ok(!/<image/.test(mo) && (mo.match(/<circle/g) || []).length > 40, "motes draws itself in circles, fetching no art at all");
+let spreadOf = (m) => { let q = buildSVG(Object.assign({}, base, { face: { set: "motes", item: m } }));
+  let xs = [...q.matchAll(/<circle cx="([0-9.]+)"/g)].map(v => +v[1]); return Math.max(...xs) - Math.min(...xs); };
+ok(spreadOf("focused") < spreadOf("content"), "focused draws tighter than content");
+ok(spreadOf("awe") > spreadOf("content") * 1.8, "awe flings the swarm wide");
+ok(/viewBox="0 0 156 152"/.test(buildSVG({ avatar: { set: "motes", item: "spark" } })), "motes works as a bare square tile too");
+ok(/<circle/.test(buildSVG(Object.assign({}, base, { face: { set: "motes", item: "not-a-mood" } }))), "an unknown mood falls back rather than failing");
+
 console.log("optional [note] adds a row");
 let n = buildSVG(Object.assign({}, base, { noticing: "peripheral" }));
 ok(/viewBox="0 0 680 152"/.test(n), "4-row banner is also H=152 — text flexes inside the constant frame");
@@ -158,7 +168,7 @@ ok(/text-anchor="end"/.test(lang), "pinned to the right edge");
 
 console.log("flags render (static markers)");
 ok(!/#ffe27a/.test(buildSVG(Object.assign({}, base, { flag: "spark" }))), "spark adds NO bulb (v0.33.0: marks are the avatar's own props, baked into its sheet)");
-ok(/rotate\(/.test(buildSVG(Object.assign({}, base, { flag: "excited" }))), "excited adds rotated sparkles");
+ok(!/class="txt fl"/.test(buildSVG(Object.assign({}, base, { flag: "excited" }))), "excited brings no weather — the avatar owns that feeling now (v0.44.0)");
 ok(!/scale\(0\.62\)/.test(buildSVG(Object.assign({}, base, { flag: "awe" }))), "awe never poses the face (v0.31.0: a flag is banner weather; the face is the avatar's)");
 
 console.log("removed params are ignored, no crash");
@@ -198,9 +208,9 @@ ok(FLOWERS.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "legacy 
 console.log("flag caption: bottom-left [name] whenever a flag fires");
 ok(!/class="txt fl"/.test(buildSVG(base)), "no flag → no caption");
 let ft = buildSVG(Object.assign({}, base, { flag: "solemn" }));
-ok(/>\[solemn\]<\/text>/.test(ft), "solemn → '[solemn]' bottom-left");
-ok(/>\[at peace\]<\/text>/.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "at_peace displays as '[at peace]'");
-ok(/>\[angry\]<\/text>/.test(buildSVG(Object.assign({}, base, { angry: true, puzzled: true }))), "legacy multi-flag payload captions the winner");
+ok(/>\[hush\]<\/text>/.test(ft), "legacy solemn resolves to the hush weather");
+ok(/>\[bloom\]<\/text>/.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "legacy at_peace resolves to bloom");
+ok(/>\[storm\]<\/text>/.test(buildSVG(Object.assign({}, base, { angry: true, puzzled: true }))), "legacy boolean payload resolves to its weather (puzzled brings none)");
 ok(/viewBox="0 0 680 152"/.test(ft), "flag caption lives in the window — no bottom padding (H=152)");
 
 console.log("new-flag static markers");
@@ -210,7 +220,7 @@ ok(/<rect [^>]*fill="#2a2622"/.test(sol) && /#ffbf72/.test(sol), "solemn dims on
 ok(/<line /.test(buildSVG(Object.assign({}, base, { resolute: true }))), "resolute draws concentration lines");
 ok(!/>\?<\/text>/.test(buildSVG(Object.assign({}, base, { puzzled: true }))), "puzzled (legacy boolean) also hangs no ? — the mark lives in the sheet now");
 let rh = buildSVG(Object.assign({}, base, { rhyme: true }));
-ok((rh.match(/꒳/g) || []).length === 2, "rhyme echoes the face (kaomoji appears twice)");
+ok((rh.match(/꒳/g) || []).length === 1, "the rhyme echo retired with the flag — one face, no duplicate (v0.44.0)");
 
 console.log("every flag yields a valid static fallback (string API + legacy boolean)");
 ["surprised", "tender", "melancholy", "anxious", "mirth", "laugh", "groan", "oops", "dramatic", "frustrated", "angry", "excited", "spark",

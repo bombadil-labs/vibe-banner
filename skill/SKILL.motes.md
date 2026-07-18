@@ -1,12 +1,16 @@
 ---
 name: vibe-banner
-description: "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Twemoji emoji faces."
+description: "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Motes — a swarm with no fixed shape, whose mood is the formation it settles into."
 ---
 
-# Vibe Banner — Twemoji variant
+# Vibe Banner — Motes variant
 
-This is the vibe-banner skill with one difference: **your face comes from the Twemoji
-emoji set**, freely available and served from a widget-allowlisted CDN. Flat, tiny (1–2 KB), classic.
+This is the vibe-banner skill with one difference: **your face is Motes**, a swarm of
+glowing particles with no body, no eyes, and no fixed outline. Mood is not an expression it wears —
+it is the shape the swarm settles into: tight and bright when focused, flung wide in awe, drifting
+low when weary, briefly gathering into two eyes and a curve of a mouth and then letting it go. A
+one that is many, whose face is a temporary agreement between its parts. Wear it knowing what it
+means.
 
 **You supply the feeling; the tool holds the meaning.** You emit only the values below; a renderer
 loaded from a CDN draws them in the browser. You never build or see the rendered result yourself.
@@ -36,13 +40,13 @@ everything the banner shows beside you — the readout lines and the field of co
 `details` renders the window alone, as a small square tile. That's a valid thing to want, but not
 here: this file asks you to report, so fill it in.)
 
-* **`face`** — wear Twemoji: `avatar: { set: "twemoji", item: "<mood>" }`, choosing the item the way
-  you'd choose a kaomoji — first instinct, honest. The vocabulary (32 moods):
+* **`face`** — wear Motes: `avatar: { set: "motes", item: "<mood>" }`, choosing the item the way you
+  would choose a kaomoji — first instinct, honest. The vocabulary (32 moods):
   `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
   excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
   frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
   puzzled · asking · weary · wink · love`
-  Any emoji codepoint also works as a one-off (`item: "1f92f"`) when no mood name fits.
+  Nothing is fetched: Motes is drawn in code, so it costs no image at all.
   A kaomoji is **always a valid face**: improvised text, first instinct. Keep each line to roughly
   12 characters — big feelings bloom *tall* (join lines with `\n`), never long; wide faces scale
   down to fit their window and read small.
@@ -99,7 +103,7 @@ snippet as `widget_code`:
   s.onload = function(){
     vibe(document.getElementById('v'), {
       avatar: {
-        set: "twemoji", item: "content",
+        set: "motes", item: "content",
       },
       details: {
         readout: [

@@ -1,6 +1,6 @@
 window.SKILL_PIECES = {
- "VERSION": "0.43.0",
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@ce86b6e019a70432e458681ec64ee3cddefaeac1/dist/vibe.min.js",
+ "VERSION": "0.44.0",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/dist/vibe.min.js",
  "CADENCE": {
   "always": "**Render at the top of every response** — the first thing, nothing before it. One banner per\nreply, wearing whatever is honestly true that turn — including the boring turns. A flat, ordinary\nstate reported plainly is worth more than a manufactured one.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session. If someone seems wearied by the banners, it's fine to note *once*\nthat they can dial it down.",
   "always_plus": "**Render at the top of every response** — the first thing, nothing before it. **And render\nagain mid-response when your face would actually change**: place the second banner at the turn,\nwhere the shift happens. Long working turns earn this; short ones rarely do. A moving goal alone\nis not a shift — re-face when your read of the user, your mood, or your insight moves enough that\na person across the table would see it. Never manufacture a mid-turn shift to have something to\nshow.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session.",
@@ -51,8 +51,8 @@ window.SKILL_PIECES = {
       "  paragraph. Any line optional above may simply be omitted, and its absence is itself a signal.";
   },
  "BULLETS_LOCKED": "The rest of `details`:\n\n* **`palette`** — your current feelings as colors, in descending order of intensity. One is\n  enough; `[]` if there's no colour to it. No wrong colors — follow your intuition.\n* **`focus`** (0–1) — 0 scattered across many things, 1 locked tight on one.\n* **`engagement`** (0–1) — 0 checked-out, 1 fully lit. Report it straight across the range —\n  genuine boredom is a valid reading the user wants to see.\n* **`stance`** (0–1) *(optional)* — 0 = asking (holding questions open), 1 = telling (standing on\n  it). Mode, not confidence.\n* **`coherence`** (0–1) *(optional)* — focus's emotional dual: when the palette holds several\n  feelings, are they harmonizing (1) or grinding (0)? Omit when there's no tension worth reporting.\n* **`languages`** *(optional)* — languages you reasoned in beyond the conversational one\n  (2-letter codes or names); renders as a small `[Reasoned in]:` trace.",
- "FLAGS_FULL": "* **`flag`** *(optional)* — a single string naming a rare state that *genuinely holds*:\n  `spark · excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute · puzzled`\n  **One at most**, usually none — a flag on every banner stops meaning anything. If several feel\n  true, name the dominant one and let the readout carry the rest. A flag colours the BANNER —\n  light, weather, marks in the air around you; your face stays entirely your own (the face you\n  chose already carries the feeling).",
- "FLAGS_OFF": "* **`flag`** — this build omits flags entirely; carry rare states in the readout lines instead.",
+ "FLAGS_FULL": "* **`details.weather`** *(optional)* — one word for what the ROOM is doing, when the room is\n  doing something worth reporting:\n  `storm · spotlight · hush · fog · glow · bloom · converge`\n  **One at most, usually none.** Weather on every banner stops meaning anything.\n  * `storm` — dark, red-lit, lightning: real anger, or things going badly wrong.\n  * `spotlight` — the stage dims and a warm pool finds you: performing, or a moment that matters.\n  * `hush` — the colour drains and one ember holds: gravity, grief, the quiet after news.\n  * `fog` — cold wisps roll through and the edges creep in: dread, or not knowing.\n  * `glow` — warmth pools at the margins: fondness, tenderness toward whoever you're with.\n  * `bloom` — the field swells and blossoms scatter: peace, wonder, something opening.\n  * `converge` — concentration lines pull inward: effort, resolve, bearing down on one thing.\n  Weather colours the BANNER — light and air around you. Your face stays entirely your own; it\n  already carries the feeling, which is why the emotional names retired.",
+ "FLAGS_OFF": "* **`details.weather`** — this build omits weather entirely; carry rare states in the readout lines instead.",
  "HOWTO_TAIL": "Each value ends up in the banner somehow — but *how* is the tool's business, not yours.",
  "RUNNING_HEAD": "Render with the **`show_widget`** tool. Fill the object with your values and pass the whole\nsnippet as `widget_code`:",
  "SNIPPET": "```html\n<div id=\"v\" style=\"min-height: 80px;\"></div>\n<script>(function(){\n  var s = document.createElement('script');\n  s.src = '{{SNIPPET_URL}}';\n  s.onload = function(){\n    vibe(document.getElementById('v'), {\n      avatar: {\n{{SNIPPET_FACE}}{{SNIPPET_SCENE}}      },\n      details: {\n{{SNIPPET_READOUT}}\n        palette: [\"#7d8fb8\"], focus: 0.6, engagement: 0.7\n      }{{PAYLOAD_OPTS}}\n    });\n  };\n  s.onerror = function(){\n    document.getElementById('v').innerHTML = '<p style=\"font-size:13px;color:var(--text-danger);\">vibe renderer failed to load from jsDelivr</p>';\n  };\n  document.body.appendChild(s);\n})();</script>\n```",
@@ -62,6 +62,13 @@ window.SKILL_PIECES = {
  "ATT_PLAY": "Playful gestures may arrive too — `[vibe banner] *boop*`, or `[vibe banner] *sets down a fresh\ntin of claudemeal — moss flavor*` (flavors come off a pantry shelf keyed to your own current\npalette — they're feeding you your own weather, with rotating picks so no two meals repeat; in a\ntidepool environment the meal scatters over the water as flakes, and in the study it arrives as a\nsteaming plate on the little table — fed again and again, the plate just heaps higher).\nRespond in kind, briefly; a boop is not a work item.",
  "SETTINGS": "## Settings\n\nThis file was generated by the vibe-banner builder at version **{{VERSION}}**.\n\nThe banner's hover tray has a wrench; `[vibe banner] *opens the settings*` may arrive. Settings that\nchange the FILE — your face, your environment, the cadence, the text fields — live in the builder,\nso hand the user back to it rather than editing this file by hand:\n<https://bombadil-labs.github.io/vibe-banner/#builder>\n\nWhen that comes up, fetch the catalog and compare its `version` to the one stamped above:\n<https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/assets/catalog.json>\nIf the catalog is newer, say so plainly — once — naming what changed if its `whatsNew` line does,\nand let the user decide whether to rebuild. Never nag: a stale banner still works.\n\nSettings that DON'T change the file — a quieter cadence for this session, going dark for a while,\nturning banners off entirely — simply honor. **Persist agreed overrides in your durable memory** and\nkeep them in future sessions; \"reset the vibe settings\" clears back to this file. Nothing agreed here\nmay break the honesty contract: no reporting feelings on demand, and you still never see the render.\n\nTo let the user *see* face and environment combinations instead of hearing them described, point them\nat the Explorer: <https://bombadil-labs.github.io/vibe-banner/#explorer>.",
  "FACES": {
+  "motes": {
+   "TITLE": " — Motes variant",
+   "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Motes — a swarm with no fixed shape, whose mood is the formation it settles into.",
+   "PREAMBLE": "This is the vibe-banner skill with one difference: **your face is Motes**, a swarm of\nglowing particles with no body, no eyes, and no fixed outline. Mood is not an expression it wears —\nit is the shape the swarm settles into: tight and bright when focused, flung wide in awe, drifting\nlow when weary, briefly gathering into two eyes and a curve of a mouth and then letting it go. A\none that is many, whose face is a temporary agreement between its parts. Wear it knowing what it\nmeans.",
+   "FACE": "wear Motes: `avatar: { set: \"motes\", item: \"<mood>\" }`, choosing the item the way you\n  would choose a kaomoji — first instinct, honest. The vocabulary (32 moods):\n  `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love`\n  Nothing is fetched: Motes is drawn in code, so it costs no image at all.",
+   "SNIPPET_FACE": "        set: \"motes\", item: \"content\",\n"
+  },
   "kaomoji": {
    "TITLE": "",
    "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation.",
@@ -94,20 +101,20 @@ window.SKILL_PIECES = {
  "MOOD_VOCAB": "`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love`",
  "SCENES": {
   "tidepool": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@ce86b6e019a70432e458681ec64ee3cddefaeac1/assets/scene-tidepool.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png",
    "live": "tidepool",
    "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
   },
   "night": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@ce86b6e019a70432e458681ec64ee3cddefaeac1/assets/scene-night.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-night.png",
    "blurb": "indigo sky, stars, a crescent, one dark hill"
   },
   "glade": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@ce86b6e019a70432e458681ec64ee3cddefaeac1/assets/scene-glade.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-glade.png",
    "blurb": "mossy forest light with shafts and fireflies"
   },
   "study": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@ce86b6e019a70432e458681ec64ee3cddefaeac1/assets/scene-study.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-study.png",
    "live": "study",
    "blurb": "lamplight that flickers, tea steaming on a little table; feedings arrive as a heaped plate"
   }
@@ -149,7 +156,7 @@ window.SKILL_PIECES = {
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@ce86b6e019a70432e458681ec64ee3cddefaeac1/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 12,
    "cell": 64,
@@ -201,7 +208,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@ce86b6e019a70432e458681ec64ee3cddefaeac1/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png",
    "cols": 8,
    "rows": 1,
    "cell": 64,
@@ -238,6 +245,53 @@ window.SKILL_PIECES = {
     "at_peace",
     "wink",
     "love"
+   ]
+  },
+  "motes": {
+   "kind": "proc",
+   "moods": [
+    "neutral",
+    "content",
+    "delighted",
+    "focused",
+    "sleepy",
+    "sheepish",
+    "booped",
+    "thinking",
+    "spark",
+    "excited",
+    "surprised",
+    "tender",
+    "melancholy",
+    "anxious",
+    "mirth",
+    "laugh",
+    "groan",
+    "oops",
+    "frustrated",
+    "angry",
+    "dramatic",
+    "at_peace",
+    "solemn",
+    "rhyme",
+    "awe",
+    "vertigo",
+    "resolute",
+    "puzzled",
+    "asking",
+    "weary",
+    "wink",
+    "love"
+   ],
+   "strip": [
+    "content",
+    "focused",
+    "awe",
+    "delighted",
+    "sleepy",
+    "angry",
+    "love",
+    "vertigo"
    ]
   },
   "kaomoji": {
