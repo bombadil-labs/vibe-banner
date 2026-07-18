@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e5663405eb1dacfc7e28d31e0860ae34aa8e6754/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0864f2264bddef3dfe52d33abadec85f2582a34e/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -476,6 +476,9 @@
     out.push('<title>Mood annotation</title><desc>Ambient mood field with a user read and a first-person feel/intent readout</desc>');
     out.push('<style>' + STYLE + '</style>');
     out.push(L.sceneSVG);                                     // the window draws on every banner
+    var RXs = L.portrait.x + L.portrait.s + 2;                // the firm boundary: field and details stay right of the window
+    var wrid = "vwr" + (++SCENE_IDS);
+    out.push('<defs><clipPath id="' + wrid + '"><rect x="' + RXs + '" y="0" width="' + (W - RXs) + '" height="' + L.H + '"/></clipPath></defs><g clip-path="url(#' + wrid + ')">');
     var soft = 1 - L.conson;                                  // consonance: split → diffuse washes (bigger, thinner)
     var sizeMul = (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);     // awe: the field swells while the face shrinks
     out.push('<g opacity="0.5">');
@@ -501,32 +504,33 @@
     }
     var glow = [];
     if (L.spark) {                                             // a little light-bulb over the face
-      var bx = 46, by = L.coreCy - 32;
+      var bx = L.portrait.x + L.portrait.s + 28, by = L.coreCy - 32;   // margin anchor, beside the window
       glow.push('<ellipse cx="' + bx + '" cy="' + by + '" rx="22" ry="22" fill="#ffe27a" opacity="0.16"/>' +
         '<circle cx="' + bx + '" cy="' + by + '" r="9" fill="#ffe27a" opacity="0.85"/>' +
         '<rect x="' + (bx - 4) + '" y="' + (by + 7) + '" width="8" height="3" rx="1" fill="#9a875f"/>');
     }
     if (L.excited) sparkleData(L.H, L.seed).forEach(function (st) { for (var a = 0; a < 3; a++) glow.push('<ellipse cx="' + st.cx.toFixed(1) + '" cy="' + st.cy.toFixed(1) + '" rx="' + st.s.toFixed(1) + '" ry="' + (st.s * st.ry).toFixed(2) + '" fill="#f7e3a8" opacity="' + st.op.toFixed(2) + '" transform="rotate(' + (st.rot + 60 * a).toFixed(1) + ' ' + st.cx.toFixed(1) + ' ' + st.cy.toFixed(1) + ')"/>'); });
     if (L.at_peace) {                                          // stillness as a positive state: a soft halo below the face, blossoms in the margins
-      glow.push('<ellipse cx="46" cy="' + g(L.coreCy + 16) + '" rx="36" ry="15" fill="#ffe9bd" opacity="0.28"/>');
+      glow.push('<ellipse cx="' + g(L.portrait.x + L.portrait.s + 28) + '" cy="' + g(L.coreCy + 16) + '" rx="36" ry="15" fill="#ffe9bd" opacity="0.28"/>');
       peaceData(L.H, L.seed).forEach(function (f) {
         glow.push('<text x="' + f.x.toFixed(1) + '" y="' + f.y.toFixed(1) + '" font-size="' + f.s.toFixed(1) + '" opacity="' + f.op.toFixed(2) + '">' + f.g + '</text>');
       });
     }
     if (L.resolute) resoluteData(L.H, L.seed).forEach(function (r) {  // concentration lines held faint
-      var dx = 46 - r.x, dy = L.coreCy - r.y;
+      var dx = (L.portrait.x + L.portrait.s + 28) - r.x, dy = L.coreCy - r.y;   // lines converge toward the margin point beside her
       glow.push('<line x1="' + r.x.toFixed(1) + '" y1="' + r.y.toFixed(1) + '" x2="' + (r.x + dx * r.len).toFixed(1) + '" y2="' + (r.y + dy * r.len).toFixed(1) + '" stroke="#4a3c26" stroke-opacity="' + (0.16 * r.op).toFixed(3) + '" stroke-width="1.2"/>');
     });
     if (L.puzzled) {                                           // the question-cloud, at rest
       var qr = mulberry32(L.seed + 37);
       for (var qi = 0; qi < 4; qi++) {
         var qa2 = qr() * 6.2832, qd = 20 + qr() * 32;
-        glow.push('<text x="' + g(60 + Math.cos(qa2) * qd) + '" y="' + g(L.coreCy - 4 + Math.sin(qa2) * qd * 0.6) +
+        glow.push('<text x="' + g(L.portrait.x + L.portrait.s + 32 + Math.cos(qa2) * qd) + '" y="' + g(L.coreCy - 4 + Math.sin(qa2) * qd * 0.6) +
           '" font-size="' + g(10 + qr() * 4) + '" font-weight="600" fill="#7a6a55" opacity="' + g(0.25 + qr() * 0.3) + '">?</text>');
       }
     }
     if (glow.length) out.push('<g opacity="0.9">' + glow.join("") + '</g>');
-    if (L.rhyme) out.push('<g opacity="0.12" transform="translate(14,6)">' + L.kaoSVG + '</g>');   // the echo of the face, behind-ish and offset
+    if (L.rhyme) out.push('<g opacity="0.12" transform="translate(' + g(L.portrait.s + 4) + ',6)">' + L.kaoSVG + '</g>');   // the echo of the face, behind-ish and offset
+    out.push('</g>');                                          // close the right-region boundary
     out.push(L.kaoSVG + L.restSVG + '</svg>');                 // flags never pose the face (v0.31.0) — a flag is banner weather; the face is the avatar's
     return out.join("");
   }
@@ -856,12 +860,15 @@
       if (!visible) { requestAnimationFrame(frame); return; }
       try {
         var cyC = L.coreCy;
-        // face anchor box: layout's own numbers, always — the HTML face never needs measuring
-        var fb = fm && fm.box;
-        var faceCX = fb ? fb.x + fb.w / 2 : 46;
-        var faceTop = fb ? fb.y : cyC - 15;
-        var faceRight = fb ? fb.x + fb.w : 92;
-        var faceMidY = fb ? fb.y + fb.h / 2 : cyC;
+        // THE FIRM BOUNDARY (v0.32.0): the window is the avatar's; the right region is
+        // the field's and the details'. Weather marks anchor in the MARGIN beside the
+        // window — annotations next to her, never over her — and everything drawn from
+        // here on (after the window-space effects) clips to the right of the boundary.
+        var RX = L.portrait.x + L.portrait.s + 2;
+        var faceCX = RX + 26;
+        var faceTop = cyC - 15;
+        var faceRight = RX + 44;
+        var faceMidY = L.portrait.y + L.portrait.s / 2;
         ctx.setTransform(sx, 0, 0, sy, 0, 0);
         ctx.clearRect(0, 0, W, H);
 
@@ -1188,6 +1195,9 @@
           }
         }
 
+        ctx.save();                                            // everything below — field, dims, storms, marks — stays right of the boundary
+        ctx.beginPath(); ctx.rect(RX, 0, W - RX, H); ctx.clip();
+
         // --- the face itself: FLAGS NO LONGER TOUCH IT (v0.31.0). A flag is banner
         // WEATHER — light, storms, marks, atmosphere; the face belongs entirely to the
         // avatar (Sepia's moods/fins/tint/ink; kaomoji and emoji just are what they
@@ -1406,15 +1416,15 @@
           }
           ctx.globalAlpha = 0.09 + 0.07 * (0.5 + 0.5 * Math.sin(t * 0.45));
           ctx.font = kaoFont; ctx.fillStyle = "rgb(" + baseFill[0] + "," + baseFill[1] + "," + baseFill[2] + ")";
-          L.kaoLines.forEach(function (ln, li) { ctx.fillText(ln, FACE_X + 14, L.kaoAbs[li] + 6); });
+          L.kaoLines.forEach(function (ln, li) { ctx.fillText(ln, RX + 10, L.kaoAbs[li] + 6); });   // the echo rests in the margin, beside the window
           ctx.globalAlpha = 1;
         }
         if (L.resolute) {                                                            // 集中線: ignition flare, then held faint — drawn after washes so it reads inside storms
           var rt = t % 6, flare = rt < 0.7 ? (rt < 0.15 ? rt / 0.15 : 1 - 0.72 * ((rt - 0.15) / 0.55)) : 0.28;
-          ctx.lineCap = "round"; ctx.lineWidth = 1.2;
+          ctx.lineCap = "round"; ctx.lineWidth = 2;            // bolder — they were barely visible (the maintainer's note)
           resLines.forEach(function (r) {
             var dx = faceCX - r.x, dy = faceMidY - r.y, ln = r.len + flare * 0.05;
-            ctx.strokeStyle = rgba("#4a3c26", (0.10 + 0.4 * flare) * r.op);
+            ctx.strokeStyle = rgba("#4a3c26", (0.3 + 0.5 * flare) * r.op);
             ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + dx * ln, r.y + dy * ln); ctx.stroke();
           });
         }
@@ -1454,6 +1464,7 @@
           });
           ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
         }
+        ctx.restore();                                         // close the right-region boundary clip
       } catch (err) { if (root.console && root.console.warn) root.console.warn("vibe: frame crashed, falling back to static", err); try { el.innerHTML = buildSVG(p); } catch (_) {} return; }
       requestAnimationFrame(frame);
     }

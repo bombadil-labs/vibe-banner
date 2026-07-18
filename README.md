@@ -71,7 +71,7 @@ SVG rows and the SVG face:
 | `scene` | the habitat, as a **framed portrait window**: `"https://…png"` or `{ url, opacity, live }` (opacity clamped 0.15–0.95, default 0.5). The scene fills a rounded square on the banner's left with the face centred inside it; readout and field columns shift right. Faces are alpha-transparent, so any scene works — first-party tidepool at `assets/scene-tidepool.png`; user photos host like face-packs (allowlisted CDNs). `live: "tidepool"` runs native ambience in the window — rising bubbles, a passing fish, tap-ripples, and feeding falls in as flakes; unknown `live` names are ignored, and the static render ignores the channel entirely. **The window always draws** — with no scene (or `scene: {}`) it renders empty: frame and a faint interior, no view yet. The window is the layout; `scene` only decides what's visible through it |
 | `field` | power path: hand-author the ovals instead of `palette` |
 
-**Flags** — rare, condition-triggered BANNER WEATHER (light, storms, marks — never face poses; the face belongs to the avatar), passed as `flag: "<name>"` (a single
+**Flags (optional DETAILS)** — rare, condition-triggered banner weather (light, storms, marks — never face poses; the face belongs to the avatar), passed as `flag: "<name>"` (a single
 string). Set one only when the named state genuinely holds; their whole value is that
 they're uncommon.
 

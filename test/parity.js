@@ -73,7 +73,7 @@ ok(sc.indexOf("clipPath") < sc.indexOf("<ellipse"), "window renders BEHIND the f
 ok(/stroke="#8a7a86"/.test(sc), "the window has its quiet frame");
 ok(/cx="265"/.test(sc) && /cx="397"/.test(sc) && /cx="530"/.test(sc), "field columns cede the left side to the window");
 let noSc = buildSVG(base);
-ok(/stroke="#8a7a86"/.test(noSc) && /fill-opacity="0.07"/.test(noSc) && !/clipPath/.test(noSc), "no scene → the EMPTY window still draws (the window is the layout)");
+ok(/stroke="#8a7a86"/.test(noSc) && /fill-opacity="0.07"/.test(noSc) && !/vscn/.test(noSc), "no scene → the EMPTY window still draws (the window is the layout)");
 ok(/cx="265"/.test(noSc), "columns sit rightward even without a scene");
 ok(/opacity="0.95"><image/.test(buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png", opacity: 3 } }))), "opacity clamps to 0.95");
 
@@ -82,12 +82,12 @@ let ew = buildSVG(Object.assign({}, base, { scene: {} }));
 ok(/stroke="#8a7a86"/.test(ew) && !/<image/.test(ew), "scene: {} → framed window, no image");
 ok(/fill="#8a7a86" fill-opacity="0.07"/.test(ew), "empty window has a faint interior");
 ok(/cx="265"/.test(ew), "empty window still shifts the field columns");
-ok(!/clipPath/.test(ew), "no image → no clip needed");
+ok(!/vscn/.test(ew), "no image → no scene-image clip needed");
 let ewT = buildSVG(Object.assign({}, base, { scene: true }));
 ok(/stroke="#8a7a86"/.test(ewT) && !/<image/.test(ewT), "scene: true → same empty window");
 
 console.log("scene.live is animation-only: the static render ignores it entirely");
-const noClip = (svg) => svg.replace(/vscn\d+/g, "vscn");
+const noClip = (svg) => svg.replace(/v(?:scn|wr)\d+/g, "vid");   // normalize both the scene-image and boundary clip ids
 let lv0 = buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png" } }));
 let lv1 = buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png", live: "tidepool" } }));
 let lv2 = buildSVG(Object.assign({}, base, { scene: { url: "https://x.co/a.png", live: "volcano" } }));
@@ -186,7 +186,7 @@ console.log("every flag yields a valid static fallback (string API + legacy bool
   var s1 = buildSVG(Object.assign({}, base, { flag: fl }));
   var o = {}; o[fl] = true;
   var s2 = buildSVG(Object.assign({}, base, o));
-  ok(s1.startsWith("<svg") && s1.endsWith("</svg>") && s1 === s2, fl + " → valid static svg, string ≡ legacy boolean");
+  ok(s1.startsWith("<svg") && s1.endsWith("</svg>") && noClip(s1) === noClip(s2), fl + " → valid static svg, string ≡ legacy boolean");
 });
 
 console.log(fails ? "\nFAILED (" + fails + ")" : "\nALL PASS");
