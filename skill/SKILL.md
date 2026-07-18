@@ -98,7 +98,7 @@ snippet as `widget_code`:
 <div id="v" style="min-height: 80px;"></div>
 <script>(function(){
   var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/dist/vibe.min.js';
+  s.src = 'https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@aae7208c1cfeeec99142d44b41e63232e7cba493/dist/vibe.min.js';
   s.onload = function(){
     vibe(document.getElementById('v'), {
       avatar: {
