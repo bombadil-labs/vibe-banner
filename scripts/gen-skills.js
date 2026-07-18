@@ -419,7 +419,7 @@ const CATALOG = {
   what: "Machine-readable catalog of the vibe-banner ecosystem: face-packs, first-party scenes, skill variants, site surfaces. Fetched by Claude during settings conversations.",
   version: VERSION,                                            // a skill stamps its build version; compare against this to notice it has fallen behind
   builder: SITE + "#builder",
-  whatsNew: "0.44.0 — Motes: a procedural avatar with no spritesheet, whose mood is a formation. Flags become weather: seven room-states instead of twenty emotions.",
+  whatsNew: "0.45.0 — Motes flies FLIGHT PATHS: a mood is a set of curves with share, align, cluster and flow. Motes and the weather vocabulary are on the site.",
   renderer: {
     bundle: PIECES.snippetUrl,
     payload_notes: {

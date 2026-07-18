@@ -192,7 +192,7 @@ ok(buildSVG(Object.assign({}, base, { prev: ["#a06a6a"] })).startsWith("<svg"), 
 
 console.log("flag is a single string — the API contract");
 const FLOWERS = /🌸|🌼|✿|❀|🌷/;
-ok(FLOWERS.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "flag: 'at_peace' blossoms");
+ok(FLOWERS.test(buildSVG(Object.assign({}, base, { weather: "bloom" }))), "weather: bloom blossoms");
 let unk = buildSVG(Object.assign({}, base, { flag: "enraptured" }));
 ok(unk.startsWith("<svg") && !/class="txt fl"/.test(unk), "unknown flag string → ignored, no trace, no crash");
 let pz = buildSVG(Object.assign({}, base, { flag: "puzzled" }));
@@ -203,21 +203,22 @@ let multi = buildSVG(Object.assign({}, base, { angry: true, at_peace: true, puzz
 ok(!FLOWERS.test(multi), "angry outranks at_peace: no blossoms");
 ok(!/>\?<\/text>/.test(multi), "angry outranks puzzled: no question-cloud");
 ok(!FLOWERS.test(buildSVG(Object.assign({}, base, { tender: true, at_peace: true }))), "tender outranks at_peace: no blossoms");
-ok(FLOWERS.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "legacy at_peace boolean alone still blossoms");
+ok(FLOWERS.test(buildSVG(Object.assign({}, base, { bloom: true }))), "boolean weather still resolves");
 
 console.log("flag caption: bottom-left [name] whenever a flag fires");
 ok(!/class="txt fl"/.test(buildSVG(base)), "no flag → no caption");
-let ft = buildSVG(Object.assign({}, base, { flag: "solemn" }));
+let ft = buildSVG(Object.assign({}, base, { weather: "hush" }));
 ok(/>\[hush\]<\/text>/.test(ft), "legacy solemn resolves to the hush weather");
-ok(/>\[bloom\]<\/text>/.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "legacy at_peace resolves to bloom");
-ok(/>\[storm\]<\/text>/.test(buildSVG(Object.assign({}, base, { angry: true, puzzled: true }))), "legacy boolean payload resolves to its weather (puzzled brings none)");
+ok(/>\[bloom\]<\/text>/.test(buildSVG(Object.assign({}, base, { weather: "bloom" }))), "bloom captions itself");
+ok(/>\[storm\]<\/text>/.test(buildSVG(Object.assign({}, base, { storm: true }))), "boolean weather payload works");
+ok(!/class="txt fl"/.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "a retired flag name is simply ignored — no alias table (v0.45.0: old skills pin old builds)");
 ok(/viewBox="0 0 680 152"/.test(ft), "flag caption lives in the window — no bottom padding (H=152)");
 
 console.log("new-flag static markers");
-ok(/🌸|🌼|✿|❀|🌷/.test(buildSVG(Object.assign({}, base, { at_peace: true }))), "at_peace scatters blossoms");
-let sol = buildSVG(Object.assign({}, base, { solemn: true }));
+ok(/🌸|🌼|✿|❀|🌷/.test(buildSVG(Object.assign({}, base, { bloom: true }))), "bloom scatters blossoms");
+let sol = buildSVG(Object.assign({}, base, { hush: true }));
 ok(/<rect [^>]*fill="#2a2622"/.test(sol) && /#ffbf72/.test(sol), "solemn dims once and keeps one ember");
-ok(/<line /.test(buildSVG(Object.assign({}, base, { resolute: true }))), "resolute draws concentration lines");
+ok(/<line /.test(buildSVG(Object.assign({}, base, { converge: true }))), "converge draws concentration lines");
 ok(!/>\?<\/text>/.test(buildSVG(Object.assign({}, base, { puzzled: true }))), "puzzled (legacy boolean) also hangs no ? — the mark lives in the sheet now");
 let rh = buildSVG(Object.assign({}, base, { rhyme: true }));
 ok((rh.match(/꒳/g) || []).length === 1, "the rhyme echo retired with the flag — one face, no duplicate (v0.44.0)");

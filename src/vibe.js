@@ -173,91 +173,129 @@
   //   ord   1 = a clean ring, 0 = scattered chaos
   // Everything else falls out. The swarm has no silhouette to get wrong, which is exactly
   // why it survived when the siphonophore (same idea, fixed anatomy) did not.
+  // ── MOTES ─────────────────────────────────────────────────────────────────────────
+  // The first avatar with NO SHEET. Sepia and Kip are spritesheets; Motes is a swarm of
+  // glowing particles drawn entirely in code, so the renderer hands it a canvas instead of
+  // hunting for cells and nothing ships as an image at all.
+  //
+  // FLIGHT PATHS (v0.45.0, the maintainer's design — and the better model). A mood is not a
+  // shape, it is a set of CURVES the swarm flies. Everything the first version hardcoded as
+  // nine separate formations turned out to be this one primitive wearing different numbers:
+  //
+  //   p        the curve: ring · arc · line · point · spiral
+  //   share    the fraction of the swarm flying it. Shares may sum to LESS than 1 — the
+  //            remainder drift free, which reads as a creature not entirely made up yet.
+  //   align    0 = loosely suggesting the path, 1 = locked to it. Independent of everything.
+  //   cluster  0 = spread evenly along the curve, 1 = every mote converged on one point of it.
+  //   flow     how fast they travel ALONG the curve. This is what makes a path a *flight*.
+  //   spin     rotation of the curve itself.
+  //
+  // Because paths compose, a face is just three of them — two small rings and an arc — which
+  // is why a smile can be a temporary flight path rather than a special case. `flash` swaps
+  // in another path set briefly and lets it go: a face that keeps almost-happening.
   var MOTE_N = 64;
-  var M_ORBIT = "orbit", M_TIGHT = "tight", M_RISE = "rise", M_FALL = "fall",
-      M_WIDE = "wide", M_LINE = "line", M_FACE = "face", M_SPIRAL = "spiral", M_TWIN = "twin";
-  var MOTE_FORM = {
-    neutral:    { f: M_ORBIT,  r: 0.62, dy: 0,     spin: 0.16, jit: 0.30, ord: 0.85 },
-    content:    { f: M_ORBIT,  r: 0.58, dy: 0.02,  spin: 0.20, jit: 0.28, ord: 0.90 },
-    delighted:  { f: M_RISE,   r: 0.70, dy: -0.05, spin: 0.40, jit: 0.55, ord: 0.60 },
-    focused:    { f: M_TIGHT,  r: 0.26, dy: 0,     spin: 0.75, jit: 0.14, ord: 0.95 },
-    sleepy:     { f: M_LINE,   r: 0.66, dy: 0.30,  spin: 0.05, jit: 0.12, ord: 0.70 },
-    sheepish:   { f: M_ORBIT,  r: 0.44, dy: 0.14,  spin: 0.14, jit: 0.34, ord: 0.55 },
-    booped:     { f: M_WIDE,   r: 0.86, dy: -0.04, spin: 0.60, jit: 0.90, ord: 0.20 },
-    thinking:   { f: M_ORBIT,  r: 0.52, dy: -0.03, spin: 0.34, jit: 0.24, ord: 0.80 },
-    spark:      { f: M_TIGHT,  r: 0.22, dy: -0.10, spin: 1.10, jit: 0.30, ord: 0.95 },
-    excited:    { f: M_RISE,   r: 0.80, dy: -0.08, spin: 0.55, jit: 0.75, ord: 0.45 },
-    surprised:  { f: M_WIDE,   r: 0.92, dy: -0.06, spin: 0.20, jit: 0.55, ord: 0.35 },
-    tender:     { f: M_TWIN,   r: 0.46, dy: 0.04,  spin: 0.14, jit: 0.20, ord: 0.85 },
-    melancholy: { f: M_FALL,   r: 0.56, dy: 0.16,  spin: 0.08, jit: 0.22, ord: 0.60 },
-    anxious:    { f: M_WIDE,   r: 0.74, dy: 0.02,  spin: 0.30, jit: 0.95, ord: 0.18 },
-    mirth:      { f: M_RISE,   r: 0.60, dy: 0,     spin: 0.45, jit: 0.50, ord: 0.65 },
-    laugh:      { f: M_RISE,   r: 0.76, dy: -0.02, spin: 0.60, jit: 0.85, ord: 0.40 },
-    groan:      { f: M_FALL,   r: 0.50, dy: 0.26,  spin: 0.06, jit: 0.18, ord: 0.55 },
-    oops:       { f: M_WIDE,   r: 0.80, dy: -0.02, spin: 0.70, jit: 0.85, ord: 0.25 },
-    frustrated: { f: M_TIGHT,  r: 0.36, dy: 0,     spin: 0.90, jit: 0.70, ord: 0.60 },
-    angry:      { f: M_TIGHT,  r: 0.32, dy: 0,     spin: 1.30, jit: 0.95, ord: 0.70 },
-    dramatic:   { f: M_ORBIT,  r: 0.78, dy: -0.04, spin: 0.26, jit: 0.30, ord: 0.92 },
-    at_peace:   { f: M_ORBIT,  r: 0.66, dy: 0.04,  spin: 0.07, jit: 0.10, ord: 0.95 },
-    solemn:     { f: M_LINE,   r: 0.70, dy: 0.10,  spin: 0.04, jit: 0.08, ord: 0.88 },
-    rhyme:      { f: M_TWIN,   r: 0.58, dy: 0,     spin: 0.24, jit: 0.26, ord: 0.80 },
-    awe:        { f: M_WIDE,   r: 0.96, dy: -0.10, spin: 0.10, jit: 0.22, ord: 0.55 },
-    vertigo:    { f: M_SPIRAL, r: 0.72, dy: 0,     spin: 0.85, jit: 0.45, ord: 0.75 },
-    resolute:   { f: M_TIGHT,  r: 0.30, dy: 0,     spin: 0.30, jit: 0.08, ord: 0.98 },
-    puzzled:    { f: M_ORBIT,  r: 0.56, dy: -0.02, spin: -0.28, jit: 0.45, ord: 0.45 },
-    asking:     { f: M_ORBIT,  r: 0.50, dy: -0.06, spin: 0.20, jit: 0.30, ord: 0.70 },
-    weary:      { f: M_FALL,   r: 0.62, dy: 0.22,  spin: 0.05, jit: 0.14, ord: 0.50 },
-    wink:       { f: M_FACE,   r: 0.62, dy: 0,     spin: 0.18, jit: 0.24, ord: 0.90 },
-    love:       { f: M_FACE,   r: 0.60, dy: 0.02,  spin: 0.12, jit: 0.18, ord: 0.92 }
+  var FACE_PATHS = [
+    { p: "ring", x: -0.40, y: -0.28, r: 0.13, share: 0.19, align: 0.94, flow: 0.35 },
+    { p: "ring", x: 0.40, y: -0.28, r: 0.13, share: 0.19, align: 0.94, flow: -0.35 },
+    { p: "arc", y: 0.14, r: 0.62, ry: 0.36, a0: 0.55, a1: 2.59, share: 0.62, align: 0.9, flow: 0.04 }
+  ];
+  var MOTE_MOODS = {
+    neutral:    { paths: [{ p: "ring", r: 0.62, ry: 0.52, align: 0.5, flow: 0.04, spin: 0.10 }] },
+    content:    { paths: [{ p: "ring", r: 0.55, ry: 0.46, share: 0.65, align: 0.62, flow: 0.06, spin: 0.12 },
+                          { p: "ring", r: 0.30, ry: 0.26, share: 0.35, align: 0.55, flow: -0.08, spin: -0.16 }],
+                  flash: { every: 11, hold: 1.7, paths: FACE_PATHS } },
+    delighted:  { paths: [{ p: "arc", y: 0.35, r: 0.72, ry: 0.62, a0: 3.4, a1: 6.0, share: 0.55, align: 0.6, flow: 0.30 },
+                          { p: "arc", y: 0.35, r: 0.50, ry: 0.44, a0: 3.4, a1: 6.0, share: 0.35, align: 0.5, flow: 0.42 }] },
+    focused:    { paths: [{ p: "ring", r: 0.20, ry: 0.18, align: 0.95, cluster: 0.25, flow: 0.50, spin: 0.50 }] },
+    sleepy:     { paths: [{ p: "line", x1: -0.75, y1: 0.34, x2: 0.75, y2: 0.30, align: 0.45, flow: 0.03 }] },
+    sheepish:   { paths: [{ p: "ring", x: 0.10, y: 0.18, r: 0.34, ry: 0.30, share: 0.8, align: 0.5, flow: 0.05 }] },
+    booped:     { paths: [{ p: "ring", r: 0.92, ry: 0.80, align: 0.12, flow: 0.50, spin: 0.60 }] },
+    thinking:   { paths: [{ p: "spiral", r: 0.55, turns: 1.6, align: 0.70, flow: 0.10, spin: 0.25 }] },
+    spark:      { paths: [{ p: "point", y: -0.20, share: 0.45, align: 0.95, cluster: 1 },
+                          { p: "ring", y: -0.20, r: 0.55, ry: 0.50, share: 0.55, align: 0.35, flow: 0.55 }] },
+    excited:    { paths: [{ p: "arc", y: 0.40, r: 0.80, ry: 0.72, a0: 3.3, a1: 6.1, share: 0.60, align: 0.45, flow: 0.45 },
+                          { p: "ring", r: 0.70, ry: 0.60, share: 0.40, align: 0.20, flow: 0.30, spin: 0.40 }] },
+    surprised:  { paths: [{ p: "ring", r: 0.92, ry: 0.80, align: 0.35, flow: 0.02, spin: 0.05 }] },
+    tender:     { paths: [{ p: "ring", x: -0.28, y: -0.05, r: 0.34, ry: 0.32, share: 0.5, align: 0.75, flow: 0.12 },
+                          { p: "ring", x: 0.28, y: -0.05, r: 0.34, ry: 0.32, share: 0.5, align: 0.75, flow: -0.12 }] },
+    melancholy: { paths: [{ p: "line", x1: -0.55, y1: -0.55, x2: 0.30, y2: 0.75, align: 0.40, flow: 0.09 }] },
+    anxious:    { paths: [{ p: "ring", r: 0.72, ry: 0.66, align: 0.08, flow: 0.35, spin: 0.30 }] },
+    mirth:      { paths: [{ p: "arc", y: 0.45, r: 0.60, ry: 0.55, a0: 3.4, a1: 6.0, align: 0.5, flow: 0.28 }] },
+    laugh:      { paths: [{ p: "arc", y: 0.42, r: 0.78, ry: 0.66, a0: 3.3, a1: 6.1, share: 0.7, align: 0.40, flow: 0.55 },
+                          { p: "ring", r: 0.50, ry: 0.44, share: 0.3, align: 0.25, flow: 0.40, spin: 0.50 }] },
+    groan:      { paths: [{ p: "line", x1: -0.60, y1: 0.42, x2: 0.60, y2: 0.50, align: 0.5, cluster: 0.15, flow: 0.02 }] },
+    oops:       { paths: [{ p: "ring", r: 0.80, ry: 0.70, align: 0.15, flow: 0.60, spin: 0.70 }] },
+    frustrated: { paths: [{ p: "ring", r: 0.34, ry: 0.30, align: 0.60, cluster: 0.20, flow: 0.70, spin: 0.90 }] },
+    angry:      { paths: [{ p: "ring", r: 0.28, ry: 0.26, align: 0.55, cluster: 0.30, flow: 1.00, spin: 1.30 }] },
+    dramatic:   { paths: [{ p: "ring", r: 0.78, ry: 0.62, share: 0.70, align: 0.85, flow: 0.10, spin: 0.16 },
+                          { p: "point", share: 0.30, align: 0.90, cluster: 1 }] },
+    at_peace:   { paths: [{ p: "ring", r: 0.66, ry: 0.58, align: 0.80, flow: 0.03, spin: 0.05 }] },
+    solemn:     { paths: [{ p: "line", x1: -0.70, y1: 0.12, x2: 0.70, y2: 0.12, align: 0.85, flow: 0.02 }] },
+    rhyme:      { paths: [{ p: "ring", x: -0.30, r: 0.36, ry: 0.32, share: 0.5, align: 0.70, flow: 0.12 },
+                          { p: "ring", x: 0.30, r: 0.36, ry: 0.32, share: 0.5, align: 0.70, flow: 0.12 }] },
+    awe:        { paths: [{ p: "ring", r: 0.98, ry: 0.86, align: 0.50, flow: 0.015, spin: 0.03 }] },
+    vertigo:    { paths: [{ p: "spiral", r: 0.85, turns: 2.6, align: 0.65, flow: 0.28, spin: 0.70 }] },
+    resolute:   { paths: [{ p: "ring", r: 0.26, ry: 0.24, align: 0.98, cluster: 0.10, flow: 0.22, spin: 0.30 }] },
+    puzzled:    { paths: [{ p: "ring", r: 0.52, ry: 0.46, share: 0.85, align: 0.35, flow: -0.16, spin: -0.22 }] },
+    asking:     { paths: [{ p: "arc", y: -0.10, r: 0.50, ry: 0.46, a0: 2.6, a1: 6.4, align: 0.60, flow: 0.10 }] },
+    weary:      { paths: [{ p: "line", x1: -0.62, y1: 0.24, x2: 0.62, y2: 0.44, align: 0.40, flow: 0.04 }] },
+    wink:       { paths: [{ p: "ring", r: 0.55, ry: 0.48, align: 0.60, flow: 0.08, spin: 0.12 }],
+                  flash: { every: 5.5, hold: 1.9, paths: FACE_PATHS } },
+    love:       { paths: [{ p: "ring", x: -0.26, y: -0.12, r: 0.30, ry: 0.30, share: 0.5, align: 0.85, flow: 0.14 },
+                          { p: "ring", x: 0.26, y: -0.12, r: 0.30, ry: 0.30, share: 0.5, align: 0.85, flow: -0.14 }],
+                  flash: { every: 7, hold: 2.2, paths: FACE_PATHS } }
   };
-  // Palette drives colour directly — the reporter's own hues, so a Motes banner is tinted
-  // by the same values that tint the field. No per-mood colour table needed.
-  function moteTarget(i, n, t, F, cx, cy, R, seed) {
-    var TAU = 6.28318, a, rad, u, ring;
-    var chaos = mulberry32(seed + i * 977);
-    var cx2 = chaos(), cy2 = chaos();
-    var jx = (cx2 - 0.5) * (1 - F.ord) * R * 1.9;
-    var jy = (cy2 - 0.5) * (1 - F.ord) * R * 1.7;
-    var oy = cy + F.dy * R * 2;
-    switch (F.f) {
-      case M_TIGHT:
-        a = (i / n) * TAU * 5 + t * F.spin; rad = R * F.r * (0.35 + 0.65 * ((i % 5) / 4));
-        return [cx + Math.cos(a) * rad + jx * 0.4, oy + Math.sin(a) * rad + jy * 0.4];
-      case M_RISE:
-        u = ((t * (0.35 + F.spin * 0.5) + i * 0.137) % 1);
-        return [cx + ((i % 11) - 5) * R * 0.17 + Math.sin(t * 2 + i) * R * 0.05 + jx * 0.5,
-                oy + R * 0.9 - u * R * 2.0];
-      case M_FALL:
-        u = ((t * 0.16 + i * 0.113) % 1);
-        return [cx + ((i % 9) - 4) * R * 0.20 + Math.sin(t * 0.6 + i) * R * 0.07 + jx * 0.5,
-                oy - R * 0.7 + u * R * 1.7];
-      case M_WIDE:
-        return [cx + Math.sin(i * 12.9898 + t * F.spin) * R * F.r * 1.15 + jx,
-                oy + Math.cos(i * 78.233 + t * F.spin * 0.86) * R * F.r * 0.95 + jy];
-      case M_LINE:
-        u = i / n;
-        return [cx + (u - 0.5) * R * F.r * 2.3 + Math.sin(t * 0.5 + i) * R * 0.05,
-                oy + Math.sin(u * 7 + t * 0.4) * R * 0.10 + jy * 0.4];
-      case M_SPIRAL:
-        u = i / n; a = u * TAU * 2.2 + t * F.spin; rad = R * F.r * (0.15 + 0.85 * u);
-        return [cx + Math.cos(a) * rad, oy + Math.sin(a) * rad * 0.9];
-      case M_TWIN:
-        ring = i % 2; a = (i / n) * TAU * 3 + t * F.spin * (ring ? -1 : 1);
-        rad = R * F.r * 0.55;
-        return [cx + (ring ? 1 : -1) * R * 0.34 + Math.cos(a) * rad + jx * 0.4,
-                oy + Math.sin(a) * rad * 0.9 + jy * 0.4];
-      case M_FACE:                                             // a face is a temporary consensus of the parts
-        if (i < 12) { a = (i / 12) * TAU + t * 0.5; rad = R * 0.13;
-          return [cx - R * 0.40 + Math.cos(a) * rad, oy - R * 0.30 + Math.sin(a) * rad * 0.9]; }
-        if (i < 24) { a = ((i - 12) / 12) * TAU - t * 0.5; rad = R * 0.13;
-          return [cx + R * 0.40 + Math.cos(a) * rad, oy - R * 0.30 + Math.sin(a) * rad * 0.9]; }
-        u = (i - 24) / (n - 24); a = Math.PI * 0.17 + u * Math.PI * 0.66;
-        return [cx + Math.cos(a) * R * 0.66, oy + R * 0.20 + Math.sin(a) * R * 0.36];
-      default:                                                 // M_ORBIT
-        ring = i % 2; a = (i / n) * TAU * 3 + t * F.spin * (ring ? -1 : 1);
-        rad = R * F.r * (ring ? 0.62 : 1);
-        return [cx + Math.cos(a) * rad + jx, oy + Math.sin(a) * rad * 0.84 + jy];
+  function motePathsFor(mood, t) {                             // flash swaps the whole set in, then lets it go
+    var M = MOTE_MOODS[mood] || MOTE_MOODS.content;
+    if (M.flash && (t % M.flash.every) < M.flash.hold) return M.flash.paths;
+    return M.paths;
+  }
+  function motePointAt(pp, u, t, cx, cy, R) {
+    var TAU = 6.28318, a, rr;
+    var ox = cx + (pp.x || 0) * R, oy = cy + (pp.y || 0) * R, spin = (pp.spin || 0) * t;
+    var r1 = pp.r == null ? 0.6 : pp.r, r2 = pp.ry == null ? r1 : pp.ry;
+    switch (pp.p) {
+      case "line":
+        return [cx + ((pp.x1 || 0) + ((pp.x2 || 0) - (pp.x1 || 0)) * u) * R,
+                cy + ((pp.y1 || 0) + ((pp.y2 || 0) - (pp.y1 || 0)) * u) * R];
+      case "point": return [ox, oy];
+      case "arc":
+        a = (pp.a0 || 0) + ((pp.a1 == null ? TAU : pp.a1) - (pp.a0 || 0)) * u + spin;
+        return [ox + Math.cos(a) * r1 * R, oy + Math.sin(a) * r2 * R];
+      case "spiral":
+        a = u * TAU * (pp.turns || 2) + spin; rr = r1 * R * (0.15 + 0.85 * u);
+        return [ox + Math.cos(a) * rr, oy + Math.sin(a) * rr * 0.9];
+      default:
+        a = u * TAU + spin;
+        return [ox + Math.cos(a) * r1 * R, oy + Math.sin(a) * r2 * R];
     }
+  }
+  function moteSlot(paths, n, i) {                             // which path is this mote flying, and where in the queue?
+    var start = 0;
+    for (var k = 0; k < paths.length; k++) {
+      var sh = paths[k].share == null ? 1 : paths[k].share;
+      var cnt = Math.max(0, Math.round(n * sh));
+      if (start + cnt > n) cnt = n - start;
+      if (i < start + cnt) return { pp: paths[k], k: i - start, n: cnt };
+      start += cnt;
+      if (start >= n) break;
+    }
+    return null;                                               // unassigned: shares summed below 1, so this one drifts free
+  }
+  function moteTarget(i, n, t, paths, cx, cy, R, seed) {
+    var s = moteSlot(paths, n, i);
+    if (!s) {
+      var fr = mulberry32(seed + i * 733), a0 = fr() * 6.28318, rr0 = R * (0.45 + fr() * 0.55);
+      return { x: cx + Math.cos(a0 + t * 0.09) * rr0, y: cy + Math.sin(a0 + t * 0.09) * rr0 * 0.85, align: 0.12 };
+    }
+    var pp = s.pp;
+    var cluster = pp.cluster == null ? 0 : pp.cluster;
+    var focus = pp.focus == null ? 0.5 : pp.focus;
+    var base = s.n > 1 ? s.k / s.n : 0.5;
+    var u = base + (focus - base) * cluster;                   // cluster pulls every mote toward one point of the curve
+    u = (u + t * (pp.flow || 0)) % 1; if (u < 0) u += 1;       // flow carries them ALONG it
+    var pt = motePointAt(pp, u, t, cx, cy, R);
+    return { x: pt[0], y: pt[1], align: pp.align == null ? 0.6 : pp.align };
   }
 
   // KnownFace registry: face: { set, item } resolves here. Every entry is version-pinned
@@ -294,7 +332,7 @@
   }
   var FACE_SETS = {
     "motes": function (item) {                                 // no url: this face is code
-      return { proc: "motes", item: MOTE_FORM[item] ? item : "content" };
+      return { proc: "motes", item: MOTE_MOODS[item] ? item : "content" };
     },
     "twemoji": function (item) { return { url: "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/" + encodeURIComponent(emojiFor(item)) + ".png" }; },
     "kip": function (item) {
@@ -397,28 +435,13 @@
    * The thirteen retired names still resolve (below) so deployed skills degrade into the
    * nearest weather instead of silently rendering nothing. */
   var WEATHER = ["storm", "spotlight", "hush", "fog", "glow", "bloom", "converge"];
-  var WEATHER_ALIAS = {                                        // old flag → the weather that carried it
-    angry: "storm", frustrated: "storm",
-    dramatic: "spotlight",
-    solemn: "hush", melancholy: "hush",
-    anxious: "fog", vertigo: "fog",
-    tender: "glow", mirth: "glow",
-    at_peace: "bloom", awe: "bloom",
-    resolute: "converge",
-    // these were pure face-work; the avatar owns them, so they bring no weather at all
-    spark: null, excited: null, surprised: null, laugh: null,
-    groan: null, oops: null, puzzled: null, rhyme: null
-  };
+  // No alias table: every deployed skill pins a full commit SHA, so an old skill loads the
+  // OLD renderer bytes. Backwards compatibility is structurally unnecessary here — the pin
+  // IS the compatibility story, which is a nice dividend of the supply-chain discipline.
   function weatherOf(p) {
     var raw = p.weather != null ? p.weather : p.flag;
-    if (typeof raw === "string") {
-      if (WEATHER.indexOf(raw) >= 0) return raw;
-      if (Object.prototype.hasOwnProperty.call(WEATHER_ALIAS, raw)) return WEATHER_ALIAS[raw];
-      return null;                                             // unknown names are ignored, never fatal
-    }
+    if (typeof raw === "string") return WEATHER.indexOf(raw) >= 0 ? raw : null;
     for (var i = 0; i < WEATHER.length; i++) if (p[WEATHER[i]]) return WEATHER[i];
-    var keys = Object.keys(WEATHER_ALIAS);                     // legacy boolean payloads
-    for (var j = 0; j < keys.length; j++) if (p[keys[j]]) return WEATHER_ALIAS[keys[j]];
     return null;
   }
 
@@ -595,15 +618,15 @@
       // holding still rather than a placeholder — one source of truth for both paths.
       var pr = Math.min(portrait.s, 140) * 0.42;
       var pcx = portrait.x + portrait.s / 2, pcy = faceCy;
-      var F = MOTE_FORM[faceProc.item] || MOTE_FORM.content;
+      var FP = motePathsFor(faceProc.item, 0);
       var hue = fieldFromPalette(p.palette);
       var dots = [];
       for (var mi = 0; mi < MOTE_N; mi++) {
-        var tg = moteTarget(mi, MOTE_N, 0, F, pcx, pcy, pr, seed);
+        var tg = moteTarget(mi, MOTE_N, 0, FP, pcx, pcy, pr, seed);
         var mc = hue[mi % hue.length].fill;
-        dots.push('<circle cx="' + g(tg[0]) + '" cy="' + g(tg[1]) + '" r="' + g(2.4 + (mi % 3) * 0.5) +
+        dots.push('<circle cx="' + g(tg.x) + '" cy="' + g(tg.y) + '" r="' + g(2.4 + (mi % 3) * 0.5) +
           '" fill="' + mc + '" opacity="0.85"/>');
-        dots.push('<circle cx="' + g(tg[0]) + '" cy="' + g(tg[1]) + '" r="' + g(6 + (mi % 3)) +
+        dots.push('<circle cx="' + g(tg.x) + '" cy="' + g(tg.y) + '" r="' + g(6 + (mi % 3)) +
           '" fill="' + mc + '" opacity="0.13"/>');
       }
       kaoSVG = '<g class="vk">' + dots.join("") + '</g>';
@@ -1503,7 +1526,7 @@
             }
             var mMood = fm.item;
             if (thrillE > 0.25) mMood = "delighted";           // fed: the swarm leaps before it settles
-            var MF = MOTE_FORM[mMood] || MOTE_FORM.content;
+            var MFP = motePathsFor(mMood, t);
             var mPal = L.blobs.length ? L.blobs.map(function (b2) { return b2.fill; }) : ["#b89ab0"];
             mx.globalCompositeOperation = "source-over";
             mx.fillStyle = "rgba(0,0,0,0.24)";                 // trail decay: the swarm smears where it has been
@@ -1512,16 +1535,18 @@
             mx.globalCompositeOperation = "lighter";
             for (var mi2 = 0; mi2 < MOTE_N; mi2++) {
               var ms = moteState[mi2];
-              var mt = moteTarget(mi2, MOTE_N, t, MF, mcx, mcy, mR, L.seed);
+              var mt = moteTarget(mi2, MOTE_N, t, MFP, mcx, mcy, mR, L.seed);
               if (boopAge < 0.8) {                             // the poke throws them outward, then they re-gather
                 var bev2 = Math.exp(-boopAge * 3.2);
-                mt[0] += (ms.x - mcx) * bev2 * 1.5;
-                mt[1] += (ms.y - mcy) * bev2 * 1.5;
+                mt.x += (ms.x - mcx) * bev2 * 1.5;
+                mt.y += (ms.y - mcy) * bev2 * 1.5;
               }
-              ms.vx += (mt[0] - ms.x) * 0.055; ms.vy += (mt[1] - ms.y) * 0.055;
-              ms.vx *= 0.85; ms.vy *= 0.85;
-              ms.x += ms.vx + Math.sin(t * 1.6 + ms.ph) * MF.jit;
-              ms.y += ms.vy + Math.cos(t * 1.4 + ms.ph * 1.3) * MF.jit;
+              var K = 0.022 + 0.085 * mt.align;              // align: how hard the path pulls…
+              var WOB = (1 - mt.align) * mR * 0.055;           // …and how much they wander off it
+              ms.vx += (mt.x - ms.x) * K; ms.vy += (mt.y - ms.y) * K;
+              ms.vx *= 0.86; ms.vy *= 0.86;
+              ms.x += ms.vx + Math.sin(t * 1.6 + ms.ph) * WOB;
+              ms.y += ms.vy + Math.cos(t * 1.4 + ms.ph * 1.3) * WOB;
               var mcol = mPal[mi2 % mPal.length];
               var tw2 = 0.6 + 0.4 * Math.sin(t * 2.4 + ms.ph);
               var mrad = Math.max(1.2, mR * 0.052) * tw2;

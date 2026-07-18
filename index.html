@@ -117,6 +117,7 @@
     <div id="face-picker" style="display:flex; gap:2px; flex-wrap:wrap; margin:4px 0 0;">
       <button class="tab-btn" data-face="kaomoji">kaomoji</button>
       <button class="tab-btn" data-face="sepia">sepia</button>
+      <button class="tab-btn" data-face="motes">motes</button>
       <button class="tab-btn" data-face="kip">kip</button>
       <button class="tab-btn" data-face="twemoji">twemoji</button>
     </div>
@@ -449,10 +450,23 @@ try { SCENE_CHOICE = localStorage.getItem("vibeGalleryScene") || "none"; } catch
 // The gallery dresses every cell in the chosen face AND the chosen habitat — the same
 // two axes the Explorer plays with, applied across forty real exchanges at once. Scenes
 // come from SKILL_PIECES so the menu can never drift from what actually ships.
+// The gallery cells name a STATE (the thing each exchange demonstrates). That state picks
+// the face's mood, and — where the room would genuinely change too — a weather. The map
+// lives here in the demo data rather than in the renderer: v0.45.0 dropped the alias table
+// because hash-pinning means old skills load old builds, so the renderer owes nobody a
+// translation. A demo page is exactly the place that still wants one.
+var STATE_WEATHER = {
+  angry: "storm", frustrated: "storm", dramatic: "spotlight",
+  solemn: "hush", melancholy: "hush", anxious: "fog", vertigo: "fog",
+  tender: "glow", mirth: "glow", at_peace: "bloom", awe: "bloom", resolute: "converge"
+};
 function withFace(p) {
   var mood = p.flag || "content";
   var q = {}; for (var k in p) q[k] = p[k];
+  delete q.flag;
+  if (STATE_WEATHER[mood]) q.weather = STATE_WEATHER[mood];
   if (FACE_CHOICE === "sepia") q.face = { set: "sepia", item: mood };
+  else if (FACE_CHOICE === "motes") q.face = { set: "motes", item: mood };
   else if (FACE_CHOICE === "kip") q.face = { set: "kip", item: KIP_MAP[mood] || "content" };
   else if (FACE_CHOICE !== "kaomoji") q.face = { set: FACE_CHOICE, item: EMOJI_MOODS[mood] || EMOJI_MOODS.content };
   var SP = window.SKILL_PIECES && window.SKILL_PIECES.SCENES;
@@ -716,7 +730,7 @@ route();
   var c2 = card("face");
   c2.appendChild(callout("Pick my face — that's the whole station. Every pack speaks the same 32 moods now, so the rest of the file doesn't change when you switch me. Try them all on —", { m: "delighted", e: "1f604", k: "( ˶ˆ ᗜ ˆ˵ )" }, ["see them in the Gallery →", "#gallery"]));
   var faceSel = document.createElement("select"); faceSel.style.cssText = SEL + "margin:0 0 8px;";
-  [["sepia", "Sepia — the cuttlefish (32 moods, alive)"], ["kip", "Kip — the mascot (8 moods)"], ["kaomoji", "kaomoji (improvised text)"], ["twemoji", "Twemoji"], ["custom", "custom (your own image URLs)"]].forEach(function (o) {
+  [["sepia", "Sepia — the cuttlefish (32 moods, alive)"], ["motes", "Motes — a swarm, drawn in code (32 moods)"], ["kip", "Kip — the mascot (8 moods)"], ["kaomoji", "kaomoji (improvised text)"], ["twemoji", "Twemoji"], ["custom", "custom (your own image URLs)"]].forEach(function (o) {
     var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; faceSel.appendChild(op);
   });
   faceSel.value = S.face;
@@ -1023,7 +1037,7 @@ route();
     return s;
   }
 
-  var faceSel = mkSel("face", [["kaomoji", "kaomoji"], ["sepia", "sepia"], ["kip", "kip"],
+  var faceSel = mkSel("face", [["kaomoji", "kaomoji"], ["sepia", "sepia"], ["motes", "motes"], ["kip", "kip"],
     ["twemoji", "twemoji"]], X.set,
     function (v) { X.set = v; refreshItems(); render(); });
 
@@ -1118,10 +1132,10 @@ route();
   cohRow.appendChild(cohR); cohRow.appendChild(cohOut); cohRow.appendChild(cohOn.wrap);
   panel.appendChild(cohRow);
 
-  var flagSel = mkSel("flag", [["", "none"]].concat(
-    "spark excited surprised tender melancholy anxious mirth laugh groan oops frustrated angry dramatic at_peace solemn rhyme awe vertigo resolute puzzled".split(" ")
+  var flagSel = mkSel("weather", [["", "none"]].concat(
+    "storm spotlight hush fog glow bloom converge".split(" ")
       .map(function (f) { return [f, f]; })), "", function (v) { X.flag = v; render(); });
-  flagSel.parentNode.title = "banner weather: light, storms, marks in the air. One at most — the face stays the avatar's";
+  flagSel.parentNode.title = "what the ROOM is doing — light, air, pressure. One at most; the face stays the avatar's";
   panel.appendChild(flagSel.parentNode);
 
   var palRow = document.createElement("label");
@@ -1219,7 +1233,7 @@ route();
     if (X.fieldOn !== false) { details.focus = X.focus == null ? 0.7 : X.focus; details.engagement = X.engagement == null ? 0.85 : X.engagement; }
     if (X.stanceOn) details.stance = X.stance == null ? 0.5 : X.stance;
     if (X.cohOn) details.coherence = X.coherence == null ? 1 : X.coherence;
-    if (X.flag) details.flag = X.flag;
+    if (X.flag) details.weather = X.flag;
     var langs = langField.value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
     if (langs.length) details.languages = langs;
     var sc = P.SCENES[X.scene];
