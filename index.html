@@ -647,7 +647,13 @@ route();
     if (pv.kind === "sheet") {
       var i = pv.moods.indexOf(mood.m); if (i < 0) i = 0;
       var col = i % pv.cols, row = Math.floor(i / pv.cols), sc = 32 / pv.cell;
-      d.style.cssText += "background-image:url(" + pv.url + ");background-size:" + (pv.cols * pv.cell * sc) + "px " + (pv.rows * pv.cell * sc) + "px;background-position:-" + (col * 32) + "px -" + (row * 32) + "px;image-rendering:pixelated;";
+      var sz = (pv.cols * pv.cell * sc) + "px " + (pv.rows * pv.cell * sc) + "px";
+      if (pv.split) {                                          // layered sheet: features stacked over the body
+        d.style.cssText += "background-image:url(" + pv.url + "),url(" + pv.url + ");background-size:" + sz + "," + sz +
+          ";background-position:-" + (col * 32) + "px -" + ((row + pv.split) * 32) + "px,-" + (col * 32) + "px -" + (row * 32) + "px;image-rendering:pixelated;";
+      } else {
+        d.style.cssText += "background-image:url(" + pv.url + ");background-size:" + sz + ";background-position:-" + (col * 32) + "px -" + (row * 32) + "px;image-rendering:pixelated;";
+      }
       return d;
     }
     d.style.cssText += "background-image:url(" + pv.tmpl.replace("{item}", mood.e) + ");background-size:contain;background-repeat:no-repeat;background-position:center;";
@@ -817,7 +823,13 @@ route();
     if (pv.kind === "sheet") {
       var idx = pv.moods.indexOf("content"); if (idx < 0) idx = 0;
       var col = idx % pv.cols, row = Math.floor(idx / pv.cols), sc = px2 / pv.cell;
-      d.style.cssText += "background-image:url(" + pv.url + ");background-size:" + (pv.cols * pv.cell * sc) + "px " + (pv.rows * pv.cell * sc) + "px;background-position:-" + (col * px2) + "px -" + (row * px2) + "px;image-rendering:pixelated;";
+      var tsz = (pv.cols * pv.cell * sc) + "px " + (pv.rows * pv.cell * sc) + "px";
+      if (pv.split) {                                          // layered sheet: features stacked over the body
+        d.style.cssText += "background-image:url(" + pv.url + "),url(" + pv.url + ");background-size:" + tsz + "," + tsz +
+          ";background-position:-" + (col * px2) + "px -" + ((row + pv.split) * px2) + "px,-" + (col * px2) + "px -" + (row * px2) + "px;image-rendering:pixelated;";
+      } else {
+        d.style.cssText += "background-image:url(" + pv.url + ");background-size:" + tsz + ";background-position:-" + (col * px2) + "px -" + (row * px2) + "px;image-rendering:pixelated;";
+      }
       return d;
     }
     d.style.cssText += "background-image:url(" + pv.tmpl.replace("{item}", pv.strip[0]) + ");background-size:contain;background-repeat:no-repeat;background-position:center;";

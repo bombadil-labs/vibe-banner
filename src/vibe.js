@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@a9fcc73bc3a19456c718826ec7b7616007cd8014/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e5663405eb1dacfc7e28d31e0860ae34aa8e6754/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -158,7 +158,7 @@
       return {
         url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 12, index: i,
         anim: {
-          frames: 2, frameRows: 4, stride: 32, maskStart: 64,
+          frames: 2, frameRows: 4, stride: 32, split: true,   // LAYERED sheet: rows 0-3 body (solid, the colour's canvas+mask), 4-7 features, 8-11 blink features
           fins: "rrftdtfrfffrdtrfdtttfcdrtrcrrdrf",           // per-mood fin posture (derives from gen-sepia's FRILL_OF — keep in sync): r ripple, f flared, d drooped, t tucked, c calm
           arms: true,                                          // three independently swaying arms, drawn from the hem (the baked stubs retired)
           ink: { 17: 1, 13: 0.4 }                              // her namesake pigment: oops sprays a full startled puff, anxious leaks nervous wisps
@@ -387,11 +387,16 @@
         : { kind: "img", url: faceImg.url, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } };
       faceBox = { x: ix, y: iy, w: faceImg.w, h: faceImg.h };            // authoritative banner-space box — getBBox on a nested sprite svg reports sheet coords, never use it
       if (faceImg.cellW && faceImg.cellH) {                    // spritesheet: crop one cell via a nested viewport
-        var col = faceImg.index % faceImg.cols, rowI = Math.floor(faceImg.index / faceImg.cols);
-        kaoSVG = '<svg class="vk" x="' + g(ix) + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
-          '" viewBox="' + (col * faceImg.cellW) + ' ' + (rowI * faceImg.cellH) + ' ' + faceImg.cellW + ' ' + faceImg.cellH +
-          '" preserveAspectRatio="xMidYMid meet"><image href="' + esc(faceImg.url) + '" x="0" y="0" width="' + (faceImg.cellW * faceImg.cols) + '" height="' + (faceImg.cellH * faceImg.rows) +
-          '" style="image-rendering:crisp-edges;image-rendering:pixelated"/></svg>';   // nearest-neighbour: no cross-cell texture bleed, crisper pixel art
+        var mkCell = function (idx, cls) {
+          var c3 = idx % faceImg.cols, r3 = Math.floor(idx / faceImg.cols);
+          return '<svg' + (cls ? ' class="' + cls + '"' : '') + ' x="' + g(ix) + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
+            '" viewBox="' + (c3 * faceImg.cellW) + ' ' + (r3 * faceImg.cellH) + ' ' + faceImg.cellW + ' ' + faceImg.cellH +
+            '" preserveAspectRatio="xMidYMid meet"><image href="' + esc(faceImg.url) + '" x="0" y="0" width="' + (faceImg.cellW * faceImg.cols) + '" height="' + (faceImg.cellH * faceImg.rows) +
+            '" style="image-rendering:crisp-edges;image-rendering:pixelated"/></svg>';   // nearest-neighbour: no cross-cell texture bleed, crisper pixel art
+        };
+        kaoSVG = faceImg.anim && faceImg.anim.split            // split sheet: the static render stacks body + features
+          ? '<g class="vk">' + mkCell(faceImg.index, "") + mkCell(faceImg.index + faceImg.anim.frameRows * faceImg.cols, "") + '</g>'
+          : mkCell(faceImg.index, "vk");
       } else {
         kaoSVG = '<image class="vk" x="' + g(ix) + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
           '" preserveAspectRatio="xMidYMid meet" href="' + esc(faceImg.url) + '"/>';
@@ -639,7 +644,7 @@
     // sprites crop with percentage background math (no nested-svg atlas, no getBBox
     // lies); transforms pivot on the element's own centre, as CSS intends. The static
     // fallback (buildSVG) keeps the SVG face.
-    var fm = L.faceMeta, kaoEl = null, faceLayerEl = null, baseFill = [92, 67, 32];
+    var fm = L.faceMeta, kaoEl = null, featEl = null, faceLayerEl = null, baseFill = [92, 67, 32];
     if (fm) {
       var faceLayer = document.createElement("div");
       faceLayer.style.cssText = "position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;" +
@@ -664,6 +669,14 @@
         }
       }
       kaoEl.style.pointerEvents = "auto";                      // the face is tappable; the rest of the layer lets water-clicks through
+      if (fm.kind === "sprite" && fm.anim && fm.anim.split) {  // the FEATURES layer: eyes and mouth, stacked ABOVE the wandering colour
+        featEl = document.createElement("div");
+        var featRow = Math.floor(fm.index / fm.cols) + fm.anim.frameRows;
+        featEl.style.cssText = "position:absolute;inset:0;pointer-events:none;background-image:url(" + fm.url + ");" +
+          "background-size:" + (fm.cols * 100) + "% " + (fm.rows * 100) + "%;" +
+          "background-position:" + g(fm.cols > 1 ? (fm.index % fm.cols) / (fm.cols - 1) * 100 : 0) + "% " + g(featRow / (fm.rows - 1) * 100) + "%;" +
+          "image-rendering:pixelated;";
+      }
       faceLayer.appendChild(kaoEl); wrap.appendChild(faceLayer);
       faceLayerEl = faceLayer;
     }
@@ -684,20 +697,31 @@
     // drifting continuously, masked to the mantle by the sheet's own mask cell. The
     // space doctrine's sibling: chunky body, fine ink; chunky frames, fluid colour.
     var chromo = null, chromoMask = null;
-    if (kaoEl && fm && fm.kind === "sprite" && fm.anim && (fm.anim.maskStart != null || fm.anim.maskIndex != null)) {
+    if (kaoEl && fm && fm.kind === "sprite" && fm.anim && (fm.anim.split || fm.anim.maskStart != null || fm.anim.maskIndex != null)) {
       chromo = document.createElement("canvas");
       chromo.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
       kaoEl.style.position = "relative";
       kaoEl.appendChild(chromo);                               // inside the face element: rides every pose and shake
+      if (featEl) kaoEl.appendChild(featEl);                   // features stack ABOVE the colour — the body is a solid surface it wanders over
       var mimg = new Image(); mimg.crossOrigin = "anonymous";
       mimg.onload = function () {
         try {
           var mc = document.createElement("canvas"); mc.width = fm.cellW || 64; mc.height = fm.cellH || 64;
-          var mIdx = fm.anim.maskStart != null ? fm.anim.maskStart + fm.index : fm.anim.maskIndex;   // per-mood mask: the flow hugs THIS expression's features
+          var mIdx = fm.anim.split ? fm.index                  // split sheet: the BODY CELL ITSELF is the mask — its alpha is the mantle
+            : fm.anim.maskStart != null ? fm.anim.maskStart + fm.index : fm.anim.maskIndex;
           var mcol = mIdx % fm.cols, mrow = Math.floor(mIdx / fm.cols);
           var mx = mc.getContext("2d");
           mx.drawImage(mimg, mcol * mc.width, mrow * mc.height, mc.width, mc.height, 0, 0, mc.width, mc.height);
           mx.getImageData(0, 0, 1, 1);                         // taint probe — throws if CORS failed, and we quietly skip the layer
+          if (fm.anim.split) {                                 // erode 2px so the colour never muddies the traced outline
+            var mc2 = document.createElement("canvas"); mc2.width = mc.width; mc2.height = mc.height;
+            mc2.getContext("2d").drawImage(mc, 0, 0);
+            [[2, 0], [-2, 0], [0, 2], [0, -2]].forEach(function (off2) {
+              mx.globalCompositeOperation = "destination-in";
+              mx.drawImage(mc2, off2[0], off2[1]);
+            });
+            mx.globalCompositeOperation = "source-over";
+          }
           chromoMask = mc;
         } catch (e) { chromo.style.display = "none"; }
       };
@@ -988,8 +1012,9 @@
           if (((t + (L.seed % 7) * 0.6) % bper) < 0.16) fr = 1;                      // blink, ~160ms on a seeded organic cadence
           if (fr !== spriteFrame) {
             spriteFrame = fr;
-            var fcol2 = fm.index % fm.cols, frow2 = Math.floor(fm.index / fm.cols) + fr * fRows;
-            kaoEl.style.backgroundPosition =
+            var fcol2 = fm.index % fm.cols;
+            var frow2 = Math.floor(fm.index / fm.cols) + (fm.anim.split ? (1 + fr) : fr) * fRows;   // split: the BODY never swaps — only the features layer blinks
+            (fm.anim.split && featEl ? featEl : kaoEl).style.backgroundPosition =
               g(fm.cols > 1 ? fcol2 / (fm.cols - 1) * 100 : 0) + "% " + g(fm.rows > 1 ? frow2 / (fm.rows - 1) * 100 : 0) + "%";
           }
         }
