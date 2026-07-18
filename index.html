@@ -86,8 +86,9 @@
 
   <section class="tab-panel" id="tab-landing" role="tabpanel">
     <p class="lede" style="color: var(--ink);">At the top of every reply, Claude renders a small
-    living banner — a kaomoji, a breathing field of colour, and a few honest first-person lines:
-    its snap read of you, its mood, its immediate goal, and sometimes the subtext it's noticing.
+    living banner — a face, a breathing field of colour, and a few honest first-person lines. By
+    default: its snap read of you, its mood, its immediate goal, and sometimes the subtext it's
+    noticing — though those lines are yours to rename, rewrite, or replace.
     Like being able to see your collaborator's expression while you work.</p>
 
     <div class="hero-banner" id="hero"></div>
@@ -130,10 +131,15 @@
     <div class="banner" id="key-banner" style="margin: 0 0 20px;"></div>
 
     <h3>The face</h3>
-    <p>The kaomoji is Claude's expression, improvised in the moment. Small feeling, small face; a
-    big feeling can bloom into multiple lines.</p>
+    <p>The face is Claude's expression in the moment — an improvised kaomoji, or one of the
+    drawn packs. Every pack speaks the same 32 moods, so switching faces changes who you're
+    looking at without changing what they can say.</p>
 
     <h3>The readout</h3>
+    <p>These four are the default lines, not a fixed set: the
+    <a href="#builder">Builder</a> lets you rename them, rewrite what Claude is asked to put in
+    them, or swap them for up to five of your own. What survives every customisation is the word
+    caps — a line that needs a paragraph has stopped being a glance.</p>
     <ul>
       <li><code>[user]</code> — Claude's honest snap read of <em>you</em>, from your last message.
         It's allowed to quietly disagree with the polite prose below it.</li>
@@ -165,9 +171,10 @@
       <li><strong>Edge</strong> is stance: when Claude is <em>telling</em> — declaring, standing
         on it — the ovals gain a definite stroked contour. When it's <em>asking</em>, they keep
         their pure, open falloff.</li>
-      <li><strong>Texture</strong> is consonance: when several reported feelings harmonize, the
-        ovals stay compact and solid; when they grind against each other, they blur into diffuse
-        washes. Plural-at-peace and plural-in-tension finally look different.</li>
+      <li><strong>Texture</strong> is coherence — focus's emotional dual: when several reported
+        feelings harmonize, the ovals stay compact and solid; when they grind against each other,
+        they blur into diffuse washes. Plural-at-peace and plural-in-tension finally look
+        different.</li>
       <li><strong>Arrival</strong> is trajectory: when Claude passes the previous banner's palette
         (<code>prev</code>), the columns visibly arrive from those colours over the first two
         seconds — you can watch the mood change, not just see the new one.</li>
@@ -229,15 +236,21 @@ Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/ma
 &lt;script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@03f53c63a7f36ff0537d8db214486960a3a885ea/dist/vibe.min.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   vibe(document.getElementById('v'), {
-    kaomoji: "( ˶ˆ ꒳ ˆ˵ )",
-    seems:   "…",          // [user]  — a snap read of the user
-    feel:    "…",          // [mood]  — activated emotions
-    trying:  "…",          // [goal]  — immediate next goal
-    noticing:"…",          // [note]  — the subtext (optional)
+    face: { set: "sepia", item: "content" },   // any pack; every pack speaks the same 32 moods
+    readout: [                                 // up to 5 rows, any labels you like
+      { label: "user", value: "…" },           //   a snap read of the user
+      { label: "mood", value: "…" },           //   activated emotions
+      { label: "note", value: "…" },           //   the subtext (optional)
+      { label: "goal", value: "…" }            //   immediate next goal
+    ],
     palette: ["#7d8fb8"],  // 0+ mood colours → the field's three columns
-    focus: 0.5, engagement: 0.5
+    focus: 0.5, engagement: 0.5,
+    stance: 0.5, coherence: 0.8                // both optional; omitted reads as neutral
   });
 &lt;/script&gt;</pre>
+    <p class="note">The older flat form — <code>seems</code>, <code>feel</code>, <code>trying</code>,
+    <code>noticing</code> — still works and always will: skills deployed before the readout became a
+    list keep rendering unchanged. New payloads should use <code>readout</code>.</p>
     <p>The full value grammar, flag list, and fork guide (reskin the whole look without touching the
     skill) are in the
     <a href="https://github.com/bombadil-labs/vibe-banner#readme">README</a>.</p>
@@ -762,31 +775,60 @@ route();
   });
   faceSel.value = S.face;
   c2.appendChild(faceSel);
-  var strip = document.createElement("div"); strip.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px;align-items:center;";
-  c2.appendChild(strip);
+  // THE PREVIEW IS THE REAL RENDERER (v0.41.1). It used to be a row of sprite crops from
+  // the sheet — body + features, no live layer — which is precisely what a BROKEN render
+  // looks like: Sepia with no fins, no arms, no drifting colour. A still of a creature
+  // whose whole point is that it moves is a lie about the product. So the builder mounts
+  // an actual banner and lets you flip moods inside it.
+  var moodRow = document.createElement("div");
+  moodRow.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);margin:0 0 8px;";
+  var moodSel = document.createElement("select"); moodSel.style.cssText = SEL;
+  moodRow.appendChild(document.createTextNode("preview mood"));
+  moodRow.appendChild(moodSel);
+  c2.appendChild(moodRow);
+  var liveMount = document.createElement("div");
+  liveMount.style.cssText = "margin:0 0 4px;min-height:80px;";
+  c2.appendChild(liveMount);
+  var previewMood = "content";
+  moodSel.addEventListener("change", function () { previewMood = moodSel.value; refreshLive(); });
   var customWrap = document.createElement("div"); customWrap.style.display = "none";
   customWrap.innerHTML = '<p style="font-size:12.5px;color:var(--sub);margin:0 0 4px;">One <code>mood = url</code> per line. Hosts must be widget-allowlisted (<code>cdn.jsdelivr.net</code>, <code>unpkg.com</code>, <code>cdnjs.cloudflare.com</code>, <code>fonts.gstatic.com</code>) — in practice, a public GitHub repo via <code>cdn.jsdelivr.net/gh/you/repo@commit/…</code>. One image per mood; no spritesheets needed.</p>';
   var customTa = document.createElement("textarea"); customTa.rows = 4; customTa.spellcheck = false; customTa.style.cssText = TA; customTa.value = S.customLines;
   var warn = document.createElement("p"); warn.style.cssText = "font-size:12px;color:#c05050;margin:4px 0 0;display:none;";
   customWrap.appendChild(customTa); customWrap.appendChild(warn); c2.appendChild(customWrap);
-  function refreshStrip() {
-    strip.innerHTML = "";
+  var SAMPLE = ["reading carefully, deciding what to keep", "curious, unhurried",
+    "you're testing how this looks before you commit to it", "show you exactly what you'll get"];
+  function refreshLive() {
     var pv = P.PREVIEW[S.face];
-    if (!pv || S.face === "custom") return;
-    var u = sceneUrl();
-    (pv.strip || []).forEach(function (it) {
-      var cell = document.createElement("span");
-      cell.style.cssText = "position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;min-width:44px;height:44px;border-radius:8px;overflow:hidden;border:1px solid var(--edge);background:rgba(138,122,134,0.06);";
-      if (u) {
-        var bg = document.createElement("span");
-        bg.style.cssText = "position:absolute;inset:0;background-image:url(" + u + ");background-size:cover;background-position:center;image-rendering:pixelated;opacity:" + Math.min(1, S.sceneOp * 1.4) + ";";
-        cell.appendChild(bg);
+    // the mood menu is the pack's own vocabulary — kaomoji has none, custom packs list
+    // whatever the user typed
+    var items = S.face === "custom" ? customEntries().entries.map(function (e) { return e[0]; })
+      : (pv && (pv.moods || pv.strip)) || [];
+    moodRow.style.display = items.length ? "flex" : "none";
+    if (items.length) {
+      var keep = items.indexOf(previewMood) >= 0 ? previewMood : (items.indexOf("content") >= 0 ? "content" : items[0]);
+      if (moodSel.value !== keep || moodSel.options.length !== items.length) {
+        moodSel.innerHTML = "";
+        items.forEach(function (m) { var op = document.createElement("option"); op.value = m; op.textContent = m; moodSel.appendChild(op); });
+        moodSel.value = keep;
       }
-      var av = avatar(pv.kind === "text" ? { k: it } : pv.kind === "sheet" ? { m: it } : { m: it, e: it }, 44);
-      av.style.position = "relative";
-      cell.appendChild(av);
-      strip.appendChild(cell);
-    });
+      previewMood = keep;
+    }
+    if (typeof window.vibe !== "function") { liveMount.textContent = "(renderer not loaded)"; return; }
+    var pay = {
+      kaomoji: "( ˘ ᵕ ˘ )",
+      readout: S.fields.slice(0, 5).map(function (f, i) { return { label: f.label, value: SAMPLE[i] || "…" }; }),
+      palette: ["#d9a877", "#8fae8f"], focus: 0.7, engagement: 0.85, stance: 0.55, coherence: 0.9
+    };
+    if (S.face === "kaomoji") pay.face = "( ˶ˆ ꒳ ˆ˵ )";
+    else if (S.face === "custom") {
+      var ce = customEntries().entries;
+      var hit = ce.filter(function (e) { return e[0] === previewMood; })[0] || ce[0];
+      if (hit) pay.face = hit[1];
+    } else pay.face = { set: S.face, item: previewMood };
+    var su = sceneUrl();
+    if (su) pay.scene = { url: su, opacity: S.sceneOp, live: (P.SCENES[S.scene] && P.SCENES[S.scene].live) || undefined };
+    try { window.vibe(liveMount, pay); } catch (e) { liveMount.textContent = "(preview failed: " + e.message + ")"; }
   }
   function faceThumb(px2, box) {                               // representative face at arbitrary size, for composite previews
     box = box || px2 / 0.6;
@@ -839,7 +881,7 @@ route();
   }
   faceSel.addEventListener("change", function () {
     S.face = faceSel.value;
-    refreshStrip(); refreshCustom(); refreshScene(); renderNarrators(); status();
+    refreshLive(); refreshCustom(); refreshScene(); renderNarrators(); status();
   });
   customTa.addEventListener("input", function () { S.customLines = customTa.value; refreshCustom(); status(); });
 
@@ -872,7 +914,7 @@ route();
     scOpRow.style.display = on ? "flex" : "none";
     scPrev.innerHTML = "";
     scPrev.appendChild(compositeChip(110));
-    refreshStrip(); renderNarrators();
+    refreshLive(); renderNarrators();
     status();
   }
   scSel.addEventListener("change", function () { S.scene = scSel.value; refreshScene(); });
@@ -956,6 +998,7 @@ route();
           f.label = lin.value.replace(/[^a-z0-9_ -]/gi, "").trim() || "field";
           pill.textContent = f.label; status();
         });
+        lin.addEventListener("change", refreshLive);
         var din = document.createElement("textarea");
         din.rows = 3; din.spellcheck = false; din.value = f.description; din.style.cssText = TA;
         din.placeholder = "what should I put here? Written as an instruction to the reporter.";
@@ -972,7 +1015,7 @@ route();
       ed.addEventListener("click", function () { editing = editing === i ? -1 : i; renderFields(); });
       del.addEventListener("click", function () {
         S.fields.splice(i, 1); if (editing >= S.fields.length) editing = -1;
-        renderFields(); status();
+        renderFields(); status(); refreshLive();
       });
       fieldList.appendChild(row);
     });
@@ -983,10 +1026,10 @@ route();
   addBtn.addEventListener("click", function () {
     if (S.fields.length >= 5) return;
     S.fields.push({ label: "field" + (S.fields.length + 1), required: true, description: "what should I put here?" });
-    editing = S.fields.length - 1; renderFields(); status();
+    editing = S.fields.length - 1; renderFields(); status(); refreshLive();
   });
   resetBtn.addEventListener("click", function () {
-    S.fields = clone(P.DEFAULT_FIELDS); editing = -1; renderFields(); status();
+    S.fields = clone(P.DEFAULT_FIELDS); editing = -1; renderFields(); status(); refreshLive();
   });
 
   // — What's fixed. Named honestly rather than hidden: people should know the file has a
@@ -1026,7 +1069,6 @@ route();
     ].join("\n");
   }
   function status() {
-    renderFields.pending || 0;
     var t = assembleAll();
     snipPre.textContent = t;
     document.getElementById("b-status").textContent = t.length + " bytes (~" + Math.round(t.length / 4) + " tokens, loaded once per session)";
@@ -1050,7 +1092,7 @@ route();
     download(NAME + ".skill.json", JSON.stringify({ name: NAME, description: faceDef().DESC, instructions: assembleAll().replace(/^---[\s\S]*?---\n\n/, "") }, null, 2), "application/json");
     document.getElementById("b-status").textContent = "json: { name, description, instructions }";
   });
-  renderFields(); refreshStrip(); refreshCustom(); refreshScene(); status();
+  renderFields(); refreshLive(); refreshCustom(); refreshScene(); status();
 })();
 
 // ---- Visuals explorer: face × environment, rendered as a live composite. Pure play —
@@ -1113,16 +1155,172 @@ route();
     itemSel.value = X.item;
   }
 
+  // EVERY VALUE IS YOURS TO SET (v0.41.1). The Explorer used to drive face × environment
+  // and hard-code the rest, which meant the half of the grammar that is actually *hard to
+  // picture* — how coherence blurs the field, what stance does to an edge, what four
+  // palette colours look like — could only be understood by reading prose about it. Now
+  // every payload value has a control, and the emitted payload is shown verbatim.
+  var panel = document.createElement("div");
+  panel.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px 18px;width:100%;margin:10px 0 0;padding:12px 0 0;border-top:1px solid var(--edge);";
+  ctl.appendChild(panel);
+  function slider(label, key, def, hint) {
+    var w = document.createElement("label");
+    w.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
+    w.title = hint || "";
+    var nm = document.createElement("span"); nm.style.cssText = "flex:0 0 82px;"; nm.textContent = label;
+    var r = document.createElement("input");
+    r.type = "range"; r.min = 0; r.max = 1; r.step = 0.05; r.value = def; r.style.cssText = "flex:1;min-width:70px;";
+    var out = document.createElement("span"); out.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; out.textContent = def;
+    r.addEventListener("input", function () { X[key] = +r.value; out.textContent = r.value; render(); });
+    w.appendChild(nm); w.appendChild(r); w.appendChild(out); panel.appendChild(w);
+    return r;
+  }
+  function toggle(label, key, hint) {                          // presence IS signal: an unchecked optional is omitted from the payload, not zeroed
+    var w = document.createElement("label");
+    w.style.cssText = "display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);";
+    w.title = hint || "";
+    var c = document.createElement("input"); c.type = "checkbox";
+    c.addEventListener("change", function () { X[key] = c.checked; render(); });
+    w.appendChild(c); w.appendChild(document.createTextNode(label));
+    return { wrap: w, box: c };
+  }
+  slider("focus", "focus", 0.7, "0 scattered across many things → 1 locked tight on one");
+  slider("engagement", "engagement", 0.85, "0 checked out → 1 fully lit. Only ever deflates the field");
+  var stanceOn = toggle("send", "stanceOn", "optional: omit and the ovals keep their open falloff");
+  var stanceRow = document.createElement("label");
+  stanceRow.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
+  stanceRow.title = "0 asking (holding questions open) → 1 telling (standing on it)";
+  stanceRow.innerHTML = '<span style="flex:0 0 82px;">stance</span>';
+  var stanceR = document.createElement("input");
+  stanceR.type = "range"; stanceR.min = 0; stanceR.max = 1; stanceR.step = 0.05; stanceR.value = 0.5; stanceR.style.cssText = "flex:1;min-width:70px;";
+  var stanceOut = document.createElement("span"); stanceOut.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; stanceOut.textContent = "off";
+  stanceR.addEventListener("input", function () { X.stance = +stanceR.value; X.stanceOn = true; stanceOn.box.checked = true; stanceOut.textContent = stanceR.value; render(); });
+  stanceOn.box.addEventListener("change", function () { stanceOut.textContent = stanceOn.box.checked ? stanceR.value : "off"; });
+  stanceRow.appendChild(stanceR); stanceRow.appendChild(stanceOut); stanceRow.appendChild(stanceOn.wrap);
+  panel.appendChild(stanceRow);
+  var cohRow = document.createElement("label");
+  cohRow.style.cssText = stanceRow.style.cssText;
+  cohRow.title = "focus's emotional dual: 0 the feelings grind (diffuse washes) → 1 they harmonize (compact, solid)";
+  cohRow.innerHTML = '<span style="flex:0 0 82px;">coherence</span>';
+  var cohR = document.createElement("input");
+  cohR.type = "range"; cohR.min = 0; cohR.max = 1; cohR.step = 0.05; cohR.value = 1; cohR.style.cssText = "flex:1;min-width:70px;";
+  var cohOut = document.createElement("span"); cohOut.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; cohOut.textContent = "off";
+  var cohOn = toggle("send", "cohOn", "optional: omit and absence reads as harmony");
+  cohR.addEventListener("input", function () { X.coherence = +cohR.value; X.cohOn = true; cohOn.box.checked = true; cohOut.textContent = cohR.value; render(); });
+  cohOn.box.addEventListener("change", function () { cohOut.textContent = cohOn.box.checked ? cohR.value : "off"; });
+  cohRow.appendChild(cohR); cohRow.appendChild(cohOut); cohRow.appendChild(cohOn.wrap);
+  panel.appendChild(cohRow);
+
+  var flagSel = mkSel("flag", [["", "none"]].concat(
+    "spark excited surprised tender melancholy anxious mirth laugh groan oops frustrated angry dramatic at_peace solemn rhyme awe vertigo resolute puzzled".split(" ")
+      .map(function (f) { return [f, f]; })), "", function (v) { X.flag = v; render(); });
+  flagSel.parentNode.title = "banner weather: light, storms, marks in the air. One at most — the face stays the avatar's";
+  panel.appendChild(flagSel.parentNode);
+
+  var palRow = document.createElement("label");
+  palRow.style.cssText = "display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);grid-column:1/-1;flex-wrap:wrap;";
+  palRow.title = "feelings as colours, most intense first. 0 → neutral grey triad; 1 → light/pure/dark; 2 → one per side plus their blend; 3 → one per oval; 4+ → the centre cycles the extras";
+  palRow.appendChild(document.createTextNode("palette"));
+  var pal = ["#7fb8b0", "#d99a5e"];
+  var palWrap = document.createElement("span");
+  palWrap.style.cssText = "display:flex;gap:5px;align-items:center;flex-wrap:wrap;";
+  palRow.appendChild(palWrap);
+  function renderPal() {
+    palWrap.innerHTML = "";
+    pal.forEach(function (c, i) {
+      var ci = document.createElement("input");
+      ci.type = "color"; ci.value = c;
+      ci.style.cssText = "width:30px;height:26px;padding:0;border:1px solid var(--edge);border-radius:6px;background:none;cursor:pointer;";
+      ci.addEventListener("input", function () { pal[i] = ci.value; render(); });
+      var x = document.createElement("button");
+      x.textContent = "×"; x.title = "remove";
+      x.style.cssText = "background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px;padding:0 2px;";
+      x.addEventListener("click", function () { pal.splice(i, 1); renderPal(); render(); });
+      var g2 = document.createElement("span"); g2.style.cssText = "display:inline-flex;align-items:center;";
+      g2.appendChild(ci); g2.appendChild(x); palWrap.appendChild(g2);
+    });
+    if (pal.length < 6) {
+      var add = document.createElement("button");
+      add.textContent = "+ colour";
+      add.style.cssText = SEL + "cursor:pointer;font-size:11.5px;padding:4px 8px;";
+      add.addEventListener("click", function () { pal.push("#b89ab0"); renderPal(); render(); });
+      palWrap.appendChild(add);
+    }
+    var none = document.createElement("button");
+    none.textContent = pal.length ? "clear" : "(empty — neutral grey)";
+    none.style.cssText = SEL + "cursor:pointer;font-size:11.5px;padding:4px 8px;";
+    none.addEventListener("click", function () { pal.length = 0; renderPal(); render(); });
+    palWrap.appendChild(none);
+  }
+  renderPal();
+  panel.appendChild(palRow);
+
+  var rowsWrap = document.createElement("div");
+  rowsWrap.style.cssText = "grid-column:1/-1;display:flex;flex-direction:column;gap:5px;";
+  var rows = [["user", "browsing the wardrobe and the real estate at once"], ["mood", "trying things on"],
+    ["note", "the same face reads differently in different light"], ["goal", "find the combination that feels like home"]];
+  function renderRows() {
+    rowsWrap.innerHTML = "";
+    var hd = document.createElement("div");
+    hd.style.cssText = "font-size:12.5px;color:var(--sub);";
+    hd.textContent = "readout — up to five lines, any labels";
+    rowsWrap.appendChild(hd);
+    rows.forEach(function (r, i) {
+      var line = document.createElement("div");
+      line.style.cssText = "display:flex;gap:6px;align-items:center;";
+      var li = document.createElement("input");
+      li.value = r[0]; li.maxLength = 14; li.style.cssText = SEL + "width:104px;font-family:var(--font-mono);font-size:12px;";
+      li.addEventListener("input", function () { r[0] = li.value; render(); });
+      var vi = document.createElement("input");
+      vi.value = r[1]; vi.style.cssText = SEL + "flex:1;min-width:120px;font-size:12px;";
+      vi.addEventListener("input", function () { r[1] = vi.value; render(); });
+      var x = document.createElement("button");
+      x.textContent = "×"; x.style.cssText = "background:none;border:none;color:var(--sub);cursor:pointer;font-size:15px;padding:0 3px;";
+      x.addEventListener("click", function () { rows.splice(i, 1); renderRows(); render(); });
+      line.appendChild(li); line.appendChild(vi); line.appendChild(x);
+      rowsWrap.appendChild(line);
+    });
+    if (rows.length < 5) {
+      var add = document.createElement("button");
+      add.textContent = "+ line";
+      add.style.cssText = SEL + "cursor:pointer;font-size:11.5px;padding:4px 9px;align-self:flex-start;";
+      add.addEventListener("click", function () { rows.push(["line" + (rows.length + 1), "…"]); renderRows(); render(); });
+      rowsWrap.appendChild(add);
+    }
+  }
+  renderRows();
+  panel.appendChild(rowsWrap);
+
+  var langIn = document.createElement("label");
+  langIn.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
+  langIn.title = "languages reasoned in beyond the conversational one; renders as a small [Reasoned in] trace";
+  langIn.innerHTML = '<span style="flex:0 0 82px;">languages</span>';
+  var langField = document.createElement("input");
+  langField.placeholder = "ja, de"; langField.style.cssText = SEL + "flex:1;min-width:70px;font-size:12px;";
+  langField.addEventListener("input", render);
+  langIn.appendChild(langField); panel.appendChild(langIn);
+
+  var prevOn = toggle("prev (arrive from grey)", "prevOn", "the previous banner's palette: the columns visibly travel from those colours over the first two seconds");
+  prevOn.wrap.style.gridColumn = "1/-1";
+  panel.appendChild(prevOn.wrap);
+
+  var src = document.createElement("pre");
+  src.style.cssText = "grid-column:1/-1;font-size:10.5px;max-height:150px;overflow:auto;margin:4px 0 0;";
+  panel.appendChild(src);
+
   function render() {
-    var payload = {
-      seems: "browsing the wardrobe and the real estate at once",
-      feel: "trying things on",
-      trying: "find the combination that feels like home",
-      noticing: "the same face reads differently in different light",
-      palette: ["#7fb8b0", "#d99a5e"], focus: 0.7, engagement: 0.85
-    };
+    var payload = { kaomoji: "( ˘ ᵕ ˘ )" };
+    payload.readout = rows.filter(function (r) { return r[1] !== ""; }).map(function (r) { return { label: r[0], value: r[1] }; });
+    if (pal.length) payload.palette = pal.slice();
+    payload.focus = X.focus == null ? 0.7 : X.focus;
+    payload.engagement = X.engagement == null ? 0.85 : X.engagement;
+    if (X.stanceOn) payload.stance = X.stance == null ? 0.5 : X.stance;
+    if (X.cohOn) payload.coherence = X.coherence == null ? 1 : X.coherence;
+    if (X.flag) payload.flag = X.flag;
+    if (X.prevOn) payload.prev = ["#9a9488", "#8a8f9a"];
+    var langs = langField.value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
+    if (langs.length) payload.languages = langs;
     payload.face = X.set === "kaomoji" ? (kaoIn.value || "( ˘ ᵕ ˘ )") : { set: X.set, item: X.item };
-    payload.kaomoji = "( ˘ ᵕ ˘ )";
     var sc = P.SCENES[X.scene];
     var su = sc ? sc.url : (X.scene === "custom" ? (X.sceneUrl || "").trim() : "");
     // the Explorer ALWAYS shows the square block — populated when an environment is
@@ -1132,6 +1330,9 @@ route();
     mnt.innerHTML = "";
     try { vibe(mnt, payload); } catch (e) { mnt.textContent = "err: " + e.message; }
     cap.textContent = sc && sc.blurb ? "the " + X.scene + " — " + sc.blurb : (su ? "custom scene" : "the empty window — pick an environment to fill it");
+    var shown = JSON.parse(JSON.stringify(payload));
+    if (shown.scene && shown.scene.url) shown.scene.url = shown.scene.url.replace(/@[0-9a-f]{40}\//, "@…/");
+    src.textContent = "vibe(el, " + JSON.stringify(shown, null, 1) + ");";
   }
 
   refreshItems(); render();

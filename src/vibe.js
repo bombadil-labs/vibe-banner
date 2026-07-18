@@ -1090,6 +1090,12 @@
       }
       if (t0 == null) t0 = now; var t = (now - t0) / 1000;
       if (!visible) { schedule(); return; }
+      // SELF-HEALING SIZE (v0.41.1): mounting inside a hidden container (a lazy tab, an
+      // accordion, a closed <details>) measures 0 and fit() bails, and the ResizeObserver
+      // does not reliably fire on the unhide — so the banner stayed at the canvas default
+      // of 300x150, stretched by CSS, blurry forever. The loop re-fits when the backing
+      // store stops matching the box; the same instinct as the rAF watchdog above.
+      if (wrap.clientWidth > 0 && cv.width !== Math.round(wrap.clientWidth * dpr)) fit();
       try {
         var cyC = L.coreCy;
         // THE FIRM BOUNDARY (v0.32.0): the window is the avatar's; the right region is
