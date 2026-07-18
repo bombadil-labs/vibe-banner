@@ -232,5 +232,50 @@ console.log("every flag yields a valid static fallback (string API + legacy bool
   ok(s1.startsWith("<svg") && s1.endsWith("</svg>") && noClip(s1) === noClip(s2), fl + " → valid static svg, string ≡ legacy boolean");
 });
 
+console.log("\npalette is top-level (v0.46.0): it colours the avatar, not just the field");
+let palTop = buildSVG({ avatar: { set: "sepia", item: "content" }, palette: ["#d99a5e"] });
+ok(/viewBox="0 0 156 152"/.test(palTop), "a palette alone does NOT widen the tile — still a square");
+let palNorm = (s) => s.replace(/v(?:scn|wr)\d+/g, "vid");
+ok(palNorm(buildSVG({ avatar: "( ˆ ᵕ ˆ )", palette: ["#d99a5e"], details: { seems: "a", feel: "b", trying: "c" } }))
+   === palNorm(buildSVG({ avatar: "( ˆ ᵕ ˆ )", details: { seems: "a", feel: "b", trying: "c", palette: ["#d99a5e"] } })),
+   "palette in details is still honoured, and renders identically to top-level");
+
+console.log("\nflight paths (v0.46.0): open curves ping-pong, mouths smile, glyphs spell");
+const M = require("../src/vibe.js").__motes;
+function frameAt(mood, t) {
+  const paths = M.pathsFor(mood, t), out = [];
+  for (let i = 0; i < M.N; i++) out.push(M.target(i, M.N, t, paths, 0, 0, 100, 7));
+  return out;
+}
+let worstJump = 0;
+["solemn", "sleepy", "melancholy", "groan", "weary"].forEach((m) => {
+  for (let t = 0; t < 8; t += 1 / 30) {
+    const a = frameAt(m, t), b = frameAt(m, t + 1 / 30);
+    for (let i = 0; i < M.N; i++) worstJump = Math.max(worstJump, Math.hypot(a[i].x - b[i].x, a[i].y - b[i].y));
+  }
+});
+ok(worstJump < 12, "open paths never teleport: worst step " + worstJump.toFixed(2) + "px of R=100 (a wrap would be ~140)");
+ok(M.closed({ p: "ring" }) && M.closed({ p: "infinity" }) && !M.closed({ p: "line" }) && !M.closed({ p: "poly" }),
+   "closedness: ring/infinity wrap, line/poly ping-pong");
+["mirth", "delighted", "laugh", "excited"].forEach((m) => {
+  const pts = frameAt(m, 0).slice().sort((p, q) => p.x - q.x);
+  const ends = (pts[0].y + pts[pts.length - 1].y) / 2, mid = pts[Math.floor(pts.length / 2)].y;
+  ok(mid > ends, m + " curves as a SMILE, not a rainbow (a rainbow reads as a frown)");
+});
+let bang = frameAt("surprised", 0.2), bx = bang.map((p) => p.x);
+ok(Math.max(...bx) - Math.min(...bx) < 6, "surprised flashes an exclamation: a vertical stroke, near-zero width");
+let qm = frameAt("puzzled", 0.2);
+ok(Math.max(...qm.map((p) => p.y)) - Math.min(...qm.map((p) => p.y)) > 100, "puzzled flashes a question mark: tall, with a detached dot");
+let sil = new Set();
+for (let t = 0; t < 13; t += 1) {
+  const f = frameAt("working", t), xs = f.map((p) => p.x), ys = f.map((p) => p.y);
+  sil.add(Math.round(Math.max(...xs) - Math.min(...xs)) + "x" + Math.round(Math.max(...ys) - Math.min(...ys)));
+}
+ok(sil.size >= 5, "working never settles: " + sil.size + " distinct silhouettes across 13s");
+ok(/<circle/.test(buildSVG({ avatar: { set: "motes", item: "working" } })), "working renders statically too");
+ok(/sepia-sheet/.test(buildSVG({ avatar: { set: "sepia", item: "working" } })), "a pack without art for a mood falls back instead of breaking");
+let ringOnly = Object.keys(M.moods).filter((k) => { const p = M.moods[k].paths; return p && p.every((x) => !x.p || x.p === "ring") && !M.moods[k].flash; });
+ok(ringOnly.length <= 10, "the swarm is not all circles: " + ringOnly.length + " moods are a plain ring with no flash (was 20)");
+
 console.log(fails ? "\nFAILED (" + fails + ")" : "\nALL PASS");
 process.exit(fails ? 1 : 0);

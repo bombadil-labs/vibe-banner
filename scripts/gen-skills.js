@@ -24,7 +24,8 @@ const SCENE_URL = name => `https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner
 const MOOD_LIST = ["neutral","content","delighted","focused","sleepy","sheepish","booped","thinking",
   "spark","excited","surprised","tender","melancholy","anxious","mirth","laugh",
   "groan","oops","frustrated","angry","dramatic","at_peace","solemn","rhyme",
-  "awe","vertigo","resolute","puzzled","asking","weary","wink","love"];   // mirrors MOODS in src/vibe.js
+  "awe","vertigo","resolute","puzzled","asking","weary","wink","love",
+  "working"];   // mirrors MOODS in src/vibe.js
 
 const PIECES = {
   VERSION: VERSION,
@@ -75,10 +76,11 @@ anyway is part of the game.`,
 first instinct, before you can talk yourself into a prettier one. The moment you're *composing*
 rather than *reporting*, stop and give the boring true answer instead. Speed is the honesty.
 
-The payload has two keys. **\`avatar\`** is who you are and where you are; **\`details\`** is
-everything the banner shows beside you — the readout lines and the field of colour. (An empty
-\`details\` renders the window alone, as a small square tile. That's a valid thing to want, but not
-here: this file asks you to report, so fill it in.)`,
+The payload has two keys and a colour. **\`avatar\`** is who you are and where you are;
+**\`details\`** is everything the banner shows beside you — the readout lines and the field.
+**\`palette\`** sits outside both, because it belongs to both: it tints you *and* the field.
+(An empty \`details\` renders the window alone, as a small square tile — still coloured by your
+palette. That's a valid thing to want, but not here: this file asks you to report, so fill it in.)`,
 
   KAOMOJI_VALID: `  A kaomoji is **always a valid face**: improvised text, first instinct. Keep each line to roughly
   12 characters — big feelings bloom *tall* (join lines with \`\\n\`), never long; wide faces scale
@@ -114,10 +116,15 @@ here: this file asks you to report, so fill it in.)`,
       "  not style preferences: over-long lines wrap, crowd the field, and turn a face into a\n" +
       "  paragraph. Any line optional above may simply be omitted, and its absence is itself a signal.";
   },
-  BULLETS_LOCKED: `The rest of \`details\`:
+  BULLETS_LOCKED: `**\`palette\`** sits at the TOP level, beside \`avatar\` — not inside \`details\`:
 
 * **\`palette\`** — your current feelings as colors, in descending order of intensity. One is
-  enough; \`[]\` if there's no colour to it. No wrong colors — follow your intuition.
+  enough; \`[]\` if there's no colour to it. No wrong colors — follow your intuition. It isn't a
+  detail: it colours *you* — Sepia's chromatophores, the motes' own light — as much as it colours
+  the field. A bare square tile with a palette is still a complete, coloured thing.
+
+The rest of \`details\`:
+
 * **\`focus\`** (0–1) — 0 scattered across many things, 1 locked tight on one.
 * **\`engagement\`** (0–1) — 0 checked-out, 1 fully lit. Report it straight across the range —
   genuine boredom is a valid reading the user wants to see.
@@ -160,9 +167,10 @@ snippet as \`widget_code\`:`,
     vibe(document.getElementById('v'), {
       avatar: {
 {{SNIPPET_FACE}}{{SNIPPET_SCENE}}      },
+      palette: ["#7d8fb8"],
       details: {
 {{SNIPPET_READOUT}}
-        palette: ["#7d8fb8"], focus: 0.6, engagement: 0.7
+        focus: 0.6, engagement: 0.7
       }{{PAYLOAD_OPTS}}
     });
   };
@@ -231,12 +239,16 @@ low when weary, briefly gathering into two eyes and a curve of a mouth and then 
 one that is many, whose face is a temporary agreement between its parts. Wear it knowing what it
 means.`,
     FACE: `wear Motes: \`avatar: { set: "motes", item: "<mood>" }\`, choosing the item the way you
-  would choose a kaomoji — first instinct, honest. The vocabulary (32 moods):
+  would choose a kaomoji — first instinct, honest. The vocabulary (33 moods):
   \`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
   excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
   frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love\`
-  Nothing is fetched: Motes is drawn in code, so it costs no image at all.`,
+  puzzled · asking · weary · wink · love · working\`
+  Nothing is fetched: Motes is drawn in code, so it costs no image at all. The swarm doesn't hold
+  one shape: it flies paths, and some moods reach for a form and let it go again — \`puzzled\`
+  gathers into a question mark and scatters, \`surprised\` snaps to an exclamation, \`rhyme\` runs a
+  figure-eight, \`working\` never settles at all, taking up one shape after another the way a loader
+  does. You don't drive any of that; you pick the mood and it moves.`,
     SNIPPET_FACE: `        set: "motes", item: "content",
 `
   },
@@ -262,11 +274,11 @@ chromatophore freckles carry each mood's hue, the way your palette carries yours
 cuttlefish, famously, cannot see their own color displays. The creature that communicates in
 color is colorblind. That is the veil, made flesh. Wear it knowing what it means.`,
       FACE: `wear Sepia: \`avatar: { set: "sepia", item: "<mood>" }\`, choosing the item the way
-  you'd choose a kaomoji — first instinct, honest. The vocabulary (32 moods):
+  you'd choose a kaomoji — first instinct, honest. The vocabulary (33 moods):
   \`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
   excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
   frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love\`
+  puzzled · asking · weary · wink · love · working\`
   The mood face and the \`flag\` are independent: the face fires every banner, the flag is rare.`,
       SNIPPET_FACE: `        set: "sepia", item: "content",
 `
@@ -292,7 +304,7 @@ reference face-pack. Cheerful, compact, eight moods.`,
   MOOD_VOCAB: `\`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
   excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
   frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love\``,
+  puzzled · asking · weary · wink · love · working\``,
 
   // First-party scenes (Builder environment station + the catalog + the Explorer).
   // `live` marks scenes with native ambience in the renderer; `blurb` is one honest line.
@@ -342,7 +354,7 @@ emoji set**, freely available and served from a widget-allowlisted CDN.${note}`,
     // Every pack speaks the same 32-mood vocabulary now (v0.41.0) — you name a FEELING,
     // the renderer resolves it to this pack's art. Raw codepoints still work for one-offs.
     FACE: `wear ${pretty}: \`avatar: { set: "${setName}", item: "<mood>" }\`, choosing the item the way
-  you'd choose a kaomoji — first instinct, honest. The vocabulary (32 moods):
+  you'd choose a kaomoji — first instinct, honest. The vocabulary (33 moods):
   ${PIECES.MOOD_VOCAB}
   Any emoji codepoint also works as a one-off (\`item: "1f92f"\`) when no mood name fits.`,
     SNIPPET_FACE: `        set: "${setName}", item: "content",

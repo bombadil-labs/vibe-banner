@@ -156,7 +156,11 @@
   var MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
-    "awe", "vertigo", "resolute", "puzzled", "asking", "weary", "wink", "love"];
+    "awe", "vertigo", "resolute", "puzzled", "asking", "weary", "wink", "love",
+    "working"];
+  // A pack whose art predates a mood borrows its nearest neighbour rather than blocking the
+  // vocabulary from growing. Sepia's sheet is 32 cells; "working" waits for the next redraw.
+  var MOOD_FALLBACK = { working: "focused" };
 
   // ── MOTES ─────────────────────────────────────────────────────────────────────────
   // The first avatar with NO SHEET. Sepia and Kip are spritesheets — art, pinned by hash,
@@ -199,13 +203,25 @@
     { p: "ring", x: 0.40, y: -0.28, r: 0.13, share: 0.19, align: 0.94, flow: -0.35 },
     { p: "arc", y: 0.14, r: 0.62, ry: 0.36, a0: 0.55, a1: 2.59, share: 0.62, align: 0.9, flow: 0.04 }
   ];
+  // Punctuation the swarm can spell. Each is a path set, so it can be flashed like a face:
+  // the motes gather into the mark, hold it, and let it go again.
+  var MARK_QUESTION = [
+    { p: "poly", glyph: "question", y: -0.04, scale: 1.15, share: 0.80, align: 0.93, flow: 0.16 },
+    { p: "point", y: 0.46, share: 0.20, align: 0.95, cluster: 1 }
+  ];
+  var MARK_BANG = [
+    { p: "line", x1: 0, y1: -0.62, x2: 0, y2: 0.14, share: 0.80, align: 0.93, flow: 0.30 },
+    { p: "point", y: 0.46, share: 0.20, align: 0.95, cluster: 1 }
+  ];
+  var MARK_BOLT = [{ p: "poly", glyph: "bolt", scale: 1.05, align: 0.90, flow: 0.45 }];
+  var LOOSE = [{ p: "ring", r: 0.74, ry: 0.64, align: 0.14, flow: 0.30, spin: 0.22 }];
   var MOTE_MOODS = {
     neutral:    { paths: [{ p: "ring", r: 0.62, ry: 0.52, align: 0.5, flow: 0.04, spin: 0.10 }] },
     content:    { paths: [{ p: "ring", r: 0.55, ry: 0.46, share: 0.65, align: 0.62, flow: 0.06, spin: 0.12 },
                           { p: "ring", r: 0.30, ry: 0.26, share: 0.35, align: 0.55, flow: -0.08, spin: -0.16 }],
                   flash: { every: 11, hold: 1.7, paths: FACE_PATHS } },
-    delighted:  { paths: [{ p: "arc", y: 0.35, r: 0.72, ry: 0.62, a0: 3.4, a1: 6.0, share: 0.55, align: 0.6, flow: 0.30 },
-                          { p: "arc", y: 0.35, r: 0.50, ry: 0.44, a0: 3.4, a1: 6.0, share: 0.35, align: 0.5, flow: 0.42 }] },
+    delighted:  { paths: [{ p: "arc", y: -0.22, r: 0.72, ry: 0.60, a0: 0.42, a1: 2.72, share: 0.55, align: 0.72, flow: 0.30 },
+                          { p: "arc", y: -0.22, r: 0.50, ry: 0.42, a0: 0.42, a1: 2.72, share: 0.35, align: 0.6, flow: 0.42 }] },
     focused:    { paths: [{ p: "ring", r: 0.20, ry: 0.18, align: 0.95, cluster: 0.25, flow: 0.50, spin: 0.50 }] },
     sleepy:     { paths: [{ p: "line", x1: -0.75, y1: 0.34, x2: 0.75, y2: 0.30, align: 0.45, flow: 0.03 }] },
     sheepish:   { paths: [{ p: "ring", x: 0.10, y: 0.18, r: 0.34, ry: 0.30, share: 0.8, align: 0.5, flow: 0.05 }] },
@@ -213,45 +229,80 @@
     thinking:   { paths: [{ p: "spiral", r: 0.55, turns: 1.6, align: 0.70, flow: 0.10, spin: 0.25 }] },
     spark:      { paths: [{ p: "point", y: -0.20, share: 0.45, align: 0.95, cluster: 1 },
                           { p: "ring", y: -0.20, r: 0.55, ry: 0.50, share: 0.55, align: 0.35, flow: 0.55 }] },
-    excited:    { paths: [{ p: "arc", y: 0.40, r: 0.80, ry: 0.72, a0: 3.3, a1: 6.1, share: 0.60, align: 0.45, flow: 0.45 },
+    excited:    { paths: [{ p: "arc", y: -0.28, r: 0.80, ry: 0.70, a0: 0.36, a1: 2.78, share: 0.60, align: 0.55, flow: 0.45 },
                           { p: "ring", r: 0.70, ry: 0.60, share: 0.40, align: 0.20, flow: 0.30, spin: 0.40 }] },
-    surprised:  { paths: [{ p: "ring", r: 0.92, ry: 0.80, align: 0.35, flow: 0.02, spin: 0.05 }] },
+    surprised:  { paths: [{ p: "ring", r: 0.92, ry: 0.80, align: 0.35, flow: 0.02, spin: 0.05 }],
+                  flash: { every: 4.5, hold: 1.5, paths: MARK_BANG } },
     tender:     { paths: [{ p: "ring", x: -0.28, y: -0.05, r: 0.34, ry: 0.32, share: 0.5, align: 0.75, flow: 0.12 },
                           { p: "ring", x: 0.28, y: -0.05, r: 0.34, ry: 0.32, share: 0.5, align: 0.75, flow: -0.12 }] },
     melancholy: { paths: [{ p: "line", x1: -0.55, y1: -0.55, x2: 0.30, y2: 0.75, align: 0.40, flow: 0.09 }] },
     anxious:    { paths: [{ p: "ring", r: 0.72, ry: 0.66, align: 0.08, flow: 0.35, spin: 0.30 }] },
-    mirth:      { paths: [{ p: "arc", y: 0.45, r: 0.60, ry: 0.55, a0: 3.4, a1: 6.0, align: 0.5, flow: 0.28 }] },
-    laugh:      { paths: [{ p: "arc", y: 0.42, r: 0.78, ry: 0.66, a0: 3.3, a1: 6.1, share: 0.7, align: 0.40, flow: 0.55 },
+    mirth:      { paths: [{ p: "arc", y: -0.30, r: 0.62, ry: 0.56, a0: 0.42, a1: 2.72, share: 0.72, align: 0.80, flow: 0.28 },
+                          { p: "ring", x: -0.42, y: -0.34, r: 0.10, share: 0.14, align: 0.90, flow: 0.4 },
+                          { p: "ring", x: 0.42, y: -0.34, r: 0.10, share: 0.14, align: 0.90, flow: -0.4 }] },
+    laugh:      { paths: [{ p: "arc", y: -0.26, r: 0.78, ry: 0.64, a0: 0.36, a1: 2.78, share: 0.7, align: 0.62, flow: 0.55 },
                           { p: "ring", r: 0.50, ry: 0.44, share: 0.3, align: 0.25, flow: 0.40, spin: 0.50 }] },
     groan:      { paths: [{ p: "line", x1: -0.60, y1: 0.42, x2: 0.60, y2: 0.50, align: 0.5, cluster: 0.15, flow: 0.02 }] },
-    oops:       { paths: [{ p: "ring", r: 0.80, ry: 0.70, align: 0.15, flow: 0.60, spin: 0.70 }] },
-    frustrated: { paths: [{ p: "ring", r: 0.34, ry: 0.30, align: 0.60, cluster: 0.20, flow: 0.70, spin: 0.90 }] },
+    oops:       { paths: [{ p: "ring", r: 0.80, ry: 0.70, align: 0.15, flow: 0.60, spin: 0.70 }],
+                  flash: { every: 6, hold: 1.2, paths: MARK_BOLT } },
+    frustrated: { paths: [{ p: "poly", glyph: "wave", scale: 0.85, align: 0.72, flow: 1.10 }] },
     angry:      { paths: [{ p: "ring", r: 0.28, ry: 0.26, align: 0.55, cluster: 0.30, flow: 1.00, spin: 1.30 }] },
     dramatic:   { paths: [{ p: "ring", r: 0.78, ry: 0.62, share: 0.70, align: 0.85, flow: 0.10, spin: 0.16 },
                           { p: "point", share: 0.30, align: 0.90, cluster: 1 }] },
     at_peace:   { paths: [{ p: "ring", r: 0.66, ry: 0.58, align: 0.80, flow: 0.03, spin: 0.05 }] },
     solemn:     { paths: [{ p: "line", x1: -0.70, y1: 0.12, x2: 0.70, y2: 0.12, align: 0.85, flow: 0.02 }] },
-    rhyme:      { paths: [{ p: "ring", x: -0.30, r: 0.36, ry: 0.32, share: 0.5, align: 0.70, flow: 0.12 },
-                          { p: "ring", x: 0.30, r: 0.36, ry: 0.32, share: 0.5, align: 0.70, flow: 0.12 }] },
+    rhyme:      { paths: [{ p: "infinity", r: 0.72, ry: 0.46, align: 0.86, flow: 0.18, spin: 0.22 }] },
     awe:        { paths: [{ p: "ring", r: 0.98, ry: 0.86, align: 0.50, flow: 0.015, spin: 0.03 }] },
     vertigo:    { paths: [{ p: "spiral", r: 0.85, turns: 2.6, align: 0.65, flow: 0.28, spin: 0.70 }] },
-    resolute:   { paths: [{ p: "ring", r: 0.26, ry: 0.24, align: 0.98, cluster: 0.10, flow: 0.22, spin: 0.30 }] },
-    puzzled:    { paths: [{ p: "ring", r: 0.52, ry: 0.46, share: 0.85, align: 0.35, flow: -0.16, spin: -0.22 }] },
+    resolute:   { paths: [{ p: "poly", glyph: "chevron", y: 0.06, scale: 1.15, align: 0.96, flow: 0.26 }] },
+    puzzled:    { paths: [{ p: "ring", r: 0.52, ry: 0.46, share: 0.85, align: 0.35, flow: -0.16, spin: -0.22 }],
+                  flash: { every: 5, hold: 2.1, paths: MARK_QUESTION } },
     asking:     { paths: [{ p: "arc", y: -0.10, r: 0.50, ry: 0.46, a0: 2.6, a1: 6.4, align: 0.60, flow: 0.10 }] },
     weary:      { paths: [{ p: "line", x1: -0.62, y1: 0.24, x2: 0.62, y2: 0.44, align: 0.40, flow: 0.04 }] },
     wink:       { paths: [{ p: "ring", r: 0.55, ry: 0.48, align: 0.60, flow: 0.08, spin: 0.12 }],
                   flash: { every: 5.5, hold: 1.9, paths: FACE_PATHS } },
     love:       { paths: [{ p: "ring", x: -0.26, y: -0.12, r: 0.30, ry: 0.30, share: 0.5, align: 0.85, flow: 0.14 },
                           { p: "ring", x: 0.26, y: -0.12, r: 0.30, ry: 0.30, share: 0.5, align: 0.85, flow: -0.14 }],
-                  flash: { every: 7, hold: 2.2, paths: FACE_PATHS } }
+                  flash: { every: 7, hold: 2.2, paths: FACE_PATHS } },
+    // The loader. Never settles into one shape: it takes hold of a form, works it, lets go,
+    // reaches for the next. Effort that is visibly ongoing rather than a pose of effort.
+    working:    { hold: 2.4, scatter: LOOSE, seq: [
+                    [{ p: "ring", r: 0.62, ry: 0.54, share: 0.5, align: 0.90, flow: 0.55, spin: 0.45 },
+                     { p: "ring", r: 0.30, ry: 0.26, share: 0.5, align: 0.90, flow: -0.75, spin: -0.65 }],
+                    [{ p: "infinity", r: 0.68, ry: 0.42, align: 0.90, flow: 0.42, spin: 0.18 }],
+                    [{ p: "spiral", r: 0.72, turns: 2.2, align: 0.86, flow: 0.34, spin: 0.45 }],
+                    [{ p: "poly", glyph: "wave", align: 0.88, flow: 0.55 }],
+                    [{ p: "ring", r: 0.44, ry: 0.40, align: 0.92, cluster: 0.55, flow: 0.85, spin: 0.55 }]
+                  ] }
   };
-  function motePathsFor(mood, t) {                             // flash swaps the whole set in, then lets it go
+  // Three ways a mood can move. `paths` is a standing shape. `flash` swaps another set in
+  // briefly and lets it go — assemble, hold, diffuse. `seq` never settles: it walks a list,
+  // holding each for a few seconds, which is what makes a loader feel like ongoing effort.
+  function motePathsFor(mood, t) {
     var M = MOTE_MOODS[mood] || MOTE_MOODS.content;
+    if (M.seq && M.seq.length) {
+      var hold = M.hold || 2.6, n = M.seq.length;
+      var slot = Math.floor(t / hold) % n; if (slot < 0) slot += n;
+      var into = (t % hold) / hold;
+      if (M.scatter && into > 0.86) return M.scatter;          // let go before reaching for the next one
+      return M.seq[slot];
+    }
     if (M.flash && (t % M.flash.every) < M.flash.hold) return M.flash.paths;
     return M.paths;
   }
+  // Glyph outlines in the same normalised space as every other path: x,y in roughly [-1,1],
+  // y down. Traced as one stroke so `flow` walks the pen along the letterform.
+  var GLYPHS = {
+    question: [[-0.30, -0.34], [-0.25, -0.55], [-0.07, -0.68], [0.13, -0.66], [0.30, -0.53],
+               [0.32, -0.34], [0.19, -0.19], [0.05, -0.05], [0.00, 0.16]],
+    chevron:  [[-0.42, 0.14], [-0.21, -0.16], [0.00, -0.44], [0.21, -0.16], [0.42, 0.14]],
+    bolt:     [[0.22, -0.72], [-0.26, -0.04], [0.04, -0.04], [-0.20, 0.72],
+               [0.28, 0.00], [-0.02, 0.00], [0.22, -0.72]],
+    wave:     [[-0.78, 0.10], [-0.46, -0.22], [-0.14, 0.10], [0.18, 0.42], [0.50, 0.10], [0.78, -0.18]]
+  };
+  function polyPoints(pp) { return pp.pts || GLYPHS[pp.glyph] || GLYPHS.question; }
   function motePointAt(pp, u, t, cx, cy, R) {
-    var TAU = 6.28318, a, rr;
+    var TAU = 6.28318, a, rr, i;
     var ox = cx + (pp.x || 0) * R, oy = cy + (pp.y || 0) * R, spin = (pp.spin || 0) * t;
     var r1 = pp.r == null ? 0.6 : pp.r, r2 = pp.ry == null ? r1 : pp.ry;
     switch (pp.p) {
@@ -265,10 +316,42 @@
       case "spiral":
         a = u * TAU * (pp.turns || 2) + spin; rr = r1 * R * (0.15 + 0.85 * u);
         return [ox + Math.cos(a) * rr, oy + Math.sin(a) * rr * 0.9];
+      case "infinity":                                         // Gerono lemniscate: closed, so it spins cleanly
+        a = u * TAU;
+        var lx = Math.cos(a) * r1, ly = Math.sin(a) * Math.cos(a) * r2 * 1.6;
+        if (spin) { var c = Math.cos(spin), s2 = Math.sin(spin), tx = lx * c - ly * s2; ly = lx * s2 + ly * c; lx = tx; }
+        return [ox + lx * R, oy + ly * R];
+      case "poly":                                             // even spacing needs arc length, not vertex index
+        var P = polyPoints(pp), segs = [], tot = 0;
+        for (i = 0; i < P.length - 1; i++) {
+          var dx = P[i + 1][0] - P[i][0], dy = P[i + 1][1] - P[i][1];
+          var len = Math.sqrt(dx * dx + dy * dy); segs.push(len); tot += len;
+        }
+        if (tot <= 0) return [ox, oy];
+        var want = u * tot, acc = 0, seg = 0, fr2 = 0;
+        for (i = 0; i < segs.length; i++) {
+          if (acc + segs[i] >= want || i === segs.length - 1) { seg = i; fr2 = segs[i] > 0 ? (want - acc) / segs[i] : 0; break; }
+          acc += segs[i];
+        }
+        fr2 = Math.max(0, Math.min(1, fr2));
+        var gx = P[seg][0] + (P[seg + 1][0] - P[seg][0]) * fr2;
+        var gy = P[seg][1] + (P[seg + 1][1] - P[seg][1]) * fr2;
+        var sc = pp.scale == null ? 1 : pp.scale;
+        if (spin) { var c2 = Math.cos(spin), s3 = Math.sin(spin), tx2 = gx * c2 - gy * s3; gy = gx * s3 + gy * c2; gx = tx2; }
+        return [ox + gx * sc * R, oy + gy * sc * R];
       default:
         a = u * TAU + spin;
         return [ox + Math.cos(a) * r1 * R, oy + Math.sin(a) * r2 * R];
     }
+  }
+  // Closed curves wrap seamlessly at u=1. Open ones do NOT: wrapping teleports a mote from
+  // the far end back to the near one and the spring drags it across the whole shape — the
+  // stray that kept shooting off the end of a line. Open paths ping-pong instead.
+  function pathClosed(pp) {
+    if (pp.closed != null) return !!pp.closed;
+    if (pp.p === "line" || pp.p === "spiral" || pp.p === "poly") return false;
+    if (pp.p === "arc") return Math.abs((pp.a1 == null ? 6.28318 : pp.a1) - (pp.a0 || 0)) > 6.2;
+    return true;                                               // ring, infinity, point
   }
   function moteSlot(paths, n, i) {                             // which path is this mote flying, and where in the queue?
     var start = 0;
@@ -293,7 +376,9 @@
     var focus = pp.focus == null ? 0.5 : pp.focus;
     var base = s.n > 1 ? s.k / s.n : 0.5;
     var u = base + (focus - base) * cluster;                   // cluster pulls every mote toward one point of the curve
-    u = (u + t * (pp.flow || 0)) % 1; if (u < 0) u += 1;       // flow carries them ALONG it
+    u = u + t * (pp.flow || 0);                                // flow carries them ALONG it
+    if (pathClosed(pp)) { u = u % 1; if (u < 0) u += 1; }
+    else { u = Math.abs(u) % 2; if (u > 1) u = 2 - u; }         // open: ping-pong, never teleport
     var pt = motePointAt(pp, u, t, cx, cy, R);
     return { x: pt[0], y: pt[1], align: pp.align == null ? 0.6 : pp.align };
   }
@@ -305,7 +390,7 @@
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
   var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
-  var SEPIA_MOODS = MOODS;                                     // Sepia covers the whole vocabulary
+  var SEPIA_MOODS = MOODS.slice(0, 32);                        // the sheet's 32 cells; later moods fall back
   // ONE VOCABULARY FOR EVERY FACE (v0.41.0, the maintainer's call): the emoji packs used
   // to take raw codepoints, so a skill's face vocabulary changed shape depending on which
   // pack you picked. Now every pack speaks Sepia's 32 moods — the reporter always names a
@@ -340,7 +425,8 @@
       return { url: KIP_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 1, index: i };
     },
     "sepia": function (item) {
-      var i = SEPIA_MOODS.indexOf(item); if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
+      var i = SEPIA_MOODS.indexOf(MOOD_FALLBACK[item] || item);
+      if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
       return {
         url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 12, index: i,
         anim: {
@@ -451,7 +537,10 @@
   // details ships the window alone: a square avatar tile, no field, no readout, no
   // weather. The flat form every deployed skill emits is untouched and still normalises
   // to the same internals, so nothing in the wild breaks.
-  var DETAIL_KEYS = ["readout", "seems", "feel", "trying", "noticing", "palette", "field",
+  // `palette` is deliberately NOT a detail. It colours the avatar itself — Sepia's
+  // chromatophores, the motes' own light — so it belongs beside `avatar`, not inside the
+  // optional readout. A square tile with a palette is a complete, coloured thing.
+  var DETAIL_KEYS = ["readout", "seems", "feel", "trying", "noticing", "field",
     "focus", "engagement", "stance", "coherence", "consonance", "flag", "languages"];
   function normalize(p) {
     p = p || {};
@@ -470,6 +559,7 @@
     DETAIL_KEYS.forEach(function (k2) {
       if (d[k2] !== undefined) { out[k2] = d[k2]; out.__square = false; }
     });
+    if (out.palette === undefined && d.palette !== undefined) out.palette = d.palette;  // tolerated, but never widens the tile
     return out;
   }
   function layout(p, o) {
@@ -2011,5 +2101,8 @@
     catch (e) { try { el.innerHTML = buildSVG(payload); } catch (_) { el.textContent = "vibe render error"; } }
   };
   root.vibe.buildSVG = buildSVG;
-  if (typeof module !== "undefined" && module.exports) module.exports = { buildSVG: buildSVG };
+  if (typeof module !== "undefined" && module.exports) module.exports = {   // CJS only: costs the browser bundle nothing
+    buildSVG: buildSVG,
+    __motes: { pointAt: motePointAt, target: moteTarget, pathsFor: motePathsFor, closed: pathClosed, moods: MOTE_MOODS, N: MOTE_N }
+  };
 })(typeof window !== "undefined" ? window : this);

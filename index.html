@@ -200,16 +200,16 @@ Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/ma
 &lt;script&gt;
   vibe(document.getElementById('v'), {
     avatar: {                                  // who you are, and where
-      set: "sepia", item: "content",           //   any pack; all of them speak the same 32 moods
+      set: "sepia", item: "content",           //   any pack; all of them speak the same 33 moods
       scene: { url: "…", opacity: 0.6 }        //   optional; omit for an empty window
     },
+    palette: ["#7d8fb8"],                      // top level: it colours YOU as well as the field
     details: {                                 // everything shown beside the window
       readout: [                               //   up to 5 rows, any labels you like
         { label: "user", value: "…" },
         { label: "mood", value: "…" },
         { label: "goal", value: "…" }
       ],
-      palette: ["#7d8fb8"],                    //   0+ mood colours → the field's three columns
       focus: 0.5, engagement: 0.5,
       stance: 0.5, coherence: 0.8              //   both optional; omitted reads as neutral
     }
@@ -217,7 +217,9 @@ Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/ma
 &lt;/script&gt;</pre>
     <p class="note">Leave <code>details</code> out entirely and you get the window alone — a small
     square avatar tile, no field, no readout, no weather. Useful anywhere you want the creature
-    without the commentary.</p>
+    without the commentary. <code>palette</code> still applies: it sits outside <code>details</code>
+    because it isn't one. It tints the creature itself — Sepia's chromatophores, the motes' own
+    light — so a bare tile is still a coloured thing.</p>
     <p class="note">The older flat form — <code>face</code>, <code>seems</code>, <code>feel</code>,
     <code>trying</code>, <code>noticing</code>, and the values at the top level — still works and
     always will: every skill deployed before this split keeps rendering unchanged.</p>
@@ -258,6 +260,7 @@ function mountTab(tab) {
   if (SP.tidepool) avatar.scene = { url: SP.tidepool.url, opacity: 0.6, live: SP.tidepool.live };
   queueMount("landing", document.getElementById("hero"), {
     avatar: avatar,
+    palette: ["#d99a5e", "#7d8fb8"],
     details: {
       readout: [
         { label: "user", value: "curious enough to click through — welcome" },
@@ -265,7 +268,6 @@ function mountTab(tab) {
         { label: "note", value: "you're wondering if this is gimmick or genuine; fair" },
         { label: "goal", value: "show you what an honest mood banner looks like" }
       ],
-      palette: ["#d99a5e", "#7d8fb8"],
       focus: 0.7, engagement: 0.85
     }
   });
@@ -728,9 +730,9 @@ route();
 
   // — Face
   var c2 = card("face");
-  c2.appendChild(callout("Pick my face — that's the whole station. Every pack speaks the same 32 moods now, so the rest of the file doesn't change when you switch me. Try them all on —", { m: "delighted", e: "1f604", k: "( ˶ˆ ᗜ ˆ˵ )" }, ["see them in the Gallery →", "#gallery"]));
+  c2.appendChild(callout("Pick my face — that's the whole station. Every pack speaks the same 33 moods now, so the rest of the file doesn't change when you switch me. Try them all on —", { m: "delighted", e: "1f604", k: "( ˶ˆ ᗜ ˆ˵ )" }, ["see them in the Gallery →", "#gallery"]));
   var faceSel = document.createElement("select"); faceSel.style.cssText = SEL + "margin:0 0 8px;";
-  [["sepia", "Sepia — the cuttlefish (32 moods, alive)"], ["motes", "Motes — a swarm, drawn in code (32 moods)"], ["kip", "Kip — the mascot (8 moods)"], ["kaomoji", "kaomoji (improvised text)"], ["twemoji", "Twemoji"], ["custom", "custom (your own image URLs)"]].forEach(function (o) {
+  [["sepia", "Sepia — the cuttlefish (33 moods, alive)"], ["motes", "Motes — a swarm, drawn in code (33 moods)"], ["kip", "Kip — the mascot (8 moods)"], ["kaomoji", "kaomoji (improvised text)"], ["twemoji", "Twemoji"], ["custom", "custom (your own image URLs)"]].forEach(function (o) {
     var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; faceSel.appendChild(op);
   });
   faceSel.value = S.face;
@@ -1229,7 +1231,8 @@ route();
     var details = {};
     details.readout = rows.filter(function (r) { return r[1] !== ""; }).map(function (r) { return { label: r[0], value: r[1] }; });
     if (!details.readout.length) delete details.readout;      // an empty readout with nothing else → the square tile, which is the honest preview of that
-    if (pal.length) details.palette = pal.slice();
+    // palette is deliberately NOT put in details — it belongs beside avatar, and keeping it
+    // out means a palette alone still previews as the square tile rather than widening it
     if (X.fieldOn !== false) { details.focus = X.focus == null ? 0.7 : X.focus; details.engagement = X.engagement == null ? 0.85 : X.engagement; }
     if (X.stanceOn) details.stance = X.stance == null ? 0.5 : X.stance;
     if (X.cohOn) details.coherence = X.coherence == null ? 1 : X.coherence;
@@ -1243,7 +1246,9 @@ route();
     // chosen, empty (frame only) when not, so composition is visible either way
     avatar.scene = su ? { url: su, opacity: X.op } : {};
     if (su && sc && sc.live) avatar.scene.live = sc.live;
-    var payload = { avatar: avatar, details: details };
+    var payload = { avatar: avatar };
+    if (pal.length) payload.palette = pal.slice();
+    payload.details = details;
     mnt.innerHTML = "";
     try { vibe(mnt, payload); } catch (e) { mnt.textContent = "err: " + e.message; }
     cap.textContent = sc && sc.blurb ? "the " + X.scene + " — " + sc.blurb : (su ? "custom scene" : "the empty window — pick an environment to fill it");

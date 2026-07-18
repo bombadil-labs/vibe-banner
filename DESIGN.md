@@ -404,6 +404,58 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   gallery, mapping each demo's state to a weather) it lives in the demo data, not the
   renderer.
 
+- **"Almost all of these reduce to spinning circles" (v0.46.0).** The maintainer counted what
+  I had not: twenty of thirty-two Motes moods were a ring with different numbers on it. Not a
+  style — I kept reaching for the primitive I had already built, which is the failure mode of
+  a good primitive. The fix was more SHAPES, not more parameters: a `poly` path type that
+  walks a point list by ARC LENGTH (so motes space evenly along a letterform, not per vertex),
+  a Gerono lemniscate for a true closed figure-eight, and glyph outlines the swarm can spell.
+  Ring-only-and-static went 20 → 9, and the nine that remain — neutral, at_peace, awe, angry,
+  anxious, booped — are moods where a circling swarm is genuinely the right answer.
+
+- **The stray mote was a bug, not a flourish (v0.46.0).** The maintainer described "one more
+  shooting off and back at one end" of the straight-line moods, and called it distracting on
+  `solemn`. It was a wrap: `u = (u + t*flow) % 1` is seamless on a closed ring but on an OPEN
+  path u=1 is the far end and u=0 the near one, so each cycle teleported a mote the length of
+  the line and the spring dragged it visibly back across. Open paths now ping-pong on a
+  triangle wave. Measured worst single-frame step over the line moods: 140px → 0.47px at
+  R=100. Closedness is derived (`ring`/`infinity` closed, `line`/`poly`/`spiral` open, `arc`
+  closed only if it spans nearly a full turn) with an explicit override.
+
+- **A rainbow is a frown (v0.46.0).** `mirth` was built as an arch — I was thinking fountain,
+  or literally rainbow. But an arch bulges UP, and a mouth that bulges up is a frown; the
+  maintainer read it instantly and correctly. Four moods had it (`mirth`, `delighted`,
+  `laugh`, `excited`), all sweeping a0≈3.3→a1≈6.1 with the centre below. Flipped to a
+  downward bowl. Guarded by a test that sorts motes by x and asserts the middle sits BELOW
+  the ends, so no future arc can quietly become a frown again.
+
+- **Marks the swarm can spell, as flashes rather than poses (v0.46.0).** The maintainer asked
+  for a question mark and an exclamation point, and — importantly — for shapes that "turn on
+  and turn off so the motes periodically assemble into it then diffuse again." That last part
+  is what makes them work: as a standing shape a punctuation mark is a logo, but as a `flash`
+  it is a gesture. `puzzled` gathers into a `?` and lets go; `surprised` snaps to a `!`;
+  `oops` throws a lightning bolt. `rhyme` took the figure-eight, which is the right shape for
+  a thing that comes back around.
+
+- **`working`, and packs that outlive their art (v0.46.0).** The maintainer noticed the
+  vocabulary had no word for sustained effort — "Claude Code would use it a lot" — which is
+  true and was a real gap: `focused` is attention narrow, `resolute` is determination, and
+  neither is the experience of grinding at something. Motes renders it as a genuine loader
+  via a third movement mode: `seq` walks a list of path sets, holding each a couple of
+  seconds and scattering between, so it NEVER settles. That is the point — effort visibly
+  ongoing rather than a pose of effort. Adding a 33rd mood would have meant regenerating
+  Sepia's 32-cell sheet, so instead `MOOD_FALLBACK` lets a pack whose art predates a mood
+  borrow its nearest neighbour. The vocabulary can now grow without every pack redrawing.
+
+- **`palette` is not a detail (v0.46.0).** It had lived inside `details` since the beginning,
+  from back when the field of colour was the only thing it touched. Sepia's chromatophores
+  broke that, and Motes settled it — the maintainer's call: "having the palette inform the
+  whole banner rather than living in the optional details is going to have to be the norm."
+  It now sits at the top level beside `avatar`, and crucially does NOT widen the tile: a
+  details-free square with a palette is a complete, coloured thing. A palette found in
+  `details` is still honoured, because punishing the old shape would be pointless — but it no
+  longer forces the wide layout.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately
