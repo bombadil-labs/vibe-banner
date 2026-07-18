@@ -489,9 +489,14 @@
     out.push('<title>Mood annotation</title><desc>Ambient mood field with a user read and a first-person feel/intent readout</desc>');
     out.push('<style>' + STYLE + '</style>');
     out.push(L.sceneSVG);                                     // the window draws on every banner
-    var RXs = L.portrait.x + L.portrait.s + 2;                // the firm boundary: field and details stay right of the window
+    // THE FULL-BLEED WEATHER (v0.39.0, the maintainer's call): the field and every
+    // banner detail cover the WHOLE rectangle — visible around the window's margins,
+    // the left oval running behind it. The window is a hole through the weather: an
+    // even-odd clip excludes only its rounded interior, where the avatar's world shows.
     var wrid = "vwr" + (++SCENE_IDS);
-    out.push('<defs><clipPath id="' + wrid + '"><rect x="' + RXs + '" y="0" width="' + (W - RXs) + '" height="' + L.H + '"/></clipPath></defs><g clip-path="url(#' + wrid + ')">');
+    var wpt = L.portrait, wps = wpt.s, wpi = wps - 20;
+    out.push('<defs><clipPath id="' + wrid + '"><path clip-rule="evenodd" d="M0 0H' + W + 'V' + L.H + 'H0Z' +
+      'M' + (wpt.x + 10) + ' ' + wpt.y + 'h' + wpi + 'a10 10 0 0 1 10 10v' + wpi + 'a10 10 0 0 1-10 10h-' + wpi + 'a10 10 0 0 1-10-10v-' + wpi + 'a10 10 0 0 1 10-10z"/></clipPath></defs><g clip-path="url(#' + wrid + ')">');
     var soft = 1 - L.conson;                                  // consonance: split → diffuse washes (bigger, thinner)
     var sizeMul = (1 + 0.22 * soft) * (L.awe ? 1.18 : 1);     // awe: the field swells while the face shrinks
     out.push('<g opacity="0.5">');
@@ -563,13 +568,25 @@
       ".vo .fg{font-family:var(--font-sans,ui-sans-serif,system-ui,sans-serif);font-size:0.88em;opacity:0.95}" +
       ".vo-panel{pointer-events:auto;max-height:100%;overflow-y:auto;padding:0.32em 0.7em 0.36em;border-radius:10px;" +
       "background:rgba(255,250,240,0.22);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgba(90,70,50,0.08)}" +
-      ".vo-tg{position:absolute;top:0;right:0;pointer-events:auto;background:none;border:none;cursor:pointer;font-size:0.85em;line-height:1;padding:2px 4px;color:inherit;opacity:0.4;transition:opacity .2s}" +
-      ".vo-tg:hover{opacity:0.85}" +
-      ".vcollapsed .vo-panel{display:flex;flex-wrap:wrap;gap:0.28em;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;overflow:visible}" +
-      ".vcollapsed .vo-panel .row{margin:0}" +
-      ".vcollapsed .vo-panel .row span:not(.pill){display:none}" +                              // collapsed: bare pills, values on hover via the row tooltip
+      ".vo-vt{position:absolute;top:-0.1em;left:0;z-index:3;pointer-events:auto;display:flex;gap:2px;opacity:0.5;transition:opacity .2s}" +   // the view toggle, over the readout's upper-left
+      ".vo-vt:hover{opacity:0.95}" +
+      ".vo-vt span{cursor:pointer;font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.6em;padding:0.12em 0.62em 0.18em;border-radius:1em;background:rgba(69,49,24,0.26);color:#f6ead0;letter-spacing:0.05em;text-shadow:none}" +
+      ".vo-vt span.on{background:rgba(69,49,24,0.72)}" +
+      ".vo-stats{pointer-events:auto;padding:0.55em 0.9em 0.6em;border-radius:10px;max-height:100%;overflow-y:auto;" +
+      "background:rgba(255,250,240,0.22);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgba(90,70,50,0.08)}" +
+      ".vo-stats .srow{display:flex;align-items:center;gap:0.65em;margin:0.4em 0;cursor:help}" +
+      ".vo-stats .slbl{font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.68em;width:8.2em;flex:none;padding:0.1em 0.6em 0.14em;border-radius:1em;background:rgba(69,49,24,0.58);color:#f6ead0;letter-spacing:0.04em;text-shadow:none}" +
+      ".vo-stats .strk{flex:1;height:0.72em;border-radius:1em;background:rgba(90,70,50,0.2);position:relative;box-shadow:inset 0 1px 2px rgba(40,28,12,0.25)}" +
+      ".vo-stats .sfil{position:absolute;left:0;top:0;bottom:0;border-radius:1em;min-width:0.72em}" +
+      ".vo-stats .smk{position:absolute;top:-0.22em;width:0.42em;height:1.16em;border-radius:0.3em;background:#5c4320;box-shadow:0 0 0 1.5px rgba(246,234,208,0.7)}" +
+      ".vo-stats .sval{font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.62em;width:2.4em;flex:none;text-align:right;opacity:0.75}" +
+      ".vo-stats .send{font-family:var(--font-sans,ui-sans-serif,sans-serif);font-size:0.56em;opacity:0.6;flex:none}" +
+      ".vo-stats .swch{width:1.15em;height:1.15em;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1.5px rgba(40,28,12,0.28)}" +
       "@media (prefers-color-scheme:dark){.vo{color:#f6ead0;text-shadow:0 1px 2px rgba(36,26,6,0.6)}" +
       ".vo .pill{background:rgba(216,197,160,0.24);color:#f6ead0}" +
+      ".vo-stats .slbl{background:rgba(216,197,160,0.24)}" +
+      ".vo-stats .smk{background:#f6ead0;box-shadow:0 0 0 1.5px rgba(36,26,6,0.6)}" +
+      ".vo-stats{background:rgba(30,24,16,0.22);box-shadow:inset 0 0 0 1px rgba(246,234,208,0.08)}" +
       ".vo-panel{background:rgba(30,24,16,0.22);box-shadow:inset 0 0 0 1px rgba(246,234,208,0.08)}}" +
       ".vdrama .vo{font-family:var(--font-voice,Georgia,serif)}" +
       ".vdrama .vo .fr,.vdrama .vo .fw,.vdrama .vo .fg{font-weight:600;letter-spacing:0.04em}" +
@@ -595,22 +612,61 @@
       pn.appendChild(row);
     });
     ov.appendChild(pn); wrap.appendChild(ov);
-    // The readout collapses to bare pills (values on hover) so the field can be watched
-    // unobstructed. The preference persists where storage allows — set once, kept.
-    var vmin = false;
-    try { vmin = localStorage.getItem("vibeReadout") === "min"; } catch (e) { }
-    if (vmin) wrap.classList.add("vcollapsed");
-    var tg = document.createElement("button");
-    tg.className = "vo-tg"; tg.textContent = vmin ? "▸" : "▾";
-    tg.title = vmin ? "expand readout" : "collapse readout to pills";
-    tg.addEventListener("click", function () {
-      vmin = !vmin;
-      wrap.classList.toggle("vcollapsed", vmin);
-      tg.textContent = vmin ? "▸" : "▾";
-      tg.title = vmin ? "expand readout" : "collapse readout to pills";
-      try { localStorage.setItem("vibeReadout", vmin ? "min" : "full"); } catch (e) { }
+    // THE STATS VIEW (v0.39.0): the collapse-to-pills button is gone (it fought the text
+    // it hid). In its place a view toggle over the readout's upper-left — TEXT (the prose
+    // rows) vs STATS (explicit instruments for the numeric params: big legible gauges,
+    // each with a tooltip explaining what it means). The ovals stay pure atmosphere.
+    var st = document.createElement("div");
+    st.className = "vo vo-stats";
+    var num = function (v, d) { v = v == null ? d : +v; return isNaN(v) ? d : Math.max(0, Math.min(1, v)); };
+    var pal0 = (p.palette && p.palette.length && p.palette[0]) || "#b89ab0";
+    var gauge = function (lbl, v, fill, tip) {
+      var r2 = document.createElement("div"); r2.className = "srow"; r2.title = tip;
+      r2.innerHTML = '<span class="slbl">' + lbl + '</span><span class="strk"><span class="sfil" style="width:' +
+        g(v * 100) + '%;background:' + fill + '"></span></span><span class="sval">' + v.toFixed(2) + '</span>';
+      st.appendChild(r2);
+    };
+    gauge("focus", num(p.focus, 0.5), lerpHex(pal0, "#5c4320", 0.15),
+      "focus — 0: scattered across many things, 1: locked tight on one");
+    gauge("engagement", num(p.engagement, 0.7), lerpHex(pal0, "#e0994e", 0.35),
+      "engagement — 0: checked out, 1: fully lit. Reported straight; boredom is a valid reading");
+    if (p.stance != null) {                                    // presence is signal: optional params only render when reported
+      var sv = num(p.stance, 0.5);
+      var r3 = document.createElement("div"); r3.className = "srow";
+      r3.title = "stance — a mode, not confidence: 0 asking (holding questions open), 1 telling (standing on it)";
+      r3.innerHTML = '<span class="slbl">stance</span><span class="send">asking</span><span class="strk"><span class="smk" style="left:calc(' +
+        g(sv * 100) + '% - 0.21em)"></span></span><span class="send">telling</span>';
+      st.appendChild(r3);
+    }
+    if (p.consonance != null) gauge("consonance", num(p.consonance, 1), lerpHex(pal0, "#8fae8f", 0.4),
+      "consonance — when several feelings share the palette: 0 grinding against each other, 1 harmonizing");
+    if (p.palette && p.palette.length) {
+      var r4 = document.createElement("div"); r4.className = "srow";
+      r4.title = "palette — current feelings as colors, in descending order of intensity";
+      var sw = '<span class="slbl">palette</span>';
+      [].concat(p.palette).slice(0, 6).forEach(function (c) { sw += '<span class="swch" style="background:' + c + '" title="' + esc(String(c)) + '"></span>'; });
+      r4.innerHTML = sw;
+      st.appendChild(r4);
+    }
+    ov.appendChild(st);
+    var view = "text";
+    try { if (localStorage.getItem("vibeView") === "stats") view = "stats"; } catch (e) { }
+    var vt = document.createElement("div");
+    vt.className = "vo vo-vt";
+    vt.innerHTML = '<span data-v="text">text</span><span data-v="stats">stats</span>';
+    var applyView = function () {
+      pn.style.display = view === "text" ? "" : "none";
+      st.style.display = view === "stats" ? "" : "none";
+      vt.querySelectorAll("span").forEach(function (s2) { s2.className = s2.getAttribute("data-v") === view ? "on" : ""; });
+    };
+    applyView();
+    vt.addEventListener("click", function (e) {
+      var v2 = e.target && e.target.getAttribute && e.target.getAttribute("data-v");
+      if (!v2 || v2 === view) return;
+      view = v2; applyView();
+      try { localStorage.setItem("vibeView", view); } catch (e2) { }
     });
-    ov.appendChild(tg);
+    ov.appendChild(vt);
     var fpill = null;
     if (L.flagName) {                                          // the flag caption as a pill, tucked into the window's bottom-left corner
       fpill = document.createElement("div");
@@ -1403,8 +1459,17 @@
           }
         }
 
-        ctx.save();                                            // everything below — field, dims, storms, marks — stays right of the boundary
-        ctx.beginPath(); ctx.rect(RX, 0, W - RX, H); ctx.clip();
+        ctx.save();                                            // FULL-BLEED WEATHER (v0.39.0): field, dims, storms cover the whole banner —
+        ctx.beginPath();                                       // visible around the window's margins; only the window's rounded interior is
+        ctx.rect(0, 0, W, H);                                  // excluded (an even-odd hole through the weather, where the avatar's world shows)
+        var wcp = L.portrait, wcs = wcp.s;
+        ctx.moveTo(wcp.x + 10, wcp.y);
+        ctx.arcTo(wcp.x + wcs, wcp.y, wcp.x + wcs, wcp.y + wcs, 10);
+        ctx.arcTo(wcp.x + wcs, wcp.y + wcs, wcp.x, wcp.y + wcs, 10);
+        ctx.arcTo(wcp.x, wcp.y + wcs, wcp.x, wcp.y, 10);
+        ctx.arcTo(wcp.x, wcp.y, wcp.x + wcs, wcp.y, 10);
+        ctx.closePath();
+        ctx.clip("evenodd");
 
         // --- the face itself: FLAGS NO LONGER TOUCH IT (v0.31.0). A flag is banner
         // WEATHER — light, storms, marks, atmosphere; the face belongs entirely to the
