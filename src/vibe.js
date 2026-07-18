@@ -716,7 +716,7 @@
     // the registry: >=0.7 → one full startled puff shortly after arrival; smaller →
     // recurring nervous wisps on a seeded cadence. Drawn in the window, behind the face.
     var inkAmt = (fm && fm.kind === "sprite" && fm.anim && fm.anim.ink && fm.anim.ink[fm.index]) || 0;
-    var inkBursts = [], inkFired = false, boopFx = null;
+    var inkBursts = [], inkFired = false, inkSeq = 0, boopFx = null;
     // The startle reflex: booping an inked creature gets a REACTION — recoil away from
     // the finger, a squash-and-boing, a poke-ripple at the spot, and a puff of ink.
     // Pure visuals (no message), so it fires on plain pages too; the chat boop stays
@@ -730,7 +730,7 @@
           cx: br2.width ? (e.clientX - br2.left) / br2.width * 64 : 32,
           cy: br2.height ? (e.clientY - br2.top) / br2.height * 64 : 32
         };
-        inkBursts.push({ t0: null, s: 0.85 });
+        inkBursts.push({ t0: null, s: 0.85, k: inkSeq++ });
       });
     }
     if (live && p.play !== false) {                            // tap the water, get ripples
@@ -911,17 +911,17 @@
 
         // --- ink: a sepia cloud expelled behind the body, dispersing in the window ---
         if (inkAmt || inkBursts.length) {
-          if (inkAmt >= 0.7) { if (!inkFired && t > 0.7) { inkBursts.push({ t0: t, s: inkAmt }); inkFired = true; } }
+          if (inkAmt >= 0.7) { if (!inkFired && t > 0.7) { inkBursts.push({ t0: t, s: inkAmt, k: inkSeq++ }); inkFired = true; } }
           else if (inkAmt) {
             var iper = 7 + (L.seed % 5);
             if (((t + (L.seed % 11) * 0.7) % iper) < 0.05 &&
-              (!inkBursts.length || inkBursts[inkBursts.length - 1].t0 == null || t - inkBursts[inkBursts.length - 1].t0 > 2.5)) inkBursts.push({ t0: t, s: inkAmt });
+              (!inkBursts.length || inkBursts[inkBursts.length - 1].t0 == null || t - inkBursts[inkBursts.length - 1].t0 > 2.5)) inkBursts.push({ t0: t, s: inkAmt, k: inkSeq++ });
           }
           if (inkBursts.length > 4) inkBursts.splice(0, inkBursts.length - 4);
-          inkBursts.forEach(function (b, bi2) {
+          inkBursts.forEach(function (b) {
             if (b.t0 == null) b.t0 = t;                        // boop bursts late-bind their clock
             var iage = t - b.t0; if (iage < 0 || iage > 4.5) return;
-            var pr2 = mulberry32(L.seed + bi2 * 977 + 29);
+            var pr2 = mulberry32(L.seed + b.k * 977 + 29);     // the burst's OWN seed — index-based seeding made surviving clouds teleport when the pool shifted
             var ptw = L.portrait, pss = ptw.s;
             ctx.save();
             ctx.beginPath();                                   // clip to the window: ink disperses in the water, not over the banner
@@ -939,14 +939,16 @@
             var baseAng = pr2() * 6.2832;                      // each burst sprays in its own randomized direction
             // lifecycle: JET (fast, dense) → EXPAND + LINGER (the cloud hangs in the
             // water, slowly swelling and drifting) → DISSOLVE (thins away by 4.5s)
-            var ial0 = iage < 0.4 ? 0.6 : iage < 2.6 ? 0.45 : 0.45 * (1 - (iage - 2.6) / 1.9);
+            var ial0 = (iage < 0.4 ? 0.6 : iage < 2.6 ? 0.45 : 0.45 * (1 - (iage - 2.6) / 1.9)) *
+              Math.min(1, iage / 0.3);                         // ramp IN: fourteen overlapped particles at age zero stacked into an instant dark blob — the cloud must grow, not snap
             for (var ik = 0; ik < 14; ik++) {
+              var pAge = iage - ik * 0.045; if (pAge < 0) continue;   // particles emerge staggered, not all at once
               var ia = baseAng + (pr2() - 0.5) * 2.6;          // a wide fan — the cloud wraps around her, biased toward the burst direction
               var ispd = (8 + pr2() * 24) * b.s;               // moderate spread: it hangs behind her rather than shooting away
-              var idist = ispd * (1 - Math.exp(-iage * 1.5));  // jet, then hang
-              var ixp = iox + Math.cos(ia) * idist + Math.sin(iage * 0.7 + ik) * iage * 1.2;   // lingering cloud sways with the water
-              var iyp = ioy + Math.sin(ia) * idist * 0.8 + iage * 2;
-              var irad = (3 + iage * 7.5 + pr2() * 4) * b.s;   // swells enough to veil the body
+              var idist = ispd * (1 - Math.exp(-pAge * 1.5));  // jet, then hang
+              var ixp = iox + Math.cos(ia) * idist + Math.sin(pAge * 0.7 + ik) * pAge * 1.2;   // lingering cloud sways with the water
+              var iyp = ioy + Math.sin(ia) * idist * 0.8 + pAge * 2;
+              var irad = (3 + pAge * 7.5 + pr2() * 4) * b.s;   // swells enough to veil the body
               var ial = Math.max(0, ial0 * b.s * (0.5 + pr2() * 0.5));
               var ig2 = ctx.createRadialGradient(ixp, iyp, 0, ixp, iyp, irad);
               ig2.addColorStop(0, rgba("#3b2c26", ial)); ig2.addColorStop(1, rgba("#3b2c26", 0));
@@ -1029,12 +1031,14 @@
             // Posture follows the fins' mood params at reduced amplitude — tucked moods
             // hold their arms close too.
             if (fm.anim.arms) {
-              [[20, 0], [32, 1], [44, 2]].forEach(function (armS) {
+              // five arms in a skirt cluster (three read as jellyfish streamers — the
+              // maintainer's note), thicker and longer, the centre ones longest
+              [[16, 0, 12], [24, 1, 15], [32, 2, 16], [40, 3, 15], [48, 4, 12]].forEach(function (armS) {
                 var acx = armS[0], ai2 = armS[1];
                 var arr2 = mulberry32(L.seed + ai2 * 3671 + 17);
                 var aph = arr2() * 6.28, arate = (0.5 + arr2() * 0.5) * (0.4 + fp2[2] * 0.35);
-                var aamp = (1.2 + fp2[1] * 0.9) * fsc, alen = 14, ay0 = 47;
-                var aw0 = 2.2 * fsc;
+                var aamp = (1.2 + fp2[1] * 0.9) * fsc, alen = armS[2], ay0 = 47;
+                var aw0 = 3 * fsc;
                 fx2.beginPath();
                 for (var ayy = 0; ayy <= alen; ayy++) {                              // left edge down
                   var au = ayy / alen;
