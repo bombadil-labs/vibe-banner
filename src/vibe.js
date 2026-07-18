@@ -570,10 +570,10 @@
       ".vo .fg{font-family:var(--font-sans,ui-sans-serif,system-ui,sans-serif);font-size:0.88em;opacity:0.95}" +
       ".vo-panel{pointer-events:auto;max-height:100%;overflow-y:auto;padding:0.32em 0.7em 0.36em;border-radius:10px;" +
       "background:rgba(255,250,240,0.22);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgba(90,70,50,0.08)}" +
-      ".vo-vt{position:absolute;top:-0.72em;left:0.9em;z-index:3;pointer-events:auto;display:flex;gap:3px}" +   // the view toggle: a CLEAR control straddling the panel's top edge
-      ".vo-vt span{cursor:pointer;font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.68em;padding:0.1em 0.62em 0.14em;border-radius:1em;background:rgba(69,49,24,0.4);color:#f6ead0;letter-spacing:0.04em;text-shadow:none;box-shadow:0 0 0 1.5px rgba(246,234,208,0.28)}" +
-      ".vo-vt span:hover{background:rgba(69,49,24,0.62)}" +
-      ".vo-vt span.on{background:rgba(69,49,24,0.92);box-shadow:0 0 0 1.5px rgba(246,234,208,0.5)}" +
+      ".vo-vt{position:absolute;top:-0.72em;left:0.9em;z-index:3;pointer-events:auto;display:flex;border-radius:1em;overflow:hidden;box-shadow:0 0 0 1.5px rgba(36,26,6,0.35)}" +   // ONE pill, two halves, straddling the panel's top edge
+      ".vo-vt span{cursor:pointer;font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.68em;padding:0.12em 0.7em 0.16em;background:rgba(48,34,16,0.85);color:rgba(246,234,208,0.7);letter-spacing:0.04em;text-shadow:none}" +
+      ".vo-vt span:hover{color:#f6ead0}" +
+      ".vo-vt span.on{background:#f6ead0;color:#452f14;cursor:default}" +
       ".vo-stats{pointer-events:auto;padding:0.55em 0.9em 0.6em;border-radius:10px;max-height:100%;overflow-y:auto;" +
       "background:rgba(255,250,240,0.22);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);box-shadow:inset 0 0 0 1px rgba(90,70,50,0.08)}" +
       ".vo-stats .srow{display:flex;align-items:center;gap:0.65em;margin:0.4em 0;cursor:help}" +
@@ -587,9 +587,6 @@
       "@media (prefers-color-scheme:dark){.vo{color:#f6ead0;text-shadow:0 1px 2px rgba(36,26,6,0.6)}" +
       ".vo .pill{background:rgba(216,197,160,0.24);color:#f6ead0}" +
       ".vo-stats .slbl{background:rgba(216,197,160,0.24)}" +
-      ".vo-vt span{background:rgba(216,197,160,0.3);box-shadow:0 0 0 1.5px rgba(36,26,6,0.4)}" +
-      ".vo-vt span:hover{background:rgba(216,197,160,0.45)}" +
-      ".vo-vt span.on{background:rgba(216,197,160,0.6);color:#241a06;box-shadow:0 0 0 1.5px rgba(36,26,6,0.55)}" +
       ".vo-stats .smk{background:#f6ead0;box-shadow:0 0 0 1.5px rgba(36,26,6,0.6)}" +
       ".vo-stats{background:rgba(30,24,16,0.22);box-shadow:inset 0 0 0 1px rgba(246,234,208,0.08)}" +
       ".vo-panel{background:rgba(30,24,16,0.22);box-shadow:inset 0 0 0 1px rgba(246,234,208,0.08)}}" +
@@ -616,8 +613,9 @@
       row.innerHTML = '<span class="pill">' + esc(it.lbl) + '</span><span class="' + it.cls + '">' + esc(it.val) + '</span>';
       pn.appendChild(row);
     });
-    var pwrap = document.createElement("div");                 // wraps both views so the toggle can straddle whichever panel is showing
-    pwrap.style.cssText = "position:relative;max-height:100%;margin-top:0.72em";
+    var pwrap = document.createElement("div");                 // GRID OVERLAY: both views occupy the same cell, so the box holds the taller
+    pwrap.style.cssText = "position:relative;max-height:100%;margin-top:0.72em;display:grid";   // of the two heights and the toggle never moves when you flip it
+    pn.style.gridArea = "1/1";
     pwrap.appendChild(pn);
     ov.appendChild(pwrap); wrap.appendChild(ov);
     // THE STATS VIEW (v0.39.0): the collapse-to-pills button is gone (it fought the text
@@ -656,15 +654,18 @@
       r4.innerHTML = sw;
       st.appendChild(r4);
     }
+    st.style.gridArea = "1/1";
     pwrap.appendChild(st);
     var view = "text";
     try { if (localStorage.getItem("vibeView") === "stats") view = "stats"; } catch (e) { }
     var vt = document.createElement("div");
     vt.className = "vo vo-vt";
     vt.innerHTML = '<span data-v="text">text</span><span data-v="stats">stats</span>';
-    var applyView = function () {
-      pn.style.display = view === "text" ? "" : "none";
-      st.style.display = view === "stats" ? "" : "none";
+    var applyView = function () {                              // visibility, not display: the hidden view keeps its height in the grid overlay
+      pn.style.visibility = view === "text" ? "" : "hidden";
+      pn.style.pointerEvents = view === "text" ? "" : "none";
+      st.style.visibility = view === "stats" ? "" : "hidden";
+      st.style.pointerEvents = view === "stats" ? "" : "none";
       vt.querySelectorAll("span").forEach(function (s2) { s2.className = s2.getAttribute("data-v") === view ? "on" : ""; });
     };
     applyView();
