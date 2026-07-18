@@ -1026,7 +1026,11 @@
                 var wv = prof * (0.75 + 0.25 * Math.sin(t * 0.13 + fy * 0.05)) *
                   (famp * 0.65 * Math.sin(fy * 0.32 - t * frate * 6.283 * fdir2) +
                    famp * 0.45 * Math.sin(fy * 0.21 * 1.618 - t * frate * 6.283 * 0.618 * fdir2 + 2.1));
-                var wdt = Math.max(0, baseW * prof * sagF + wv);
+                // below the brow, the fin's OUTER edge follows only ~20% of the body's
+                // tuck: the membrane holds nearly its brow-level width while the mantle
+                // narrows away beneath it (fading closed over the last few cells)
+                var tuckFill = fy > 31 ? 0.8 * (flankX(fy) - 6) * (fy > 42 ? (46 - fy) / 4 : 1) : 0;
+                var wdt = Math.max(0, baseW * prof * sagF + wv + tuckFill);
                 seamPts.push([axc, fy * fsc]);
                 edgePts.push([axc + fdir2 * wdt, fy * fsc]);
               }
