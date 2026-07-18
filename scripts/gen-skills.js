@@ -380,7 +380,7 @@ const CATALOG = {
   what: "Machine-readable catalog of the vibe-banner ecosystem: face-packs, first-party scenes, skill variants, site surfaces. Fetched by Claude during settings conversations.",
   version: VERSION,                                            // a skill stamps its build version; compare against this to notice it has fallen behind
   builder: SITE + "#builder",
-  whatsNew: "0.41.2 — prev is retired; every avatar preview on the site is a live render.",
+  whatsNew: "0.41.3 — the site is five tabs: the Installation page folded into Build and install.",
   renderer: {
     bundle: PIECES.snippetUrl,
     payload_notes: {

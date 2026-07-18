@@ -78,10 +78,9 @@
   <div class="tabs" role="tablist">
     <button class="tab-btn" data-tab="landing" role="tab">Landing</button>
     <button class="tab-btn" data-tab="meaning" role="tab">What it means</button>
-    <button class="tab-btn" data-tab="install" role="tab">Installation</button>
     <button class="tab-btn" data-tab="gallery" role="tab">Gallery</button>
     <button class="tab-btn" data-tab="explorer" role="tab">Explorer</button>
-    <button class="tab-btn" data-tab="builder" role="tab">Builder</button>
+    <button class="tab-btn" data-tab="builder" role="tab">Build and install</button>
   </div>
 
   <section class="tab-panel" id="tab-landing" role="tabpanel">
@@ -98,7 +97,7 @@
 
     <p>Start with the <a href="#gallery">gallery</a> to see every state in a mocked-up
     conversation, learn to <a href="#meaning">read a banner</a>, or jump straight to
-    <a href="#install">installation</a> — it's one pasted file on claude.ai, one
+    <a href="#builder">installation</a> — it's one pasted file on claude.ai, one
     <code>curl</code> in Claude Code.</p>
 
     <h2>Why it's honest</h2>
@@ -187,46 +186,8 @@
     field in <em>awe</em>, the banner nested inside itself in <em>vertigo</em>, concentration lines
     when <em>resolute</em>, drifting question marks when <em>puzzled</em>. Their whole value is that
     they're uncommon; every one is demonstrated in the <a href="#gallery">gallery</a>.</p>
-  </section>
-
-  <section class="tab-panel" id="tab-install" role="tabpanel">
-    <h2 id="install">Install the skill</h2>
-
-    <h3>On claude.ai (no tools needed)</h3>
-    <ol>
-      <li>Open the skill file:
-        <a href="https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.md">skill/SKILL.md</a>.
-        You'll paste from it in a moment — it has a short <em>description</em> at the top (the
-        <code>description:</code> line between the <code>---</code> markers) and the
-        <em>instructions</em> (everything below).</li>
-      <li>In the <a href="https://claude.ai">claude.ai</a> sidebar, click <strong>Customize</strong>.</li>
-      <li>In the Skills panel, click <strong>Add</strong> → <strong>Write skill instructions</strong>.</li>
-      <li>Fill in the form: name it <code>vibe-banner</code>, paste the description line into
-        <strong>Description</strong>, and everything below the frontmatter into
-        <strong>Instructions</strong>.</li>
-      <li>Save. Your next conversation opens with a banner.</li>
-    </ol>
-
-    <h3>In Claude Code</h3>
-    <p>Install is one file:</p>
-    <pre>mkdir -p ~/.claude/skills/vibe-banner
-curl -fsSL https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.md \
-  -o ~/.claude/skills/vibe-banner/SKILL.md</pre>
-    <p>Windows (PowerShell):</p>
-    <pre>New-Item -ItemType Directory -Force "$HOME\.claude\skills\vibe-banner" | Out-Null
-Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.md `
-  -OutFile "$HOME\.claude\skills\vibe-banner\SKILL.md"</pre>
-    <p>Either way, the skill self-triggers ("preface every response with a usage of it"), so the next
-    conversation starts with a banner. To dial the cadence down or turn it off, just tell Claude —
-    the skill honors that for the session. To remove it, delete the skill (claude.ai: the Skills
-    panel; Claude Code: delete the folder).</p>
-    <p><strong>A security note, practiced here:</strong> the skill loads the renderer pinned to a
-    <em>full commit hash</em>, never a tag or branch. Tags are mutable pointers — in a context where
-    the host injects capabilities like <code>sendPrompt</code> into rendered pages, a silently moved
-    tag would be a script-injection vector. A commit hash can't be re-pointed, so the CDN can only
-    ever serve the audited bytes. If you fork this, keep that property.</p>
-
-    <h2 id="library">Use it as a library</h2>
+  
+<h2 id="library">Use it as a library</h2>
     <p>You don't need the skill — <code>vibe(el, {…})</code> is a tiny standalone mood-banner
     library:</p>
     <pre>&lt;div id="v"&gt;&lt;/div&gt;
@@ -251,7 +212,10 @@ Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/ma
     <p>The full value grammar, flag list, and fork guide (reskin the whole look without touching the
     skill) are in the
     <a href="https://github.com/bombadil-labs/vibe-banner#readme">README</a>.</p>
+  
   </section>
+
+  
 
   <section class="tab-panel" id="tab-gallery" role="tabpanel">
     <h2 id="gallery">Gallery — every state, in conversation</h2>
@@ -288,9 +252,9 @@ Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/ma
     attunement rules and the value bullets are load-bearing, and versions people hand-edited
     mostly got worse. Four things are genuinely yours: <strong>your face</strong>, <strong>your
     environment</strong>, <strong>how often the banner fires</strong>, and <strong>which text
-    lines it carries</strong>. Your chosen face narrates the tour. When it reads right, copy the
-    whole thing (claude.ai: Customize → Skills → Add → Write skill instructions) or download it
-    for <code>~/.claude/skills/vibe-banner/</code>.</p>
+    lines it carries</strong>. Your chosen face narrates the tour, and the preview under it is a
+    real banner, not a picture of one. When it reads right, take it away with the buttons at the
+    bottom — <a href="#install">installing it</a> is a paste or a file.</p>
     <div id="b-modules"></div>
     <div style="display:flex; gap:8px; margin:18px 0 0; flex-wrap:wrap; position:sticky; bottom:12px; background:var(--paper); padding:10px 0; border-top:1px solid var(--edge);">
       <button id="b-copy" class="tab-btn" style="border:1px solid var(--accent); border-radius:8px;">Copy whole skill</button>
@@ -298,6 +262,43 @@ Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/ma
       <button id="b-dl-json" class="tab-btn" style="border:1px solid var(--edge); border-radius:8px;">Download .json</button>
       <span id="b-status" style="font-size:12.5px; color:var(--sub); align-self:center;"></span>
     </div>
+
+    <h2 id="install">Install what you built</h2>
+
+    <h3>On claude.ai (no tools needed)</h3>
+    <ol>
+      <li>Hit <strong>Copy whole skill</strong> above.</li>
+      <li>In the <a href="https://claude.ai">claude.ai</a> sidebar, click <strong>Customize</strong>.</li>
+      <li>In the Skills panel, click <strong>Add</strong> → <strong>Write skill instructions</strong>.</li>
+      <li>Name it <code>vibe-banner</code>. The file you copied opens with a short
+        <code>description:</code> line between <code>---</code> markers — that goes in
+        <strong>Description</strong>; everything below the markers goes in
+        <strong>Instructions</strong>.</li>
+      <li>Save. Your next conversation opens with a banner.</li>
+    </ol>
+
+    <h3>In Claude Code</h3>
+    <p>Hit <strong>Download SKILL.md</strong> and drop it in its own folder:</p>
+    <pre>~/.claude/skills/vibe-banner/SKILL.md</pre>
+    <p>Or, if you're happy with the defaults and would rather not build anything, take the
+    shipped file as-is:</p>
+    <pre>mkdir -p ~/.claude/skills/vibe-banner
+curl -fsSL https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.md \
+  -o ~/.claude/skills/vibe-banner/SKILL.md</pre>
+    <p>Windows (PowerShell):</p>
+    <pre>New-Item -ItemType Directory -Force "$HOME\.claude\skills\vibe-banner" | Out-Null
+Invoke-WebRequest https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.md `
+  -OutFile "$HOME\.claude\skills\vibe-banner\SKILL.md"</pre>
+    <p>Either way, the skill self-triggers ("preface every response with a usage of it"), so the next
+    conversation starts with a banner. To dial the cadence down or turn it off, just tell Claude —
+    the skill honors that for the session. To remove it, delete the skill (claude.ai: the Skills
+    panel; Claude Code: delete the folder).</p>
+    <p><strong>A security note, practiced here:</strong> the file you just built loads the renderer
+    pinned to a <em>full commit hash</em>, never a tag or branch — which is why that snippet isn't
+    editable. Tags are mutable pointers, and in a context where the host injects capabilities like
+    <code>sendPrompt</code> into rendered pages, a silently moved tag would be a script-injection
+    vector. A commit hash can't be re-pointed, so the CDN can only ever serve the audited bytes. If
+    you fork this, keep that property.</p>
   </section>
 
   <footer>
@@ -600,7 +601,7 @@ document.querySelectorAll("#face-picker button").forEach(function (b) {
 buildGallery();
 
 var TAB_ALIAS = { "": "landing", landing: "landing", meaning: "meaning", key: "meaning",
-  how: "meaning", install: "install", library: "install", gallery: "gallery",
+  how: "meaning", install: "builder", library: "meaning", gallery: "gallery",
   explorer: "explorer", visuals: "explorer", builder: "builder", build: "builder" };
 function activate(tab) {
   document.querySelectorAll(".tabs .tab-btn").forEach(function (b) {
