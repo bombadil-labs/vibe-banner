@@ -187,7 +187,7 @@
   // The animated set is faces-and-a-few-objects only; every mood above resolves there
   // EXCEPT the musical note, so rhyme borrows whimsy's upside-down face. (Audited by
   // fetching all 32 against the gstatic set — see DESIGN.md.)
-  var MOOD_EMOJI_OVERRIDE = { "noto-animated": { rhyme: "1f643" } };
+  var MOOD_EMOJI_OVERRIDE = {};                                // per-pack substitutions when a mood has no art in that pack
   function emojiFor(item, set) {
     var k = String(item == null ? "" : item);
     var ov = set && MOOD_EMOJI_OVERRIDE[set];
@@ -195,8 +195,6 @@
     return MOOD_EMOJI[k] || k;                                 // unknown → pass through: raw codepoints still work
   }
   var FACE_SETS = {
-    "noto-animated": function (item) { return { url: "https://fonts.gstatic.com/s/e/notoemoji/latest/" + encodeURIComponent(emojiFor(item, "noto-animated")) + "/512.gif" }; },
-    "noto": function (item) { return { url: "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@v2.047/png/128/emoji_u" + encodeURIComponent(emojiFor(item)) + ".png" }; },
     "twemoji": function (item) { return { url: "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/" + encodeURIComponent(emojiFor(item)) + ".png" }; },
     "kip": function (item) {
       var i = KIP_MOODS[item]; if (i == null) i = Math.max(0, Math.min(7, parseInt(item, 10) || 0));

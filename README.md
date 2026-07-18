@@ -73,7 +73,7 @@ SVG rows and the SVG face:
 
 | input | shows as | notes |
 |---|---|---|
-| `face` | the face | **one union, four forms**: a kaomoji string (non-URL text; `\n` → multi-line bloom, left-aligned) · an image URL string · a spritesheet slice `{ url, cellW, cellH, cols, rows, index }` · a KnownFace `{ set, item }` from the built-in registry (`kip` with mood-name items, `noto-animated`, `noto`, `twemoji` with codepoint items). Images centre in the face column, load browser-side (URL-only payload, never base64), and must live on a widget-allowlisted CDN — in practice `cdn.jsdelivr.net/gh/…`, hash-pinnable like the renderer itself |
+| `face` | the face | **one union, four forms**: a kaomoji string (non-URL text; `\n` → multi-line bloom, left-aligned) · an image URL string · a spritesheet slice `{ url, cellW, cellH, cols, rows, index }` · a KnownFace `{ set, item }` from the built-in registry (`kip` and `sepia` with mood-name items, `twemoji` with mood names or codepoints). Images centre in the face column, load browser-side (URL-only payload, never base64), and must live on a widget-allowlisted CDN — in practice `cdn.jsdelivr.net/gh/…`, hash-pinnable like the renderer itself |
 | `kaomoji` | legacy alias / fallback | still accepted; also the fallback text + seed material when `face` is an image |
 | `seems` | `[user]` | your immediate read of the user |
 | `feel` | `[mood]` | your activated emotions |
@@ -216,8 +216,6 @@ one base — `npm run skills` — so they never drift):
 | `skill/SKILL.md` | kaomoji, improvised fresh every banner |
 | `skill/SKILL.sepia.md` | Sepia — the cuttlefish Claude designed for itself (32 moods) |
 | `skill/SKILL.kip.md` | Kip — the project mascot (8 moods) |
-| `skill/SKILL.noto-animated.md` | Noto animated emoji (Google's GIFs; big files, they move) |
-| `skill/SKILL.noto.md` | Noto emoji (warm, round, static) |
 | `skill/SKILL.twemoji.md` | Twemoji (flat, tiny, classic) |
 
 Try them before choosing: the site's **Gallery tab has a face picker** that re-dresses

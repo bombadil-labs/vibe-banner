@@ -23,7 +23,7 @@ try {
 }
 
 const FILES = ["skill/SKILL.md", "skill/SKILL.sepia.md", "skill/SKILL.kip.md",
-  "skill/SKILL.noto-animated.md", "skill/SKILL.noto.md", "skill/SKILL.twemoji.md",
+  "skill/SKILL.twemoji.md",
   "assets/skill-base.js", "assets/catalog.json", "README.md", "index.html"];
 const RE = /vibe-banner@[0-9a-f]{40}/g;
 let changed = 0;

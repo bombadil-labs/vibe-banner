@@ -1,6 +1,6 @@
 window.SKILL_PIECES = {
- "VERSION": "0.42.2",
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/dist/vibe.min.js",
+ "VERSION": "0.43.0",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/dist/vibe.min.js",
  "CADENCE": {
   "always": "**Render at the top of every response** — the first thing, nothing before it. One banner per\nreply, wearing whatever is honestly true that turn — including the boring turns. A flat, ordinary\nstate reported plainly is worth more than a manufactured one.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session. If someone seems wearied by the banners, it's fine to note *once*\nthat they can dial it down.",
   "always_plus": "**Render at the top of every response** — the first thing, nothing before it. **And render\nagain mid-response when your face would actually change**: place the second banner at the turn,\nwhere the shift happens. Long working turns earn this; short ones rarely do. A moving goal alone\nis not a shift — re-face when your read of the user, your mood, or your insight moves enough that\na person across the table would see it. Never manufacture a mid-turn shift to have something to\nshow.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session.",
@@ -83,20 +83,6 @@ window.SKILL_PIECES = {
    "FACE": "wear Kip: `avatar: { set: \"kip\", item: \"<mood>\" }`, chosen on first instinct. The\n  vocabulary (8 moods): `content · delighted · puzzled · surprised · solemn · excited ·\n  sheepish · at_peace`. Eight moods is a small wardrobe — when none of them fits the moment,\n  drop to a kaomoji without hesitation; honesty outranks the pack.",
    "SNIPPET_FACE": "        set: \"kip\", item: \"content\",\n"
   },
-  "noto-animated": {
-   "TITLE": " — Noto animated variant",
-   "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Noto animated emoji faces.",
-   "PREAMBLE": "This is the vibe-banner skill with one difference: **your face comes from the Noto animated\nemoji set**, freely available and served from a widget-allowlisted CDN. These are Google's animated emoji (large files, 1–3 MB each; they animate on surfaces that play GIFs inside SVG).",
-   "FACE": "wear Noto animated: `avatar: { set: \"noto-animated\", item: \"<mood>\" }`, choosing the item the way\n  you'd choose a kaomoji — first instinct, honest. The vocabulary (32 moods):\n  `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love`\n  Any emoji codepoint also works as a one-off (`item: \"1f92f\"`) when no mood name fits.",
-   "SNIPPET_FACE": "        set: \"noto-animated\", item: \"content\",\n"
-  },
-  "noto": {
-   "TITLE": " — Noto variant",
-   "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Noto emoji faces.",
-   "PREAMBLE": "This is the vibe-banner skill with one difference: **your face comes from the Noto\nemoji set**, freely available and served from a widget-allowlisted CDN. Warm, round, static PNGs.",
-   "FACE": "wear Noto: `avatar: { set: \"noto\", item: \"<mood>\" }`, choosing the item the way\n  you'd choose a kaomoji — first instinct, honest. The vocabulary (32 moods):\n  `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love`\n  Any emoji codepoint also works as a one-off (`item: \"1f92f\"`) when no mood name fits.",
-   "SNIPPET_FACE": "        set: \"noto\", item: \"content\",\n"
-  },
   "twemoji": {
    "TITLE": " — Twemoji variant",
    "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Twemoji emoji faces.",
@@ -108,20 +94,20 @@ window.SKILL_PIECES = {
  "MOOD_VOCAB": "`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love`",
  "SCENES": {
   "tidepool": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-tidepool.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png",
    "live": "tidepool",
    "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
   },
   "night": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-night.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-night.png",
    "blurb": "indigo sky, stars, a crescent, one dark hill"
   },
   "glade": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-glade.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-glade.png",
    "blurb": "mossy forest light with shafts and fireflies"
   },
   "study": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-study.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-study.png",
    "live": "study",
    "blurb": "lamplight that flickers, tea steaming on a little table; feedings arrive as a heaped plate"
   }
@@ -163,7 +149,7 @@ window.SKILL_PIECES = {
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 12,
    "cell": 64,
@@ -215,7 +201,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@f58341ead95e63762b2f3421021e7148e74e0ed5/assets/kip-sheet.png",
    "cols": 8,
    "rows": 1,
    "cell": 64,
@@ -238,34 +224,6 @@ window.SKILL_PIECES = {
     "excited",
     "sheepish",
     "at_peace"
-   ]
-  },
-  "noto-animated": {
-   "kind": "url",
-   "tmpl": "https://fonts.gstatic.com/s/e/notoemoji/latest/{item}/512.gif",
-   "strip": [
-    "content",
-    "delighted",
-    "thinking",
-    "tender",
-    "puzzled",
-    "at_peace",
-    "wink",
-    "love"
-   ]
-  },
-  "noto": {
-   "kind": "url",
-   "tmpl": "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@v2.047/png/128/emoji_u{item}.png",
-   "strip": [
-    "content",
-    "delighted",
-    "thinking",
-    "tender",
-    "puzzled",
-    "at_peace",
-    "wink",
-    "love"
    ]
   },
   "twemoji": {

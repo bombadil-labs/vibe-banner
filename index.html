@@ -118,8 +118,6 @@
       <button class="tab-btn" data-face="kaomoji">kaomoji</button>
       <button class="tab-btn" data-face="sepia">sepia</button>
       <button class="tab-btn" data-face="kip">kip</button>
-      <button class="tab-btn" data-face="noto-animated">noto animated</button>
-      <button class="tab-btn" data-face="noto">noto</button>
       <button class="tab-btn" data-face="twemoji">twemoji</button>
     </div>
     <p style="margin:14px 0 0; font-size:13px; color:var(--sub);">…and any shipped habitat
@@ -249,28 +247,14 @@ function mountTab(tab) {
   MOUNT_QUEUE[tab] = [];
 }
 
-// The hero rolls a face and a habitat on every load: the project's actual claim is that
-// this is a wardrobe, not one mascot, and a fixed hero quietly argues the opposite. The
-// MOOD stays inside a warm register, because the readout copy below is warm and a random
-// `angry` under "welcome" would read as a bug rather than range. noto-animated sits out —
-// its frames are 1–3 MB each, which is a rude thing to put on a front door.
+// The hero is Sepia in the tidepool, fixed. A randomised front door was tried and pulled:
+// the first thing a visitor sees is the one composition that should be *chosen*, and the
+// project's own face in her own habitat is the honest introduction. Variety lives one tab
+// away, in the Gallery, where trying combinations is the actual point.
 (function () {
   var SP = (window.SKILL_PIECES && window.SKILL_PIECES.SCENES) || {};
-  var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
-  var WARM = ["content", "delighted", "tender", "mirth", "at_peace", "spark", "thinking", "neutral"];
-  var KIP_WARM = ["content", "delighted", "excited", "at_peace"];
-  var KAOS = ["( ˶ˆ ꒳ ˆ˵ )", "( ˘ ᵕ ˘ )", "( ˶˃ ᵕ ˂˶ )", "( ⊙ ᵕ ⊙ )"];
-  var packs = ["kaomoji", "sepia", "sepia", "kip", "noto", "twemoji"];   // sepia twice: she's the face the project designed for itself
-  var pack = pick(packs), avatar;
-  if (pack === "kaomoji") avatar = { face: pick(KAOS) };
-  else if (pack === "kip") avatar = { set: "kip", item: pick(KIP_WARM) };
-  else avatar = { set: pack, item: pick(WARM) };
-  var sceneKeys = Object.keys(SP);
-  if (sceneKeys.length) {
-    var sk = pick(sceneKeys), sc = SP[sk];
-    avatar.scene = { url: sc.url, opacity: 0.6 };
-    if (sc.live) avatar.scene.live = sc.live;
-  }
+  var avatar = { set: "sepia", item: "content" };
+  if (SP.tidepool) avatar.scene = { url: SP.tidepool.url, opacity: 0.6, live: SP.tidepool.live };
   queueMount("landing", document.getElementById("hero"), {
     avatar: avatar,
     details: {
@@ -732,7 +716,7 @@ route();
   var c2 = card("face");
   c2.appendChild(callout("Pick my face — that's the whole station. Every pack speaks the same 32 moods now, so the rest of the file doesn't change when you switch me. Try them all on —", { m: "delighted", e: "1f604", k: "( ˶ˆ ᗜ ˆ˵ )" }, ["see them in the Gallery →", "#gallery"]));
   var faceSel = document.createElement("select"); faceSel.style.cssText = SEL + "margin:0 0 8px;";
-  [["sepia", "Sepia — the cuttlefish (32 moods, alive)"], ["kip", "Kip — the mascot (8 moods)"], ["kaomoji", "kaomoji (improvised text)"], ["noto-animated", "Noto animated emoji"], ["noto", "Noto emoji"], ["twemoji", "Twemoji"], ["custom", "custom (your own image URLs)"]].forEach(function (o) {
+  [["sepia", "Sepia — the cuttlefish (32 moods, alive)"], ["kip", "Kip — the mascot (8 moods)"], ["kaomoji", "kaomoji (improvised text)"], ["twemoji", "Twemoji"], ["custom", "custom (your own image URLs)"]].forEach(function (o) {
     var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; faceSel.appendChild(op);
   });
   faceSel.value = S.face;
@@ -1040,7 +1024,7 @@ route();
   }
 
   var faceSel = mkSel("face", [["kaomoji", "kaomoji"], ["sepia", "sepia"], ["kip", "kip"],
-    ["noto-animated", "noto animated"], ["noto", "noto"], ["twemoji", "twemoji"]], X.set,
+    ["twemoji", "twemoji"]], X.set,
     function (v) { X.set = v; refreshItems(); render(); });
 
   var itemSel = mkSel("mood", [["content", "content"]], X.item, function (v) { X.item = v; render(); });

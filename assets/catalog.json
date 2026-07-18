@@ -1,10 +1,10 @@
 {
   "what": "Machine-readable catalog of the vibe-banner ecosystem: face-packs, first-party scenes, skill variants, site surfaces. Fetched by Claude during settings conversations.",
-  "version": "0.42.2",
+  "version": "0.43.0",
   "builder": "https://bombadil-labs.github.io/vibe-banner/#builder",
-  "whatsNew": "0.42.2 — the landing hero rolls a face and a habitat on every visit.",
+  "whatsNew": "0.43.0 — the Noto packs are retired; faces are kaomoji, Sepia, Kip, Twemoji, or your own. The landing hero is Sepia in the tidepool.",
   "renderer": {
-    "bundle": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/dist/vibe.min.js",
+    "bundle": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/dist/vibe.min.js",
     "payload_notes": {
       "face": "one union: kaomoji string | image URL | sprite slice {url,cellW,cellH,cols,rows,index} | KnownFace {set,item}",
       "scene": "{ url, opacity (0.15-0.95, default 0.5), live? } — fills the framed portrait window on the banner's left (face centred inside). The window always draws; without a scene it renders empty (frame only)",
@@ -76,42 +76,6 @@
       ],
       "note": "the project mascot; small wardrobe, drop to kaomoji when nothing fits"
     },
-    "noto-animated": {
-      "kind": "url-set",
-      "payload": {
-        "set": "noto-animated",
-        "item": "<codepoint>"
-      },
-      "starter_items": [
-        "content",
-        "delighted",
-        "thinking",
-        "tender",
-        "puzzled",
-        "at_peace",
-        "wink",
-        "love"
-      ],
-      "note": "Google animated emoji; any codepoint works"
-    },
-    "noto": {
-      "kind": "url-set",
-      "payload": {
-        "set": "noto",
-        "item": "<codepoint>"
-      },
-      "starter_items": [
-        "content",
-        "delighted",
-        "thinking",
-        "tender",
-        "puzzled",
-        "at_peace",
-        "wink",
-        "love"
-      ],
-      "note": "warm round static PNGs; any codepoint works"
-    },
     "twemoji": {
       "kind": "url-set",
       "payload": {
@@ -133,20 +97,20 @@
   },
   "scenes": {
     "tidepool": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-tidepool.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png",
       "live": "tidepool",
       "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
     },
     "night": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-night.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-night.png",
       "blurb": "indigo sky, stars, a crescent, one dark hill"
     },
     "glade": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-glade.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-glade.png",
       "blurb": "mossy forest light with shafts and fireflies"
     },
     "study": {
-      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c4b06ee5479a45217301160e9d3abd25571cfe8c/assets/scene-study.png",
+      "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-study.png",
       "live": "study",
       "blurb": "lamplight that flickers, tea steaming on a little table; feedings arrive as a heaped plate"
     }
@@ -155,8 +119,6 @@
     "kaomoji": "https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.md",
     "sepia": "https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.sepia.md",
     "kip": "https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.kip.md",
-    "noto-animated": "https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.noto-animated.md",
-    "noto": "https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.noto.md",
     "twemoji": "https://raw.githubusercontent.com/bombadil-labs/vibe-banner/main/skill/SKILL.twemoji.md"
   },
   "site": {

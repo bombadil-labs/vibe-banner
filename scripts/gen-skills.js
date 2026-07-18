@@ -293,10 +293,6 @@ reference face-pack. Cheerful, compact, eight moods.`,
     kip: { kind: "sheet", url: KIP_SHEET, cols: 8, rows: 1, cell: 64,
       moods: ["content","delighted","puzzled","surprised","solemn","excited","sheepish","at_peace"],
       strip: ["content","delighted","puzzled","surprised","solemn","excited","sheepish","at_peace"] },
-    "noto-animated": { kind: "url", tmpl: "https://fonts.gstatic.com/s/e/notoemoji/latest/{item}/512.gif",
-      strip: ["content","delighted","thinking","tender","puzzled","at_peace","wink","love"] },
-    noto: { kind: "url", tmpl: "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@v2.047/png/128/emoji_u{item}.png",
-      strip: ["content","delighted","thinking","tender","puzzled","at_peace","wink","love"] },
     twemoji: { kind: "url", tmpl: "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/{item}.png",
       strip: ["content","delighted","thinking","tender","puzzled","at_peace","wink","love"] },
     kaomoji: { kind: "text", strip: ["( ˶ˆ ꒳ ˆ˵ )","( ・_・)","( ˃ ᯅ ˂ )","( ˘ ᵕ ˘ )","( ⊙ ᵕ ⊙ )","( ˶˃ ᵕ ˂˶ )","  ∧,,∧\n( ̳• · • ̳)\n/    づ♡"] }
@@ -319,9 +315,6 @@ emoji set**, freely available and served from a widget-allowlisted CDN.${note}`,
 `
   };
 }
-PIECES.FACES["noto-animated"] = emojiFace("noto-animated", "Noto animated",
-  " These are Google's animated emoji (large files, 1–3 MB each; they animate on surfaces that play GIFs inside SVG).");
-PIECES.FACES["noto"] = emojiFace("noto", "Noto", " Warm, round, static PNGs.");
 PIECES.FACES["twemoji"] = emojiFace("twemoji", "Twemoji", " Flat, tiny (1–2 KB), classic.");
 
 // Mirrored client-side in index.html's Builder (content above is the single-sourced part).
@@ -366,7 +359,7 @@ function assemble(faceKey, opts) {
 
 const SHIP = {
   "SKILL.md": "kaomoji", "SKILL.sepia.md": "sepia", "SKILL.kip.md": "kip",
-  "SKILL.noto-animated.md": "noto-animated", "SKILL.noto.md": "noto", "SKILL.twemoji.md": "twemoji"
+  "SKILL.twemoji.md": "twemoji"
 };
 Object.keys(SHIP).forEach(function (file) {
   const out = assemble(SHIP[file], {});
@@ -392,7 +385,7 @@ const CATALOG = {
   what: "Machine-readable catalog of the vibe-banner ecosystem: face-packs, first-party scenes, skill variants, site surfaces. Fetched by Claude during settings conversations.",
   version: VERSION,                                            // a skill stamps its build version; compare against this to notice it has fallen behind
   builder: SITE + "#builder",
-  whatsNew: "0.42.2 — the landing hero rolls a face and a habitat on every visit.",
+  whatsNew: "0.43.0 — the Noto packs are retired; faces are kaomoji, Sepia, Kip, Twemoji, or your own. The landing hero is Sepia in the tidepool.",
   renderer: {
     bundle: PIECES.snippetUrl,
     payload_notes: {
@@ -407,10 +400,6 @@ const CATALOG = {
       note: "the cuttlefish Claude designed for itself; wears feeling as color" },
     kip: { kind: "sheet", payload: { set: "kip", item: "<mood>" }, items: PIECES.PREVIEW.kip.moods,
       note: "the project mascot; small wardrobe, drop to kaomoji when nothing fits" },
-    "noto-animated": { kind: "url-set", payload: { set: "noto-animated", item: "<codepoint>" },
-      starter_items: PIECES.PREVIEW["noto-animated"].strip, note: "Google animated emoji; any codepoint works" },
-    noto: { kind: "url-set", payload: { set: "noto", item: "<codepoint>" },
-      starter_items: PIECES.PREVIEW.noto.strip, note: "warm round static PNGs; any codepoint works" },
     twemoji: { kind: "url-set", payload: { set: "twemoji", item: "<codepoint>" },
       starter_items: PIECES.PREVIEW.twemoji.strip, note: "flat, tiny, classic; any codepoint works" }
   },

@@ -24,10 +24,10 @@ let coh = (x) => buildSVG(Object.assign({}, base, x)).replace(/v(?:scn|wr)\d+/g,
 ok(coh({ coherence: 0.2 }) === coh({ consonance: 0.2 }), "coherence is consonance renamed; both accepted");
 
 console.log("every face pack speaks the 32-mood vocabulary");
-ok(/emoji_u1f604\.png/.test(buildSVG(Object.assign({}, base, { face: { set: "noto", item: "delighted" } }))), "noto: mood name resolves to its emoji");
-ok(/1f643\/512\.gif/.test(buildSVG(Object.assign({}, base, { face: { set: "noto-animated", item: "rhyme" } }))), "noto-animated: rhyme takes the pack-specific override");
-ok(/1f620\.png/.test(buildSVG(Object.assign({}, base, { face: { set: "twemoji", item: "angry" } }))), "twemoji: mood name resolves");
-ok(/emoji_u1f60a\.png/.test(buildSVG(Object.assign({}, base, { face: { set: "noto", item: "1f60a" } }))), "raw codepoints still pass through");
+ok(/1f604\.png/.test(buildSVG(Object.assign({}, base, { face: { set: "twemoji", item: "delighted" } }))), "twemoji: mood name resolves to its emoji");
+ok(/1f620\.png/.test(buildSVG(Object.assign({}, base, { face: { set: "twemoji", item: "angry" } }))), "twemoji: a second mood name resolves");
+ok(/1f60a\.png/.test(buildSVG(Object.assign({}, base, { face: { set: "twemoji", item: "1f60a" } }))), "raw codepoints still pass through");
+ok(/class="txt fk vk"/.test(buildSVG(Object.assign({}, base, { face: { set: "noto", item: "content" } }))), "the retired noto packs fall back to kaomoji, never a broken image");
 
 console.log("two keys (v0.42.0): avatar + details; empty details ships a square tile");
 let sq = buildSVG({ avatar: { set: "sepia", item: "content" } });
@@ -85,8 +85,8 @@ ok(!/class="txt fk vk"/.test(fp1), "image face replaces the kaomoji glyphs");
 let fp2 = buildSVG(Object.assign({}, base, { face: { url: "https://cdn.jsdelivr.net/gh/u/r@abc/sheet.png", cellW: 64, cellH: 64, cols: 4, rows: 2, index: 5 } }));
 ok(/<svg class="vk"[^>]*viewBox="64 64 64 64"/.test(fp2), "sprite index 5 of 4-col sheet → viewBox crops row 1, col 1");
 ok(/width="256" height="128"/.test(fp2), "sheet dims derive from cell size × grid");
-let kf1 = buildSVG(Object.assign({}, base, { face: { set: "noto-animated", item: "1f60a" } }));
-ok(/fonts\.gstatic\.com\/s\/e\/notoemoji\/latest\/1f60a\/512\.gif/.test(kf1), "KnownFace noto-animated resolves the gstatic URL");
+let kf1 = buildSVG(Object.assign({}, base, { face: { set: "twemoji", item: "1f60a" } }));
+ok(/twemoji@15\.1\.0\/assets\/72x72\/1f60a\.png/.test(kf1), "KnownFace twemoji resolves its jsDelivr URL");
 let kf2 = buildSVG(Object.assign({}, base, { face: { set: "kip", item: "puzzled" } }));
 ok(/kip-sheet\.png/.test(kf2) && /viewBox="128 0 64 64"/.test(kf2), "KnownFace kip:puzzled → sheet cell 2");
 let kf3 = buildSVG(Object.assign({}, base, { face: { set: "sepia", item: "vertigo" } }));
