@@ -639,7 +639,7 @@
     // sprites crop with percentage background math (no nested-svg atlas, no getBBox
     // lies); transforms pivot on the element's own centre, as CSS intends. The static
     // fallback (buildSVG) keeps the SVG face.
-    var fm = L.faceMeta, kaoEl = null, baseFill = [92, 67, 32];
+    var fm = L.faceMeta, kaoEl = null, faceLayerEl = null, baseFill = [92, 67, 32];
     if (fm) {
       var faceLayer = document.createElement("div");
       faceLayer.style.cssText = "position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;" +
@@ -665,6 +665,7 @@
       }
       kaoEl.style.pointerEvents = "auto";                      // the face is tappable; the rest of the layer lets water-clicks through
       faceLayer.appendChild(kaoEl); wrap.appendChild(faceLayer);
+      faceLayerEl = faceLayer;
     }
     // SUB-PIXEL FINS (v0.21.0): the grid could only crenelate; membranes flow. Each
     // flank wears a tapered ribbon whose outer edge is a travelling sine wave, posture
@@ -735,6 +736,7 @@
     }
     if (live && p.play !== false) {                            // tap the water, get ripples
       wrap.addEventListener("click", function (e) {
+        if (faceLayerEl && faceLayerEl.contains(e.target)) return;   // a boop is never a water tap, whatever the propagation path
         var r = wrap.getBoundingClientRect(); if (!r.width || !r.height) return;
         var x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * L.H;
         var pt = L.portrait;
@@ -1031,13 +1033,15 @@
             // Posture follows the fins' mood params at reduced amplitude — tucked moods
             // hold their arms close too.
             if (fm.anim.arms) {
-              // five arms in a skirt cluster (three read as jellyfish streamers — the
-              // maintainer's note), thicker and longer, the centre ones longest
-              [[16, 0, 12], [24, 1, 15], [32, 2, 16], [40, 3, 15], [48, 4, 12]].forEach(function (armS) {
+              // five arms in a skirt cluster, the OUTERMOST flush with the body's
+              // flanks — their outer edges continue the silhouette line downward, so
+              // the skirt reads as the body tapering into arms (cuttlefish), never
+              // danglers hanging beneath it (jellyfish)
+              [[14.5, 0, 12], [23, 1, 15], [32, 2, 16], [41, 3, 15], [49.5, 4, 12]].forEach(function (armS) {
                 var acx = armS[0], ai2 = armS[1];
                 var arr2 = mulberry32(L.seed + ai2 * 3671 + 17);
                 var aph = arr2() * 6.28, arate = (0.5 + arr2() * 0.5) * (0.4 + fp2[2] * 0.35);
-                var aamp = (1.2 + fp2[1] * 0.9) * fsc, alen = armS[2], ay0 = 47;
+                var aamp = (1.2 + fp2[1] * 0.9) * fsc, alen = armS[2], ay0 = 46;   // roots overlap the hem by a cell — contiguous, no seam
                 var aw0 = 3 * fsc;
                 fx2.beginPath();
                 for (var ayy = 0; ayy <= alen; ayy++) {                              // left edge down
@@ -1058,17 +1062,16 @@
                 fx2.strokeStyle = rgba("#5a4a52", 0.55); fx2.stroke();               // the fine line wraps the arms too
               });
             }
-            if (boopFx && boopFx.t0 != null) {                                       // the poke-ripple, at the exact spot she was touched
+            if (boopFx && boopFx.t0 != null) {                                       // the poke: a soft impact FLASH absorbed at the spot — deliberately nothing like a water ripple
               var bAge2 = t - boopFx.t0;
-              if (bAge2 < 0.7) {
-                fx2.lineWidth = Math.max(1, fsc);
-                [0, 0.18].forEach(function (boff) {
-                  var bu = bAge2 - boff; if (bu < 0) return;
-                  fx2.globalAlpha = 0.55 * (1 - bu / 0.7);
-                  fx2.strokeStyle = "#fff8ec";
-                  fx2.beginPath(); fx2.arc(boopFx.cx * fsc, boopFx.cy * fsc, (2 + bu * 30) * fsc, 0, 6.2832); fx2.stroke();
-                });
-                fx2.globalAlpha = 1;
+              if (bAge2 < 0.45) {
+                var bu = bAge2 / 0.45;
+                var brad = (7 - bu * 5) * fsc;                                       // pops wide, absorbs inward as it fades
+                var bgd = fx2.createRadialGradient(boopFx.cx * fsc, boopFx.cy * fsc, 0, boopFx.cx * fsc, boopFx.cy * fsc, brad);
+                bgd.addColorStop(0, rgba("#fff8ec", 0.7 * (1 - bu)));
+                bgd.addColorStop(1, rgba("#fff8ec", 0));
+                fx2.fillStyle = bgd;
+                fx2.beginPath(); fx2.arc(boopFx.cx * fsc, boopFx.cy * fsc, brad, 0, 6.2832); fx2.fill();
               }
             }
           }
