@@ -26,39 +26,28 @@ const COLORS = {
 // the register hierarchy into generic vector art), but with room for real curves.
 // BASE16 is the ancestral 16×16 form; BASE32 doubles it, then hand-carves the
 // silhouette: a rounder five-step dome, sloped shoulders, tapered arm tips.
-const BASE16 = [
-  "................",
-  ".....oooooo.....",
-  "...oobbbbbboo...",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "..obbbbbbbbbbo..",
-  "................",
-  "................",
-  "................"
+// THE MANTLE PROFILE (v0.26.0): the square is gone. The body is defined by a per-row
+// width profile — rounded crown, widest through the eye band, then a long fluid taper
+// that lands flush on the arm cluster. PROFILE[row] = leftmost column (right mirrors);
+// null = no body. The hem's bottom edge stays open for the renderer-drawn arms.
+const PROFILE = [
+  null, null,                                                  // rows 0-1: water
+  12, 10, 9, 8, 7, 6, 5, 5,                                    // rows 2-9: the dome, rounding out
+  4, 4, 4, 4, 4, 4,                                            // rows 10-15: widest — the eye band
+  5, 5, 5,                                                     // rows 16-18: the taper begins
+  6, 6, 6,                                                     // rows 19-21
+  7, 7, 7,                                                     // rows 22-24
+  8                                                            // row 25: the hem — flush with the outer arms
 ];
-// (the arm stubs left the sheet in v0.24.0 — the renderer draws the arm skirt. The body
-// runs one 16-row deeper since v0.25.0: breathing room below the mouth, and the hem's
-// bottom edge is NOT traced — the renderer closes the boundary only in the gaps between
-// arms, so body and skirt share one continuous line.)
-const B32 = [];
-BASE16.forEach(r => { const d = r.split("").map(c => c + c).join(""); B32.push(d.split("")); B32.push(d.split("")); });
-const PB = (y, x, c) => { B32[y][x] = c; };
-PB(2, 10, "."); PB(2, 21, ".");                                // crown: round the top corners
-PB(4, 6, "."); PB(4, 7, "."); PB(4, 24, "."); PB(4, 25, ".");  // second step in
-PB(5, 6, "."); PB(5, 25, ".");
-PB(6, 4, "."); PB(6, 6, "o"); PB(6, 7, "o");                   // sloped shoulder joins the flank
-PB(6, 27, "."); PB(6, 24, "o"); PB(6, 25, "o");
-PB(24, 4, "."); PB(24, 27, ".");                               // the hem rounds — the body ends in a soft tuck; arms flow from it, renderer-drawn
-PB(25, 4, "."); PB(25, 5, "."); PB(25, 26, "."); PB(25, 27, ".");
-const BASE = B32.map(r => r.join(""));
+const BASE = [];
+for (let y = 0; y < 32; y++) {
+  let row = "";
+  for (let x = 0; x < 32; x++) {
+    const Lc = PROFILE[y];
+    row += (Lc != null && x >= Lc && x <= 31 - Lc) ? "b" : ".";
+  }
+  BASE.push(row);
+}
 // Fin frills are an expression channel, not anatomy furniture: straight side bars read
 // as arms (the maintainer's flicker, round two), but fins that flare, ripple, droop, and
 // tuck with the mood can only be fins. Left-side pixels; the right side mirrors.
@@ -267,7 +256,7 @@ MOODS.forEach((mood, i) => { for (let frame = 0; frame < 2; frame++) {
       if (!solid(gx - 1, gy)) frect(rx, ry, 1, 2, EDGE);
       if (!solid(gx + 1, gy)) frect(rx + 1, ry, 1, 2, EDGE);
       if (!solid(gx, gy - 1)) frect(rx, ry, 2, 1, EDGE);
-      if (!solid(gx, gy + 1) && gy < 24) frect(rx, ry + 1, 2, 1, EDGE);   // the hem's bottom edge is NOT baked — arms flow out of it; the renderer closes the gaps
+      if (!solid(gx, gy + 1) && gy < 25) frect(rx, ry + 1, 2, 1, EDGE);   // the hem's bottom edge is NOT baked — arms flow out of it; the renderer closes the gaps
     }
   }
 
