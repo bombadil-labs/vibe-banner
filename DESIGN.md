@@ -456,6 +456,24 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   `details` is still honoured, because punishing the old shape would be pointless — but it no
   longer forces the wide layout.
 
+- **The sequencer had to tween (v0.47.0).** The maintainer asked whether shapes shouldn't
+  transition smoothly, and they were right that it wasn't happening. The subtle part is WHY it
+  looked half-right: the motes are spring-driven, so a hard target swap already produces
+  motion — but it is 64 springs racing independently toward new stations, which reads as a
+  scramble rather than a change of shape. The fix belongs one level up, at the target rather
+  than the spring. A mood's movement now resolves to a PLAN — two path sets and a blend
+  factor — and never to a bare set. The target is the lerp of both, so the swarm morphs as one
+  body, each mote walking a smooth line from its old station to its new one. `align` eases
+  across the seam too, so the grip loosens in transit and firms up on arrival.
+  Applied to `flash` as well as `seq`, which is what makes gathering into a question mark
+  actually look like gathering. Measured: no mood's target moves more than 8px per frame at
+  R=100, where a hard swap stepped ~150px. `seq` reads as reach-hold-release: gather 0.77s,
+  hold 0.86s, let go into the scatter, gather the next.
+  One consequence worth recording: the static tile can no longer sample t=0, because at zero
+  every seq mood is mid-gather and every flash mood is mid-reach. `MOTE_STILL_T = 0.9` is
+  chosen so the flashes sit at full reach and a seq sits mid-hold — a still frame should show
+  a shape, not a blur between two.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately

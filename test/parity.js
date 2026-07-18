@@ -242,6 +242,7 @@ ok(palNorm(buildSVG({ avatar: "( ˆ ᵕ ˆ )", palette: ["#d99a5e"], details: { 
 
 console.log("\nflight paths (v0.46.0): open curves ping-pong, mouths smile, glyphs spell");
 const M = require("../src/vibe.js").__motes;
+const MOTE_STILL = 0.9;   // mirrors MOTE_STILL_T: sample where a flash is at full reach
 function frameAt(mood, t) {
   const paths = M.pathsFor(mood, t), out = [];
   for (let i = 0; i < M.N; i++) out.push(M.target(i, M.N, t, paths, 0, 0, 100, 7));
@@ -262,9 +263,9 @@ ok(M.closed({ p: "ring" }) && M.closed({ p: "infinity" }) && !M.closed({ p: "lin
   const ends = (pts[0].y + pts[pts.length - 1].y) / 2, mid = pts[Math.floor(pts.length / 2)].y;
   ok(mid > ends, m + " curves as a SMILE, not a rainbow (a rainbow reads as a frown)");
 });
-let bang = frameAt("surprised", 0.2), bx = bang.map((p) => p.x);
+let bang = frameAt("surprised", MOTE_STILL), bx = bang.map((p) => p.x);
 ok(Math.max(...bx) - Math.min(...bx) < 6, "surprised flashes an exclamation: a vertical stroke, near-zero width");
-let qm = frameAt("puzzled", 0.2);
+let qm = frameAt("puzzled", MOTE_STILL);
 ok(Math.max(...qm.map((p) => p.y)) - Math.min(...qm.map((p) => p.y)) > 100, "puzzled flashes a question mark: tall, with a detached dot");
 let sil = new Set();
 for (let t = 0; t < 13; t += 1) {
@@ -276,6 +277,23 @@ ok(/<circle/.test(buildSVG({ avatar: { set: "motes", item: "working" } })), "wor
 ok(/sepia-sheet/.test(buildSVG({ avatar: { set: "sepia", item: "working" } })), "a pack without art for a mood falls back instead of breaking");
 let ringOnly = Object.keys(M.moods).filter((k) => { const p = M.moods[k].paths; return p && p.every((x) => !x.p || x.p === "ring") && !M.moods[k].flash; });
 ok(ringOnly.length <= 10, "the swarm is not all circles: " + ringOnly.length + " moods are a plain ring with no flash (was 20)");
+
+console.log("\nshapes tween (v0.47.0): no mood ever hard-swaps its target");
+let jumpy = [];
+Object.keys(M.moods).forEach((m) => {
+  let w = 0;
+  for (let t = 0; t < 25; t += 1 / 60) {
+    const a = frameAt(m, t), b = frameAt(m, t + 1 / 60);
+    for (let i = 0; i < M.N; i++) w = Math.max(w, Math.hypot(a[i].x - b[i].x, a[i].y - b[i].y));
+  }
+  if (w > 8) jumpy.push(m + " (" + w.toFixed(1) + "px)");
+});
+ok(!jumpy.length, "every mood's target moves continuously — a swap would step ~150px" + (jumpy.length ? " — jumpy: " + jumpy : ""));
+let plan = M.pathsFor("working", 0.4);
+ok(plan.a !== plan.b && plan.k > 0 && plan.k < 1, "mid-gather, a seq mood is genuinely blending two sets (k=" + plan.k.toFixed(2) + ")");
+ok(M.pathsFor("working", 1.2).k === 0, "mid-hold, it rests on one shape rather than blending forever");
+let fl = M.pathsFor("puzzled", 0.2);
+ok(fl.k > 0 && fl.k < 1, "flash ramps in too — the question mark gathers rather than appearing");
 
 console.log("\nevery mood resolves in every pack that advertises it");
 const MOODS_ALL = ["neutral","content","delighted","focused","sleepy","sheepish","booped","thinking",

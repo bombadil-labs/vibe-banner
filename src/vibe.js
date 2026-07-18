@@ -198,6 +198,9 @@
   // is why a smile can be a temporary flight path rather than a special case. `flash` swaps
   // in another path set briefly and lets it go: a face that keeps almost-happening.
   var MOTE_N = 64;
+  // Where the static tile samples the clock. Chosen so the flash moods sit at full reach and
+  // a seq mood sits mid-hold, rather than caught in a ramp looking like neither shape.
+  var MOTE_STILL_T = 0.9;
   var FACE_PATHS = [
     { p: "ring", x: -0.40, y: -0.28, r: 0.13, share: 0.19, align: 0.94, flow: 0.35 },
     { p: "ring", x: 0.40, y: -0.28, r: 0.13, share: 0.19, align: 0.94, flow: -0.35 },
@@ -244,7 +247,7 @@
                           { p: "ring", r: 0.50, ry: 0.44, share: 0.3, align: 0.25, flow: 0.40, spin: 0.50 }] },
     groan:      { paths: [{ p: "line", x1: -0.60, y1: 0.42, x2: 0.60, y2: 0.50, align: 0.5, cluster: 0.15, flow: 0.02 }] },
     oops:       { paths: [{ p: "ring", r: 0.80, ry: 0.70, align: 0.15, flow: 0.60, spin: 0.70 }],
-                  flash: { every: 6, hold: 1.2, paths: MARK_BOLT } },
+                  flash: { every: 6, hold: 1.7, ramp: 0.7, paths: MARK_BOLT } },
     frustrated: { paths: [{ p: "poly", glyph: "wave", scale: 0.85, align: 0.72, flow: 1.10 }] },
     angry:      { paths: [{ p: "ring", r: 0.28, ry: 0.26, align: 0.55, cluster: 0.30, flow: 1.00, spin: 1.30 }] },
     dramatic:   { paths: [{ p: "ring", r: 0.78, ry: 0.62, share: 0.70, align: 0.85, flow: 0.10, spin: 0.16 },
@@ -275,20 +278,41 @@
                     [{ p: "ring", r: 0.44, ry: 0.40, align: 0.92, cluster: 0.55, flow: 0.85, spin: 0.55 }]
                   ] }
   };
-  // Three ways a mood can move. `paths` is a standing shape. `flash` swaps another set in
-  // briefly and lets it go — assemble, hold, diffuse. `seq` never settles: it walks a list,
-  // holding each for a few seconds, which is what makes a loader feel like ongoing effort.
+  function ease(k) { return k <= 0 ? 0 : k >= 1 ? 1 : k * k * (3 - 2 * k); }
+  // Three ways a mood can move. `paths` is a standing shape. `flash` reaches for another set
+  // and lets it go. `seq` never settles: it walks a list, holding each a few seconds.
+  //
+  // All of it resolves to a PLAN — two path sets and a blend between them — never a bare
+  // swap. Swapping sets outright leaves 64 springs racing independently toward new stations,
+  // which reads as a scramble rather than a change of shape. Blending the TARGETS means the
+  // swarm morphs as one body: each mote walks a smooth line from its old station to its new
+  // one, and `align` eases across the seam so the grip loosens in transit and firms up again
+  // on arrival. The tween is why gathering into a question mark looks like gathering.
   function motePathsFor(mood, t) {
     var M = MOTE_MOODS[mood] || MOTE_MOODS.content;
+    var still = function (p) { return { a: p, b: p, k: 0 }; };
     if (M.seq && M.seq.length) {
-      var hold = M.hold || 2.6, n = M.seq.length;
-      var slot = Math.floor(t / hold) % n; if (slot < 0) slot += n;
-      var into = (t % hold) / hold;
-      if (M.scatter && into > 0.86) return M.scatter;          // let go before reaching for the next one
-      return M.seq[slot];
+      var hold = M.hold || 2.6, n = M.seq.length, xf = M.cross == null ? 0.32 : M.cross;
+      var idx = Math.floor(t / hold), into = (t % hold) / hold;
+      if (into < 0) into += 1;
+      var cur = M.seq[((idx % n) + n) % n];
+      // what it gathers OUT of and lets go INTO: the scatter if the mood has one, else the
+      // shape before it — so a seq without a scatter still flows shape-to-shape
+      var rest = M.scatter || M.seq[(((idx - 1) % n) + n) % n];
+      if (into < xf) return { a: rest, b: cur, k: ease(into / xf) };                       // gathering
+      if (M.scatter && into > 1 - xf) return { a: cur, b: M.scatter, k: ease((into - (1 - xf)) / xf) };  // letting go
+      return still(cur);
     }
-    if (M.flash && (t % M.flash.every) < M.flash.hold) return M.flash.paths;
-    return M.paths;
+    if (M.flash) {
+      var ph = t % M.flash.every, hd = M.flash.hold;
+      var rp = M.flash.ramp == null ? Math.min(0.55, hd * 0.42) : M.flash.ramp;
+      if (ph < hd) {
+        var k = ph < rp ? ease(ph / rp) : (ph > hd - rp ? ease((hd - ph) / rp) : 1);
+        return { a: M.paths, b: M.flash.paths, k: k };
+      }
+      return still(M.paths);
+    }
+    return still(M.paths);
   }
   // Glyph outlines in the same normalised space as every other path: x,y in roughly [-1,1],
   // y down. Traced as one stroke so `flow` walks the pen along the letterform.
@@ -365,7 +389,16 @@
     }
     return null;                                               // unassigned: shares summed below 1, so this one drifts free
   }
-  function moteTarget(i, n, t, paths, cx, cy, R, seed) {
+  function moteTarget(i, n, t, plan, cx, cy, R, seed) {
+    if (Array.isArray(plan)) return moteTargetOn(i, n, t, plan, cx, cy, R, seed);
+    var A = moteTargetOn(i, n, t, plan.a, cx, cy, R, seed);
+    if (plan.k <= 0 || plan.a === plan.b) return A;
+    var B = moteTargetOn(i, n, t, plan.b, cx, cy, R, seed);
+    if (plan.k >= 1) return B;
+    var k = plan.k;
+    return { x: A.x + (B.x - A.x) * k, y: A.y + (B.y - A.y) * k, align: A.align + (B.align - A.align) * k };
+  }
+  function moteTargetOn(i, n, t, paths, cx, cy, R, seed) {
     var s = moteSlot(paths, n, i);
     if (!s) {
       var fr = mulberry32(seed + i * 733), a0 = fr() * 6.28318, rr0 = R * (0.45 + fr() * 0.55);
@@ -708,11 +741,14 @@
       // holding still rather than a placeholder — one source of truth for both paths.
       var pr = Math.min(portrait.s, 140) * 0.42;
       var pcx = portrait.x + portrait.s / 2, pcy = faceCy;
-      var FP = motePathsFor(faceProc.item, 0);
+      // Sample where the shape is SETTLED, not at t=0: a seq mood is mid-gather at zero and a
+      // flash mood is mid-reach, so t=0 would freeze the static tile on a blur of motion.
+      var MT0 = MOTE_STILL_T;
+      var FP = motePathsFor(faceProc.item, MT0);
       var hue = fieldFromPalette(p.palette);
       var dots = [];
       for (var mi = 0; mi < MOTE_N; mi++) {
-        var tg = moteTarget(mi, MOTE_N, 0, FP, pcx, pcy, pr, seed);
+        var tg = moteTarget(mi, MOTE_N, MT0, FP, pcx, pcy, pr, seed);
         var mc = hue[mi % hue.length].fill;
         dots.push('<circle cx="' + g(tg.x) + '" cy="' + g(tg.y) + '" r="' + g(2.4 + (mi % 3) * 0.5) +
           '" fill="' + mc + '" opacity="0.85"/>');
