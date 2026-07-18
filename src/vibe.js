@@ -167,6 +167,7 @@
           contract: { 16: 1 },                                 // groan: the long contraction cycle — deadpan, then the visible squeeze, held ~30s, eventually released
           strain: { 19: 1 },                                   // angry: RESTRAINED fury — arms strain longer and tense, fins frill out but not far, everything trembling slightly
           props: { 8: "bulb", 15: "laughs", 16: "sweat", 17: "excl", 18: "vein", 19: "grawlix", 27: "qmark" },   // per-mood emoji props, drawn live ON the avatar (v0.34.0: real emoji, not pixel recreations; still the avatar's own, never flag weather)
+          tint: { 20: 1 },                                     // dramatic: the porcelain mask washes in the palette's lead colour (v0.40.3) — the sheet stays white; the tint is live. Tinted moods must keep both feature frames identical (the tint canvas replaces the features layer)
           thrill: 15                                           // the feeding reaction (v0.35.0): whatever the mood, being fed flashes this cell's frame 1 — laugh's wide-eyed guffaw — one delighted pulse, then back
         }
       };
@@ -788,6 +789,16 @@
       kaoEl.style.position = "relative";
       kaoEl.appendChild(chromo);                               // inside the face element: rides every pose and shake
       if (featEl) kaoEl.appendChild(featEl);                   // features stack ABOVE the colour — the body is a solid surface it wanders over
+      // THE MASK TINT (v0.40.3): tint moods wash their FEATURES layer in the palette's
+      // lead colour — multiply keeps the dark holes dark while the porcelain takes the
+      // hue. Painted once from the sheet on load; replaces featEl, so tinted moods must
+      // keep both feature frames identical (dramatic's mask never blinks anyway).
+      var tintC = null;
+      if (featEl && fm.anim.split && fm.anim.tint && fm.anim.tint[fm.index] && p.palette && p.palette.length && p.palette[0]) {
+        tintC = document.createElement("canvas");
+        tintC.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated";
+        kaoEl.appendChild(tintC);
+      }
       var mimg = new Image(); mimg.crossOrigin = "anonymous";
       mimg.onload = function () {
         try {
@@ -809,6 +820,23 @@
           }
           chromoMask = mc;
         } catch (e) { chromo.style.display = "none"; }
+        if (tintC) {
+          try {
+            tintC.width = fm.cellW || 64; tintC.height = fm.cellH || 64;
+            var tfx = tintC.getContext("2d");
+            tfx.imageSmoothingEnabled = false;
+            var tcol = fm.index % fm.cols, trow = Math.floor(fm.index / fm.cols) + fm.anim.frameRows;   // the open-features frame
+            tfx.drawImage(mimg, tcol * tintC.width, trow * tintC.height, tintC.width, tintC.height, 0, 0, tintC.width, tintC.height);
+            tfx.getImageData(0, 0, 1, 1);                      // taint probe
+            tfx.globalCompositeOperation = "multiply";
+            tfx.fillStyle = rgba(String(p.palette[0]), 0.7);
+            tfx.fillRect(0, 0, tintC.width, tintC.height);
+            tfx.globalCompositeOperation = "destination-in";   // restore the features' own alpha — the wash stays inside the drawn pixels
+            tfx.drawImage(mimg, tcol * tintC.width, trow * tintC.height, tintC.width, tintC.height, 0, 0, tintC.width, tintC.height);
+            tfx.globalCompositeOperation = "source-over";
+            featEl.style.visibility = "hidden";                // the tinted copy IS the features layer now
+          } catch (e2) { if (tintC.parentNode) tintC.parentNode.removeChild(tintC); tintC = null; }
+        }
       };
       mimg.onerror = function () { chromo.style.display = "none"; };
       mimg.src = fm.url;
@@ -816,7 +844,7 @@
     // THE ECHO (v0.40.0, rhyme): an exact replica of the face, 25 banner-px to the LEFT,
     // 25% alpha, non-interactive, mirroring every action — transform, sprite frames, and
     // the fin/chromatophore canvases blitted each frame. A verse and its rhyme.
-    var echoKao = null, echoFeat = null, echoFins = null, echoChromo = null;
+    var echoKao = null, echoFeat = null, echoFins = null, echoChromo = null, echoTint = null;
     if (L.rhyme && kaoEl && faceLayerEl) {
       var echoLayer = document.createElement("div");
       echoLayer.style.cssText = faceLayerEl.style.cssText;
@@ -830,8 +858,9 @@
       echoLayer.appendChild(echoKao);
       wrap.insertBefore(echoLayer, faceLayerEl);
       var eCvs = echoKao.querySelectorAll("canvas");
-      if (finC) echoFins = eCvs[0] || null;                    // children were appended finC → chromo → featEl; the clone preserves order
+      if (finC) echoFins = eCvs[0] || null;                    // children were appended finC → chromo → featEl → tintC; the clone preserves order
       if (chromo) echoChromo = eCvs[finC ? 1 : 0] || null;
+      if (tintC) echoTint = eCvs[(finC ? 1 : 0) + (chromo ? 1 : 0)] || null;
       echoFeat = featEl ? echoKao.querySelector("div") : null;
     }
     // Every banner-generated message carries this prefix so it never reads as typed text —
@@ -1586,6 +1615,12 @@
             var ecx2 = echoChromo.getContext("2d");
             ecx2.clearRect(0, 0, echoChromo.width, echoChromo.height); ecx2.drawImage(chromo, 0, 0);
           }
+          if (echoTint && tintC && tintC.width > 0) {
+            if (echoTint.width !== tintC.width || echoTint.height !== tintC.height) { echoTint.width = tintC.width; echoTint.height = tintC.height; }
+            var ecx3 = echoTint.getContext("2d");
+            ecx3.clearRect(0, 0, echoTint.width, echoTint.height); ecx3.drawImage(tintC, 0, 0);
+          }
+          if (echoFeat && featEl && echoFeat.style.visibility !== featEl.style.visibility) echoFeat.style.visibility = featEl.style.visibility;   // the tint hides the plain features on both
         }
 
         // --- the field: three columns holding a seeded vertical band set by focus ---
