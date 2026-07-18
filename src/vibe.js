@@ -931,18 +931,22 @@
             ctx.arcTo(ptw.x, ptw.y + pss, ptw.x, ptw.y, 10);
             ctx.arcTo(ptw.x, ptw.y, ptw.x + pss, ptw.y, 10);
             ctx.closePath(); ctx.clip();
-            var fb2 = fm.box, iox = fb2.x + fb2.w * 0.2, ioy = fb2.y + fb2.h * 0.88;
+            // the ink emits from BEHIND her (the cloud's origin is her centre-mass, and
+            // this canvas sits under the face layer) — it billows outward in the burst's
+            // own randomized direction and swells until much of her is veiled from behind,
+            // while she stays crisp in front of her own cloud
+            var fb2 = fm.box, iox = fb2.x + fb2.w * 0.5, ioy = fb2.y + fb2.h * 0.5;
             var baseAng = pr2() * 6.2832;                      // each burst sprays in its own randomized direction
             // lifecycle: JET (fast, dense) → EXPAND + LINGER (the cloud hangs in the
             // water, slowly swelling and drifting) → DISSOLVE (thins away by 4.5s)
             var ial0 = iage < 0.4 ? 0.6 : iage < 2.6 ? 0.45 : 0.45 * (1 - (iage - 2.6) / 1.9);
             for (var ik = 0; ik < 14; ik++) {
-              var ia = baseAng + (pr2() - 0.5) * 1.1;          // a fan around the burst's own direction
-              var ispd = (12 + pr2() * 30) * b.s;
+              var ia = baseAng + (pr2() - 0.5) * 2.6;          // a wide fan — the cloud wraps around her, biased toward the burst direction
+              var ispd = (8 + pr2() * 24) * b.s;               // moderate spread: it hangs behind her rather than shooting away
               var idist = ispd * (1 - Math.exp(-iage * 1.5));  // jet, then hang
               var ixp = iox + Math.cos(ia) * idist + Math.sin(iage * 0.7 + ik) * iage * 1.2;   // lingering cloud sways with the water
-              var iyp = ioy + Math.sin(ia) * idist * 0.75 + iage * 2.2;
-              var irad = (2.5 + iage * 5.5 + pr2() * 3) * b.s;
+              var iyp = ioy + Math.sin(ia) * idist * 0.8 + iage * 2;
+              var irad = (3 + iage * 7.5 + pr2() * 4) * b.s;   // swells enough to veil the body
               var ial = Math.max(0, ial0 * b.s * (0.5 + pr2() * 0.5));
               var ig2 = ctx.createRadialGradient(ixp, iyp, 0, ixp, iyp, irad);
               ig2.addColorStop(0, rgba("#3b2c26", ial)); ig2.addColorStop(1, rgba("#3b2c26", 0));
