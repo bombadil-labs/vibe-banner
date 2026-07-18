@@ -265,14 +265,12 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   tooltips on every row. Presence-is-signal holds: optional params only render gauges
   when reported.
 
-- **Jimothy (bench, the maintainer's request, 2026-07-18).** Once Sepia is locked down,
-  the next custom character: Jimothy, the beloved deformed raccoon of Seattle — stunted,
-  compressed, a walking arch with a low-slung masked face and stub legs. Cute and memey;
-  the whole read is the SILHOUETTE (the hunch is the identity, the way Sepia's dart is
-  hers), so the sheet likely wants a profile-leaning pose rather than Sepia's frontal
-  symmetry — which breaks the mirrored-eye component assumption and earns its own
-  PROFILE-style table. Same registers: pixel flesh, fine ink, renderer-drawn life
-  (waddle bounce instead of fins?). Initial illustration sketched in-chat 2026-07-18.
+- **Jimothy: considered and declined (2026-07-18).** Briefly benched as the next
+  character: the beloved deformed raccoon of Seattle. The maintainer read further and
+  pulled it the same day — the animal is unwell, and turning a suffering creature into
+  a meme avatar is exploitation regardless of affection. Do not resurrect. The craft
+  note that came out of the study survives on its own: a profile-silhouette character
+  breaks the mirrored-eye frontal assumption and would earn its own profile table.
 
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
