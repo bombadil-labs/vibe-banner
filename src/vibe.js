@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@81aded341b18a6d5f606800367de649977a58ca3/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@c82c40a82bb36ee95c7fe4e3f8eaa0e36a340d16/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -165,6 +165,7 @@
           cycle: { 15: 0.32 },                                 // beat moods: laugh's frame 1 is the guffaw, cycled in slow deep HAs (belly laugh, not cackle — the maintainer's note)
           bounce: { 15: 1 },                                   // beat moods also heave the whole body — up-down AND a chest-wide width pulse
           contract: { 16: 1 },                                 // groan: the long contraction cycle — deadpan, then the visible squeeze, held ~30s, eventually released
+          strain: { 19: 1 },                                   // angry: RESTRAINED fury — arms strain longer and tense, fins frill out but not far, everything trembling slightly
           props: { 8: "bulb", 15: "laughs", 16: "sweat", 17: "excl", 18: "vein", 19: "grawlix", 27: "qmark" },   // per-mood emoji props, drawn live ON the avatar (v0.34.0: real emoji, not pixel recreations; still the avatar's own, never flag weather)
           thrill: 15                                           // the feeding reaction (v0.35.0): whatever the mood, being fed flashes this cell's frame 1 — laugh's wide-eyed guffaw — one delighted pulse, then back
         }
@@ -1092,6 +1093,7 @@
           conAmt = conBase * cenv * (0.92 + 0.08 * Math.sin(t * 0.8));
           conFrame = cenv > 0.55 ? 1 : 0;                                            // past halfway the eyes clench shut
         }
+        var strainA = (fm && fm.anim && fm.anim.strain && fm.anim.strain[fm.index]) || 0;   // restrained fury: the body held taut, not exploded
         if (feedFx && feedFx.t0 == null) feedFx.t0 = t;                              // late-bind the feeding clock, like every other gesture
         var feedAge = feedFx ? t - feedFx.t0 - feedFx.delay : 9;
         var thrillE = feedAge > 0 && feedAge < 1.1 ? Math.sin(feedAge / 1.1 * Math.PI) : 0;   // the thrill: one delighted pulse when the food arrives, then back to the mood
@@ -1139,7 +1141,7 @@
             var fcode = fm.anim.fins.charAt(fm.index) || "r";
             var fp2 = FINP[fcode] || FINP.r;
             var fsc = fcw / 64;
-            var baseW = fp2[0] * fsc * (1 - 0.55 * conAmt), famp = fp2[1] * fsc * (1 - 0.6 * conAmt), frate = fp2[2];   // contraction pulls the membranes hard against the flanks
+            var baseW = fp2[0] * fsc * (1 - 0.55 * conAmt) * (1 + 0.55 * strainA), famp = fp2[1] * fsc * (1 - 0.6 * conAmt) * (1 + 0.3 * strainA), frate = fp2[2];   // contraction pulls the membranes in; strain frills them out — but not far
             // the fins ATTACH ALONG THE MANTLE'S CURVE (mirrors gen-sepia's PROFILE):
             // the flank bows out to the eye band and tapers away below — the membrane
             // follows it, so the fin reads as grown from the body line, not pinned to a wall
@@ -1194,12 +1196,13 @@
                 var acx = armS[0], ai2 = armS[1];
                 var arr2 = mulberry32(L.seed + ai2 * 3671 + 17);
                 var aph = arr2() * 6.28, arate = (0.5 + arr2() * 0.5) * (0.4 + fp2[2] * 0.35);
-                var aamp = (1.2 + fp2[1] * 0.9) * fsc * (1 - 0.6 * conAmt), alen = Math.max(6, Math.round(armS[2] * (1 - 0.38 * conAmt))), ay0 = 49;   // roots tuck up under the open hem; contraction draws the whole skirt in
+                var aamp = (1.2 + fp2[1] * 0.9) * fsc * (1 - 0.6 * conAmt) * (1 - 0.45 * strainA), alen = Math.max(6, Math.round(armS[2] * (1 - 0.38 * conAmt) * (1 + 0.28 * strainA))), ay0 = 49;   // contraction draws the skirt in; strain reaches it LONGER and holds it tense
                 var aw0 = 2.3 * fsc;
                 var lEdge = [], rEdge = [];
                 for (var ayy = 0; ayy <= alen; ayy++) {
                   var au = ayy / alen;
-                  var adx = aamp * Math.sin(t * arate * 6.283 + aph + au * 1.9) * au * au;
+                  var adx = aamp * Math.sin(t * arate * 6.283 + aph + au * 1.9) * au * au
+                    + strainA * 0.45 * fsc * Math.sin(t * 11 + aph * 3) * au * au;   // the strain TREMBLES: a fine fast shiver down each taut arm
                   var aw = aw0 * (1 - 0.55 * au);
                   lEdge.push([(acx * fsc) + adx - aw, (ay0 + ayy) * fsc]);
                   rEdge.push([(acx * fsc) + adx + aw, (ay0 + ayy) * fsc]);
