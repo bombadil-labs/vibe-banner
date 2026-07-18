@@ -245,6 +245,11 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   with frustrated, and a gritted-teeth snarl (GRIT extras overwrite the placeholder block
   mouth). Grawlix sized to 9.5 units, centred higher so the curses climb above the crown.
   The escalation frustrated → angry is now legible in the face alone.
+  v0.38.0 pulled it back to RESTRAINED fury: the snarl read as about-to-chomp, so the
+  mouth became a seethe (small fine-ink line, angled down) and the brows went (the fury
+  lids are the brows). New `anim.strain` channel: arms reach ~28% longer and hold tense
+  with a fine 11Hz tremble, fins frill out ~55% past tucked but no further. Fury held
+  in the body — the strain, not the explosion, is the signal.
 
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
