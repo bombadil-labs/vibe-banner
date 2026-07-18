@@ -106,13 +106,16 @@ function drawEyes(out, lp, rp, blink) {
   [[8, lp, false], [19, rp, true]].forEach(spec => {
     const bx = spec[0], preset = spec[1], mir = spec[2];
     const x0 = bx - 1, x1 = bx + 5, y0 = 9, y1 = 16;           // socket ring bounds; whites bx..bx+4, rows 10-15
-    for (let x = x0 + 1; x < x1; x++) { out.push([x, y0, "p"], [x, y1, "p"]); }
-    for (let y = y0 + 1; y < y1; y++) { out.push([x0, y, "p"], [x1, y, "p"]); }
     if (blink) {
-      out.push([bx, 13, "p"], [bx + 4, 13, "p"]);              // curved lid inside the socket
-      for (let x = bx + 1; x <= bx + 3; x++) out.push([x, 12, "p"]);
+      // a blink compresses the WHOLE socket, outline included — not a lid framed
+      // inside an open ring (the maintainer's catch). One full-width stroke at the
+      // eye's midline, ends dipping: the outline squeezed shut.
+      out.push([x0, 13, "p"], [x1, 13, "p"]);
+      for (let x = x0 + 1; x < x1; x++) out.push([x, 12, "p"]);
       return;
     }
+    for (let x = x0 + 1; x < x1; x++) { out.push([x, y0, "p"], [x, y1, "p"]); }
+    for (let y = y0 + 1; y < y1; y++) { out.push([x0, y, "p"], [x1, y, "p"]); }
     for (let y = 10; y <= 15; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
     if (preset === "heart" || preset === "star") {
       (preset === "heart" ? HEARTR : STARR).forEach(q =>
