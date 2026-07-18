@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@0864f2264bddef3dfe52d33abadec85f2582a34e/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@8d9c24cfc0ef8f899c3200a2d61815c90dcad2f9/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -161,7 +161,8 @@
           frames: 2, frameRows: 4, stride: 32, split: true,   // LAYERED sheet: rows 0-3 body (solid, the colour's canvas+mask), 4-7 features, 8-11 blink features
           fins: "rrftdtfrfffrdtrfdtttfcdrtrcrrdrf",           // per-mood fin posture (derives from gen-sepia's FRILL_OF — keep in sync): r ripple, f flared, d drooped, t tucked, c calm
           arms: true,                                          // three independently swaying arms, drawn from the hem (the baked stubs retired)
-          ink: { 17: 1, 13: 0.4 }                              // her namesake pigment: oops sprays a full startled puff, anxious leaks nervous wisps
+          ink: { 17: 1, 13: 0.4 },                             // her namesake pigment: oops sprays a full startled puff, anxious leaks nervous wisps
+          cycle: { 15: 0.3 }                                   // beat moods: laugh's frame 1 is the guffaw (mouth thrown wide), cycled in bouts — not a blink
         }
       };
     }
@@ -503,12 +504,7 @@
         '<rect x="0" y="0" width="' + W + '" height="' + L.H + '" fill="url(#drsp)"/>');
     }
     var glow = [];
-    if (L.spark) {                                             // a little light-bulb over the face
-      var bx = L.portrait.x + L.portrait.s + 28, by = L.coreCy - 32;   // margin anchor, beside the window
-      glow.push('<ellipse cx="' + bx + '" cy="' + by + '" rx="22" ry="22" fill="#ffe27a" opacity="0.16"/>' +
-        '<circle cx="' + bx + '" cy="' + by + '" r="9" fill="#ffe27a" opacity="0.85"/>' +
-        '<rect x="' + (bx - 4) + '" y="' + (by + 7) + '" width="8" height="3" rx="1" fill="#9a875f"/>');
-    }
+    // (the spark bulb left the weather in v0.33.0 — marks like it are the avatar's own props now, baked into its sheet)
     if (L.excited) sparkleData(L.H, L.seed).forEach(function (st) { for (var a = 0; a < 3; a++) glow.push('<ellipse cx="' + st.cx.toFixed(1) + '" cy="' + st.cy.toFixed(1) + '" rx="' + st.s.toFixed(1) + '" ry="' + (st.s * st.ry).toFixed(2) + '" fill="#f7e3a8" opacity="' + st.op.toFixed(2) + '" transform="rotate(' + (st.rot + 60 * a).toFixed(1) + ' ' + st.cx.toFixed(1) + ' ' + st.cy.toFixed(1) + ')"/>'); });
     if (L.at_peace) {                                          // stillness as a positive state: a soft halo below the face, blossoms in the margins
       glow.push('<ellipse cx="' + g(L.portrait.x + L.portrait.s + 28) + '" cy="' + g(L.coreCy + 16) + '" rx="36" ry="15" fill="#ffe9bd" opacity="0.28"/>');
@@ -520,14 +516,6 @@
       var dx = (L.portrait.x + L.portrait.s + 28) - r.x, dy = L.coreCy - r.y;   // lines converge toward the margin point beside her
       glow.push('<line x1="' + r.x.toFixed(1) + '" y1="' + r.y.toFixed(1) + '" x2="' + (r.x + dx * r.len).toFixed(1) + '" y2="' + (r.y + dy * r.len).toFixed(1) + '" stroke="#4a3c26" stroke-opacity="' + (0.16 * r.op).toFixed(3) + '" stroke-width="1.2"/>');
     });
-    if (L.puzzled) {                                           // the question-cloud, at rest
-      var qr = mulberry32(L.seed + 37);
-      for (var qi = 0; qi < 4; qi++) {
-        var qa2 = qr() * 6.2832, qd = 20 + qr() * 32;
-        glow.push('<text x="' + g(L.portrait.x + L.portrait.s + 32 + Math.cos(qa2) * qd) + '" y="' + g(L.coreCy - 4 + Math.sin(qa2) * qd * 0.6) +
-          '" font-size="' + g(10 + qr() * 4) + '" font-weight="600" fill="#7a6a55" opacity="' + g(0.25 + qr() * 0.3) + '">?</text>');
-      }
-    }
     if (glow.length) out.push('<g opacity="0.9">' + glow.join("") + '</g>');
     if (L.rhyme) out.push('<g opacity="0.12" transform="translate(' + g(L.portrait.s + 4) + ',6)">' + L.kaoSVG + '</g>');   // the echo of the face, behind-ish and offset
     out.push('</g>');                                          // close the right-region boundary
@@ -1010,8 +998,14 @@
         if (kaoEl && fm && fm.kind === "sprite" && fm.anim) {
           var fRows = fm.anim.frameRows || fm.rows / fm.anim.frames;
           var fr = 0;                                                                // base at rest — fins and chromatophores carry all continuous motion now
-          var bper = 3.2 + (L.seed % 5) * 0.9;
-          if (((t + (L.seed % 7) * 0.6) % bper) < 0.16) fr = 1;                      // blink, ~160ms on a seeded organic cadence
+          var beat = fm.anim.cycle && fm.anim.cycle[fm.index];
+          if (beat != null) {                                                        // beat moods (the guffaw): frame 1 is a mouth thrown wide, not a blink —
+            var bout = t % 3.4;                                                      // a bout of laughter, then a breath
+            if (bout < 1.9 && (bout % (beat * 2)) < beat) fr = 1;
+          } else {
+            var bper = 3.2 + (L.seed % 5) * 0.9;
+            if (((t + (L.seed % 7) * 0.6) % bper) < 0.16) fr = 1;                    // blink, ~160ms on a seeded organic cadence
+          }
           if (fr !== spriteFrame) {
             spriteFrame = fr;
             var fcol2 = fm.index % fm.cols;
@@ -1257,25 +1251,7 @@
             ctx.fillStyle = rgba("#c8d2ff", 0.1 * fla); ctx.fillRect(0, 0, W, H);
             ctx.globalAlpha = 1;
           }
-          // a little cloud of grawlix curses clustered around the head — pop, fall, shrink, fade
-          var gw = ["$#@&", "%$#!", "@#$%", "#@!*", "&$@#", "*!?#", "$%&#", "@&#!", "!#$%", "#$@!"];
-          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          var GN = 10, gper = 2.0, glife = 1.3, fcx = Math.min(faceCX, 92), fcy = faceMidY;
-          for (var gi = 0; gi < GN; gi++) {
-            var grr = mulberry32(L.seed + gi * 131 + 61);
-            var birth = grr() * gper, word = gw[Math.floor(grr() * gw.length) % gw.length];
-            var ang = grr() * 6.2832, rad = 18 + grr() * 36;
-            var age = (((t - birth) % gper) + gper) % gper;
-            if (age > glife) continue;
-            var u = age / glife;
-            var fall = u < 0.2 ? -6 * (u / 0.2) : -6 + 22 * ((u - 0.2) / 0.8);         // small pop up, then fall
-            var gx = fcx + Math.cos(ang) * rad, gy = fcy + Math.sin(ang) * rad * 0.7 + fall;
-            var scl = 1.05 - 0.5 * u, al = u < 0.14 ? u / 0.14 : Math.max(0, 1 - (u - 0.14) / 0.86);
-            ctx.globalAlpha = al; ctx.font = "700 " + (10.5 * scl).toFixed(1) + "px ui-monospace, Menlo, Consolas, monospace";
-            ctx.fillStyle = gi % 3 === 0 ? "#ffd24a" : "#ff5a4a";
-            ctx.fillText(word, gx, gy);
-          }
-          ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
+          // (the grawlix curses left the storm in v0.33.0 — they're the avatar's own props now, baked into its sheet)
         }
         if (L.dramatic) {
           var dx = faceCX, dy = faceMidY, fl = 0.94 + 0.06 * Math.sin(t * 5.5) + 0.03 * Math.sin(t * 11);
@@ -1286,23 +1262,9 @@
           dim.addColorStop(0, rgba("#08080f", 0)); dim.addColorStop(0.5, rgba("#08080f", 0.16 * fl)); dim.addColorStop(1, rgba("#08080f", 0.46 * fl));
           ctx.fillStyle = dim; ctx.fillRect(0, 0, W, H);
         }
-        if (L.spark) {                                                               // light-bulb over the face: a periodic "click on"
-          var bx = faceCX, by = faceTop - 14, scyc = t % 3.0, on;
-          if (scyc < 0.12) on = scyc / 0.12;                                          // fast attack — the click
-          else if (scyc < 1.6) on = 1;                                               // hold bright
-          else if (scyc < 2.1) on = 1 - (scyc - 1.6) / 0.5;                          // dim down
-          else on = 0.12 + 0.05 * Math.sin(t * 2);                                    // faint idle glow
-          var gg = ctx.createRadialGradient(bx, by, 2, bx, by, 30);
-          gg.addColorStop(0, rgba("#fff6c0", 0.6 * on)); gg.addColorStop(0.5, rgba("#ffe27a", 0.24 * on)); gg.addColorStop(1, rgba("#ffe27a", 0));
-          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(bx, by, 30, 0, 6.2832); ctx.fill();
-          var burst = Math.max(0, on) * (scyc < 0.5 ? 1 : 0.4);                       // rays flare on the click
-          ctx.strokeStyle = rgba("#fff0a0", 0.85 * burst); ctx.lineWidth = 1.6; ctx.lineCap = "round";
-          for (var ri = 0; ri < 8; ri++) { var ra = ri * Math.PI / 4 - 0.2, r1 = 13 + burst * 9; ctx.beginPath(); ctx.moveTo(bx + Math.cos(ra) * 12, by + Math.sin(ra) * 12); ctx.lineTo(bx + Math.cos(ra) * r1, by + Math.sin(ra) * r1); ctx.stroke(); }
-          ctx.globalAlpha = 1; ctx.fillStyle = rgba("#ffe27a", 0.5 + 0.45 * on); ctx.beginPath(); ctx.arc(bx, by, 9, 0, 6.2832); ctx.fill();
-          if (on > 0.5) { ctx.strokeStyle = rgba("#c9892a", on); ctx.lineWidth = 1; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(bx - 3, by + 1); ctx.lineTo(bx - 1, by - 2); ctx.lineTo(bx + 1, by + 1); ctx.lineTo(bx + 3, by - 2); ctx.stroke(); }  // filament
-          ctx.fillStyle = rgba("#fffbe6", 0.6 * on); ctx.beginPath(); ctx.arc(bx - 2.5, by - 2.5, 3, 0, 6.2832); ctx.fill();
-          ctx.fillStyle = "#9a875f"; ctx.fillRect(bx - 4, by + 7, 8, 3); ctx.fillRect(bx - 3.5, by + 10, 7, 1.6); ctx.fillRect(bx - 3, by + 12, 6, 1.4);   // screw base
-        }
+        // (the spark bulb, the 💢 vein, the groan sweat drop, the oops "!", and the ?-cloud
+        // all left the weather in v0.33.0 — a mark is a prop the AVATAR wears, baked per-mood
+        // into its own sheet, free to differ per face; the banner keeps only true climate)
         if (stars.length) {
           ctx.strokeStyle = "#f7e3a8"; ctx.lineCap = "round";
           stars.forEach(function (o) {
@@ -1387,28 +1349,6 @@
           }
           ctx.globalAlpha = 1;
         }
-        if (L.frustrated) {                                                          // the anime anger-vein mark, above-and-right of the head; throbs in intensity, not size
-          var mkx = faceRight + 4 + kx, mky = faceTop - 6 + ky;                       // ride the kaomoji's shake
-          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.globalAlpha = 0.6 + 0.4 * frP;                                          // pulse opacity only (size stays put, so it doesn't fight the shake)
-          ctx.font = "16px ui-sans-serif, \"Segoe UI Emoji\", \"Apple Color Emoji\", sans-serif";
-          ctx.fillText("💢", mkx, mky);
-          ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
-        }
-        if (L.groan && groanGr > 0.05) {
-          var sdx = faceRight - 8, sdy = faceTop + 4 + groanGr * 7;
-          ctx.globalAlpha = 0.75 * groanGr; ctx.fillStyle = "#a9c4e0";
-          ctx.beginPath(); ctx.arc(sdx, sdy, 3.2, 0, 6.2832); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(sdx - 2.4, sdy - 1.8); ctx.lineTo(sdx, sdy - 7.5); ctx.lineTo(sdx + 2.4, sdy - 1.8); ctx.closePath(); ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-        if (L.oops && oopsE > 0.04) {
-          var exX = (faceRight - 4) + oopsOsc * 4, exY = faceTop - 8 - oopsE * 5;
-          ctx.globalAlpha = Math.min(1, oopsE * 1.3); ctx.strokeStyle = "#e07a5f"; ctx.fillStyle = "#e07a5f"; ctx.lineWidth = 3; ctx.lineCap = "round";
-          ctx.beginPath(); ctx.moveTo(exX, exY - 9); ctx.lineTo(exX, exY + 2); ctx.stroke();
-          ctx.beginPath(); ctx.arc(exX, exY + 7, 1.9, 0, 6.2832); ctx.fill();
-          ctx.globalAlpha = 1;
-        }
         if (L.rhyme && kaoEl && !L.faceImg) {                                        // the echo of the face: the kaomoji's own ghost, resting posture, slow fade cycle (text faces only)
           if (!kaoFont) {
             var kcs = root.getComputedStyle ? getComputedStyle(kaoEl) : null;
@@ -1427,25 +1367,6 @@
             ctx.strokeStyle = rgba("#4a3c26", (0.3 + 0.5 * flare) * r.op);
             ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + dx * ln, r.y + dy * ln); ctx.stroke();
           });
-        }
-        if (L.puzzled) {                                                             // the pre-spark: a loose cloud of "?" around the head — grawlix mechanics, gentle register
-          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          var QN = 5, qper = 3.4, qlife = 2.4, qcx = Math.min(faceCX, 92) + kx, qcy = faceMidY + ky;
-          for (var qi = 0; qi < QN; qi++) {
-            var qrr = mulberry32(L.seed + qi * 173 + 37);
-            var qbirth = qrr() * qper, qang = qrr() * 6.2832, qrad = 20 + qrr() * 34;
-            var qage = (((t - qbirth) % qper) + qper) % qper;
-            if (qage > qlife) continue;
-            var qu = qage / qlife;
-            var qrise = qu < 0.15 ? 2 * (qu / 0.15) : 2 - 14 * ((qu - 0.15) / 0.85);   // tiny bob, then a slow drift up
-            var qx = qcx + Math.cos(qang) * qrad, qy = qcy + Math.sin(qang) * qrad * 0.6 + qrise;
-            var qscl = 0.85 + 0.3 * qrr(), qa = qu < 0.18 ? qu / 0.18 : Math.max(0, 1 - (qu - 0.18) / 0.82);
-            ctx.globalAlpha = 0.5 * qa;
-            ctx.font = "600 " + (11.5 * qscl).toFixed(1) + "px ui-sans-serif, sans-serif";
-            ctx.fillStyle = qi % 3 === 0 ? "#9a8a6a" : "#7a6a55";
-            ctx.fillText("?", qx, qy);
-          }
-          ctx.globalAlpha = 1; ctx.textAlign = "start"; ctx.textBaseline = "alphabetic";
         }
         if (L.solemn) {                                                              // one small warm ember, steady, low in the frame
           var eg = ctx.createRadialGradient(W - 52, H - 12, 1, W - 52, H - 12, 15);

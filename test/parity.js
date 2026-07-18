@@ -125,7 +125,7 @@ ok(/Esperanto/.test(lang) || /eo/.test(lang), "Esperanto (no flag) → text, nam
 ok(/text-anchor="end"/.test(lang), "pinned to the right edge");
 
 console.log("flags render (static markers)");
-ok(/<circle/.test(buildSVG(Object.assign({}, base, { flag: "spark" }))), "spark adds a light-bulb");
+ok(!/#ffe27a/.test(buildSVG(Object.assign({}, base, { flag: "spark" }))), "spark adds NO bulb (v0.33.0: marks are the avatar's own props, baked into its sheet)");
 ok(/rotate\(/.test(buildSVG(Object.assign({}, base, { flag: "excited" }))), "excited adds rotated sparkles");
 ok(!/scale\(0\.62\)/.test(buildSVG(Object.assign({}, base, { flag: "awe" }))), "awe never poses the face (v0.31.0: a flag is banner weather; the face is the avatar's)");
 
@@ -154,7 +154,7 @@ ok(FLOWERS.test(buildSVG(Object.assign({}, base, { flag: "at_peace" }))), "flag:
 let unk = buildSVG(Object.assign({}, base, { flag: "enraptured" }));
 ok(unk.startsWith("<svg") && !/class="txt fl"/.test(unk), "unknown flag string → ignored, no trace, no crash");
 let pz = buildSVG(Object.assign({}, base, { flag: "puzzled" }));
-ok((pz.match(/>\?<\/text>/g) || []).length >= 3, "puzzled renders a cloud of ?s, not a single mark");
+ok(!/>\?<\/text>/.test(pz), "puzzled hangs NO ?-cloud (v0.33.0: the ? is the avatar's own prop, baked into its sheet)");
 
 console.log("legacy boolean payloads still resolve, one flag wins by priority");
 let multi = buildSVG(Object.assign({}, base, { angry: true, at_peace: true, puzzled: true }));
@@ -176,7 +176,7 @@ ok(/🌸|🌼|✿|❀|🌷/.test(buildSVG(Object.assign({}, base, { at_peace: tr
 let sol = buildSVG(Object.assign({}, base, { solemn: true }));
 ok(/<rect [^>]*fill="#2a2622"/.test(sol) && /#ffbf72/.test(sol), "solemn dims once and keeps one ember");
 ok(/<line /.test(buildSVG(Object.assign({}, base, { resolute: true }))), "resolute draws concentration lines");
-ok(/>\?<\/text>/.test(buildSVG(Object.assign({}, base, { puzzled: true }))), "puzzled hangs a ?");
+ok(!/>\?<\/text>/.test(buildSVG(Object.assign({}, base, { puzzled: true }))), "puzzled (legacy boolean) also hangs no ? — the mark lives in the sheet now");
 let rh = buildSVG(Object.assign({}, base, { rhyme: true }));
 ok((rh.match(/꒳/g) || []).length === 2, "rhyme echoes the face (kaomoji appears twice)");
 
