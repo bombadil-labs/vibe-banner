@@ -73,7 +73,7 @@ const FRILL_OF = {
 // SUB-PIXEL MOUTHS: certain moods trade the chunky block mouth for fine-ink lips drawn
 // in the definition register (like the lashes) — a pressed-thin line reads restraint the
 // 4px grid can't. Table keyed by mood name; add sparingly, the block mouth is the norm.
-const FINE_MOUTH = { groan: "pressed", resolute: "tight" };   // tight: a straight pressed line — the set jaw of concentration
+const FINE_MOUTH = { groan: "pressed", resolute: "tight", angry: "seethe" };   // tight: the set jaw; seethe: a small line angled down — fury held behind the lips
 // All feature tables are authored in the ancestral 16-grid and auto-doubled to the
 // 32-grid (pixel-identical rendering) — EXCEPT where the finer grid earns real curves:
 // hand-authored 32-grid overrides below (smile/frown/wavy arcs, curved lids, a true
@@ -209,12 +209,9 @@ const X = {}; Object.keys(X16).forEach(k => { X[k] = up2(X16[k]); });
 const VBROWS = [];
 [[10,5],[11,6],[12,6],[13,7],[14,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[21,5],[20,6],[19,6],[18,7],[17,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
-// THE GRIT (v0.37.0): anger's mouth is a bared-teeth snarl — dark lips clamped around a
-// row of gritted teeth. Drawn over the placeholder block mouth (extras push last).
-const GRIT = [];
-for (let x = 11; x <= 20; x++) GRIT.push([x, 19, "p"], [x, 22, "p"]);
-for (let y = 20; y <= 21; y++) for (let x = 11; x <= 20; x++)
-  GRIT.push([x, y, (x === 11 || x === 20 || x === 14 || x === 17) ? "p" : "W"]);
+// (v0.38.0: the gritted-teeth snarl lasted one release — it read as about to chomp
+// someone. Anger's mouth is now a seethe: a small tight fine-ink line angled downward,
+// drawn in the fine pass. Restrained fury, not appetite.)
 // A mood is a RECIPE, not a drawing: [name, eyes-preset (or [left,right]), mouth-name,
 // chromatophore hue, extras?]. Eyes and mouth are components that draw themselves;
 // fins (posture code) and spots (live layer) are the renderer's components.
@@ -238,7 +235,7 @@ const MOODS = [
   ["groan",      "dot",              "frown", "#9a9488"],   // deadpan base; frame 1 squeezes the eyes to slits as the body contracts live
   ["oops",       "wide",             "open",  "#d98a6a", X.sweat],
   ["frustrated", "glower",           "flatdrop", "#a05050", VBROWS],
-  ["angry",      "fury",             "flat",  "#c04040", VBROWS.concat(GRIT)],   // fury lids + V-brows + the gritted snarl (flat mouth hides beneath it)
+  ["angry",      "fury",             "flat",  "#c04040"],   // fury lids carry it alone — no brows (the dark lids ARE the brows), seethe mouth in the fine pass
   ["dramatic",   "wide",             "smile", "#b0413e"],   // the Greek mask overlay is drawn in the frame pass below
   ["at_peace",   "closed",           "smile", "#8fae8f", X.flower],
   ["solemn",     "closed",           "flat",  "#8a8f9a"],
@@ -354,6 +351,11 @@ MOODS.forEach((mood, i) => {
       frect(27, 40, 11, 2, COLORS.p);
       fpx(26, 41, COLORS.p); fpx(38, 41, COLORS.p);
       frect(28, 42, 9, 1, "#c8b6c2");
+    }
+    if (FINE_MOUTH[mood[0]] === "seethe") {     // the seethe: small, tight, angled down — fury held behind the lips
+      frect(27, 39, 4, 2, COLORS.p);
+      frect(30, 40, 4, 2, COLORS.p);
+      frect(33, 41, 3, 2, COLORS.p);
     }
     if (FINE_MOUTH[mood[0]] === "tight") {      // tight lips: a straight pressed line, no dips — the set jaw
       frect(28, 40, 9, 2, COLORS.p);
