@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@e8357ec031736e75cb02bb485a320f03281af13a/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@93aee550643209820576bd415f92c83f8fc40216/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -1005,20 +1005,25 @@
             var fp2 = FINP[fcode] || FINP.r;
             var fsc = fcw / 64;
             var baseW = fp2[0] * fsc, famp = fp2[1] * fsc, frate = fp2[2];
-            [[9.5, -1], [54.5, 1]].forEach(function (fside) {
-              var ax = fside[0] * fsc, fdir2 = fside[1];
-              var edgePts = [];
-              fx2.beginPath();
-              fx2.moveTo(ax, 12 * fsc);
+            // the fins ATTACH ALONG THE MANTLE'S CURVE (mirrors gen-sepia's PROFILE):
+            // the flank bows out to the eye band and tapers away below — the membrane
+            // follows it, so the fin reads as grown from the body line, not pinned to a wall
+            var flankX = function (fy2) { return 8 + 6 * Math.pow(Math.abs(fy2 - 28) / 16, 1.6); };
+            [[-1], [1]].forEach(function (fside) {
+              var fdir2 = fside[0];
+              var edgePts = [], seamPts = [];
               for (var fy = 12; fy <= 44; fy++) {
+                var axc = (fdir2 < 0 ? flankX(fy) + 1.5 : 64 - flankX(fy) - 1.5) * fsc;
                 var prof = Math.sin((fy - 12) / 32 * Math.PI);                       // tapered ends, widest amidships
                 var sagF = fcode === "d" ? 0.25 + (fy - 12) / 32 * 0.9 : 1;          // drooped: the membrane pools toward the bottom
                 var wv = famp * Math.sin(fy * 0.32 - t * frate * 6.283 * fdir2) * prof;
                 var wdt = Math.max(0, baseW * prof * sagF + wv);
-                fx2.lineTo(ax + fdir2 * wdt, fy * fsc);
-                edgePts.push([ax + fdir2 * wdt, fy * fsc]);
+                seamPts.push([axc, fy * fsc]);
+                edgePts.push([axc + fdir2 * wdt, fy * fsc]);
               }
-              fx2.lineTo(ax, 44 * fsc);
+              fx2.beginPath();
+              seamPts.forEach(function (sp2, si2) { si2 ? fx2.lineTo(sp2[0], sp2[1]) : fx2.moveTo(sp2[0], sp2[1]); });
+              for (var ei2 = edgePts.length - 1; ei2 >= 0; ei2--) fx2.lineTo(edgePts[ei2][0], edgePts[ei2][1]);
               fx2.closePath();
               fx2.fillStyle = rgba("#d8bcc8", 0.92); fx2.fill();
               fx2.lineWidth = Math.max(1, fsc);                                      // the fine silhouette continues around the fins
@@ -1026,23 +1031,23 @@
               fx2.beginPath(); fx2.moveTo(edgePts[0][0], edgePts[0][1]);
               for (var ep = 1; ep < edgePts.length; ep++) fx2.lineTo(edgePts[ep][0], edgePts[ep][1]);
               fx2.stroke();
-              fx2.strokeStyle = rgba("#a08a9a", 0.65);                               // the single-pixel fine boundary where fin meets body
-              fx2.beginPath(); fx2.moveTo(ax, 13 * fsc); fx2.lineTo(ax, 43 * fsc); fx2.stroke();
+              fx2.strokeStyle = rgba("#a08a9a", 0.65);                               // the single-pixel fine boundary where fin meets body — following the curve
+              fx2.beginPath();
+              seamPts.forEach(function (sp3, si3) { si3 ? fx2.lineTo(sp3[0], sp3[1]) : fx2.moveTo(sp3[0], sp3[1]); });
+              fx2.stroke();
             });
             // --- the arms: three ribbons from the hem, each swaying to its own current.
             // Posture follows the fins' mood params at reduced amplitude — tucked moods
             // hold their arms close too.
             if (fm.anim.arms) {
-              // five arms in a skirt cluster, the OUTERMOST flush with the body's
-              // flanks — their outer edges continue the silhouette line downward, so
-              // the skirt reads as the body tapering into arms (cuttlefish), never
-              // danglers hanging beneath it (jellyfish)
-              [[14.5, 0, 12], [23, 1, 15], [32, 2, 16], [41, 3, 15], [49.5, 4, 12]].forEach(function (armS) {
+              // five arms in a TIGHT cluster spanning exactly the tapered hem — the
+              // outermost continue the mantle's taper line, so body flows into skirt
+              [[17.5, 0, 12], [24.5, 1, 15], [32, 2, 16], [39.5, 3, 15], [46.5, 4, 12]].forEach(function (armS) {
                 var acx = armS[0], ai2 = armS[1];
                 var arr2 = mulberry32(L.seed + ai2 * 3671 + 17);
                 var aph = arr2() * 6.28, arate = (0.5 + arr2() * 0.5) * (0.4 + fp2[2] * 0.35);
                 var aamp = (1.2 + fp2[1] * 0.9) * fsc, alen = armS[2], ay0 = 49;   // roots tuck up under the open hem — one flesh, no seam
-                var aw0 = 3 * fsc;
+                var aw0 = 2.6 * fsc;
                 var lEdge = [], rEdge = [];
                 for (var ayy = 0; ayy <= alen; ayy++) {
                   var au = ayy / alen;
@@ -1069,8 +1074,8 @@
               // the hem's boundary line lives ONLY in the gaps between arm roots — the
               // silhouette runs flank → hem-gap → down an arm and back, one continuous line
               fx2.fillStyle = rgba("#5a4a52", 0.85);
-              [[17.5, 20], [26, 29], [35, 38], [44, 46.5]].forEach(function (gseg) {
-                fx2.fillRect(gseg[0] * fsc, 50 * fsc, (gseg[1] - gseg[0]) * fsc, Math.max(1, fsc));
+              [[20.1, 21.9], [27.1, 29.4], [34.6, 36.9], [42.1, 43.9]].forEach(function (gseg) {
+                fx2.fillRect(gseg[0] * fsc, 51 * fsc, (gseg[1] - gseg[0]) * fsc, Math.max(1, fsc));
               });
             }
             if (boopFx && boopFx.t0 != null) {                                       // the poke: a soft impact FLASH absorbed at the spot — deliberately nothing like a water ripple
