@@ -140,7 +140,7 @@
   var KIP_MOODS = { content: 0, delighted: 1, puzzled: 2, surprised: 3, solemn: 4, excited: 5, sheepish: 6, at_peace: 7 };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@352a942b427b9d7d83dfa8d4d0ed7c580e2e12c8/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-annotation-renderer@a9fcc73bc3a19456c718826ec7b7616007cd8014/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped", "thinking",
     "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth", "laugh",
     "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
@@ -1008,9 +1008,10 @@
             // the fins ATTACH ALONG THE MANTLE'S CURVE (mirrors gen-sepia's PROFILE):
             // the flank bows out to the eye band and tapers away below — the membrane
             // follows it, so the fin reads as grown from the body line, not pinned to a wall
-            var flankX = function (fy2) {                                            // mirrors gen-sepia's bold PROFILE: crown flare, wide eye band, long taper
-              return fy2 <= 16 ? 6 + (16 - fy2) * 0.8 : fy2 <= 31 ? 6 : 6 + (fy2 - 31) * 0.72;
-            };
+            // EXACT mirror of gen-sepia's PROFILE (dart tip → brow bulge → tuck) —
+            // approximations drifted every resculpt; the lookup cannot. Keep in sync.
+            var FPROF = [15, 15, 14, 13, 12, 11, 10, 9, 7, 5, 4, 3, 3, 3, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 10, 10];
+            var flankX = function (fy2) { return (FPROF[Math.max(0, Math.min(25, fy2 >> 1))] || 15) * 2; };
             [[-1], [1]].forEach(function (fside) {
               var fdir2 = fside[0];
               var edgePts = [], seamPts = [];
