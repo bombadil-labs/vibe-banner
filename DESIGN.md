@@ -319,6 +319,32 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   so there is no client-side mirror left to drift. The wrench hands users back to the
   builder and compares the skill's stamped version against the catalog's.
 
+- **A still of a living thing is a lie about it (v0.41.1).** The Builder previewed faces
+  as sprite crops from the sheet — body plus features, no live layer — which is exactly
+  what a BROKEN render looks like: Sepia with no fins, no arms, no drifting colour. The
+  maintainer spotted it as the bug it resembled. Fix: the face station mounts a REAL
+  banner and flips moods inside it. Rule going forward: never preview a live avatar with
+  a still frame; if the preview cannot move, it is misrepresenting the product.
+  (The small narrator chips beside each station are still sheet crops, because there is
+  no standalone avatar API to mount at 42px — which is one more argument for extracting
+  the avatar layer.)
+
+- **The hidden-mount bug (v0.41.1).** Chasing the preview turned up a real renderer
+  fault: mounting inside a hidden container (a lazy tab, an accordion, a closed
+  `<details>`) measures 0, `fit()` bails, and the ResizeObserver does NOT reliably fire
+  on the unhide — so the banner stayed at the canvas default of 300×150, stretched by
+  CSS, blurry forever. The frame loop now re-fits whenever the backing store stops
+  matching the box: the same self-healing instinct as the rAF watchdog. Verified failing
+  before and healing after, in a browser — this class of bug is invisible to the
+  node-side parity suite.
+
+- **Not every dead banner is a bug.** While investigating the above, the Explorer's
+  banner appeared stone dead — zero ink on every canvas, zero rAF calls. It was correct:
+  the mount sat below the fold and the IntersectionObserver was pausing it on purpose.
+  Scrolling it into view showed all three canvases sizing and animating. Worth recording
+  because the symptom is indistinguishable from the flat-Sepia bug: check `inViewport`
+  before diagnosing a dead loop.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately
