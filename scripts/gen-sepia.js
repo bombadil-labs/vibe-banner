@@ -283,10 +283,11 @@ MOODS.forEach((mood, i) => {
   // renderer OVER the wandering colour
   for (let frame = 0; frame < 2; frame++) {
     const cx = colX, cy = rowY + (1 + frame) * FRAME_ROWS * CELL;
-    const blink = frame === 1 && mood[0] !== "laugh";           // laugh's frame 1 is the guffaw beat, not a blink — the eyes stay crinkled
+    const blink = frame === 1 && mood[0] !== "laugh";           // laugh's frame 1 is the guffaw beat, not a blink
     const eyeSpec = mood[1], pair = Array.isArray(eyeSpec) ? eyeSpec : [eyeSpec, eyeSpec];
     const feat = [];
-    drawEyes(feat, pair[0], pair[1], blink);
+    const gpair = mood[0] === "laugh" && frame === 1 ? ["wide", "wide"] : pair;   // the guffaw frame goes WIDE-eyed — wilder mid-cackle, and it doubles as the feeding-thrill face
+    drawEyes(feat, gpair[0], gpair[1], blink);
     if (mood[0] === "laugh" && frame === 1) feat.push(...GUFFAW);
     else if (!FINE_MOUTH[mood[0]]) feat.push(...MOUTH[mood[2]].map(q => [q[0], q[1], "p"]));
     feat.push(...(mood[4] || []));

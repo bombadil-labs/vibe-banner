@@ -193,10 +193,16 @@ function canvas(LW, LH, SCALE) {
   // desk: wood grain band across the bottom
   for (let y = 30; y < LH; y++) for (let x = 0; x < LW; x++)
     lput(x, y, y === 30 ? "#6a4a30" : ((x * 3 + y * 7) % 11 === 0 ? "#4a3422" : "#573d28"));
-  // a small steaming mug on the desk
-  for (let x = 29; x <= 32; x++) for (let y = 27; y <= 29; y++) lput(x, y, "#7a8a94");
-  lput(33, 28, "#7a8a94");
-  lput(30, 25, "#c8c2b8"); lput(31, 24, "#b8b2a8");
+  // a little side table (v0.35.0, cozy-core): pedestal and all, standing on the desk
+  // floor — the tea lives HERE now, and the renderer sets the feeding plate beside it
+  for (let x = 26; x <= 38; x++) { lput(x, 24, "#7a5638"); lput(x, 25, "#5a3e28"); }
+  lput(26, 24, "#8a6644"); lput(38, 24, "#8a6644");
+  for (let y = 26; y <= 30; y++) { lput(31, y, "#4a3422"); lput(32, y, "#4a3422"); }
+  for (let x = 29; x <= 34; x++) lput(x, 30, "#42301e");
+  // the mug of tea, up on the table (its steam is the renderer's — animation is code)
+  for (let x = 27; x <= 30; x++) for (let y = 21; y <= 23; y++) lput(x, y, "#7a8a94");
+  lput(31, 22, "#7a8a94");
+  for (let x = 27; x <= 30; x++) lput(x, 21, "#5f6e78");
   // dust motes in the lamplight
   for (let k = 0; k < 6; k++) lput(4 + Math.floor(r() * 12), 4 + Math.floor(r() * 14), "#8a6f52");
   save("scene-study.png");
