@@ -474,6 +474,25 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   chosen so the flashes sit at full reach and a seq sits mid-hold — a still frame should show
   a shape, not a blur between two.
 
+- **Named environments, and the bug hiding behind the wart (v0.48.0).** The maintainer
+  reported two things that turned out to be one: the environment wasn't getting set from a
+  deployed skill, and the API looked wrong — "do we really need to specify a whole path for a
+  png? Can't I just say tidepool and the JS engine knows what to do?"
+  The wart first: yes, and now it does. `scene: "tidepool"` is the whole call. The renderer
+  owns the URL, the pin, the opacity and whether the place is alive, because none of that is
+  the reporter's business. A bare word is read as a NAME and only a url-shaped string as a
+  url, so a mistyped name empties the window rather than requesting an image called
+  "tidepool". `{ name, opacity }` keeps the name when you want to override the level.
+  The bug was worse and the wart was pointing right at it: `gen-skills` assembled every
+  shipped skill with `assemble(face, {})` — an empty options object — so **no stock skill ever
+  contained a scene at all**. Not a wrong URL: no scene key. The environment could not be set
+  from a shipped skill however the reporter tried. Every variant now names a home (Sepia her
+  tidepool, Motes the dark, the rest a lamplit study), and a test asserts that no shipped
+  skill lacks a scene and that none contains a hand-copyable 40-char sha.
+  The general lesson: a payload field that is long, opaque and mandatory-looking is not just
+  ugly — it is a field that silently doesn't get filled in. The awkwardness was the symptom
+  and the empty window was the disease.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately

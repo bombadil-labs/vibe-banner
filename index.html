@@ -705,13 +705,14 @@ route();
     return "";
   }
   function snippetText() {
-    var su = sceneUrl();                                       // the scene lives inside `avatar` now: where you are is part of who you are
-    var slive = P.SCENES[S.scene] && P.SCENES[S.scene].live;
+    // a first-party environment emits as its NAME; only a custom image needs the url form
+    var sarg = P.SCENES[S.scene] ? S.scene
+      : (S.scene === "custom" && (S.sceneUrl || "").trim() ? { url: (S.sceneUrl || "").trim(), opacity: S.sceneOp } : null);
     return P.SNIPPET
       .replace("{{SNIPPET_URL}}", P.snippetUrl)
       .replace("{{SNIPPET_FACE}}", faceDef().SNIPPET_FACE)
       .replace("{{SNIPPET_READOUT}}", P.SNIPPET_READOUT(S.fields))
-      .replace("{{SNIPPET_SCENE}}", su ? '        scene: { url: "' + su + '", opacity: ' + S.sceneOp + (slive ? ', live: "' + slive + '"' : '') + ' }\n' : "")
+      .replace("{{SNIPPET_SCENE}}", P.SNIPPET_SCENE(sarg))
       .replace("{{PAYLOAD_OPTS}}", "");
   }
 

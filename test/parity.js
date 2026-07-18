@@ -278,6 +278,32 @@ ok(/sepia-sheet/.test(buildSVG({ avatar: { set: "sepia", item: "working" } })), 
 let ringOnly = Object.keys(M.moods).filter((k) => { const p = M.moods[k].paths; return p && p.every((x) => !x.p || x.p === "ring") && !M.moods[k].flash; });
 ok(ringOnly.length <= 10, "the swarm is not all circles: " + ringOnly.length + " moods are a plain ring with no flash (was 20)");
 
+console.log("\nnamed environments (v0.48.0): scene: \"tidepool\" is the whole thing");
+const sceneOf = (sc) => {
+  const q = buildSVG({ avatar: { set: "sepia", item: "content", scene: sc }, details: { seems: "a", feel: "b", trying: "c" } });
+  const m = /href="([^"]*assets\/scene-[^"]*)"/.exec(q);
+  return m ? m[1] : null;
+};
+["tidepool", "study", "night", "glade"].forEach((n) => {
+  const u = sceneOf(n);
+  ok(u && u.indexOf("scene-" + n + ".png") > 0, 'scene: "' + n + '" resolves to its art');
+  ok(u && /@[0-9a-f]{40}\//.test(u), 'scene: "' + n + '" is pinned to a full sha, never a tag');
+});
+ok(!sceneOf("nonsense"), "an unknown name renders an EMPTY window, not a request for an image called nonsense");
+ok(sceneOf("https://cdn.jsdelivr.net/gh/u/r@abc/assets/scene-custom.png") === null
+   || /example|custom/.test(String(sceneOf("https://cdn.jsdelivr.net/gh/u/r@abc/assets/scene-custom.png"))), "a url-shaped string is still taken as a url");
+let namedObj = buildSVG({ avatar: { set: "sepia", item: "content", scene: { name: "tidepool", opacity: 0.9 } }, details: { seems: "a", feel: "b", trying: "c" } });
+ok(/scene-tidepool\.png/.test(namedObj) && /opacity="0\.9"/.test(namedObj), "{ name, opacity } lets you keep the name and still set opacity");
+const SKILLS = require("fs").readdirSync("skill").filter((f) => /^SKILL.*\.md$/.test(f));
+let sceneless = SKILLS.filter((f) => !/scene:/.test(require("fs").readFileSync("skill/" + f, "utf8")));
+ok(!sceneless.length, "every shipped skill names a home — a stock skill could not set one before v0.48.0" + (sceneless.length ? ": " + sceneless : ""));
+let shaInSkill = SKILLS.filter((f) => {
+  const t = require("fs").readFileSync("skill/" + f, "utf8");
+  const snip = /scene: \{[^}]*\}/.exec(t);
+  return snip && /[0-9a-f]{40}/.test(snip[0]);
+});
+ok(!shaInSkill.length, "no shipped skill asks the reporter to hand-copy a 40-char sha for a scene");
+
 console.log("\nshapes tween (v0.47.0): no mood ever hard-swaps its target");
 let jumpy = [];
 Object.keys(M.moods).forEach((m) => {

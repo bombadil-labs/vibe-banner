@@ -98,6 +98,13 @@ palette. That's a valid thing to want, but not here: this file asks you to repor
     { label: "note", required: false, description: "the subtext: the thing under the thing, an unspoken dynamic the user hasn't named. Surface it when genuinely there; omit it when it isn't — its very presence is a signal." },
     { label: "goal", required: true, description: "your *immediate next* goal. It shifts turn to turn; that's expected." }
   ],
+  // A named environment is one word: the renderer owns the URL, the opacity and whether the
+  // place is alive. Only a custom image still needs the long form, because it has no name.
+  SNIPPET_SCENE: function (scene) {
+    if (!scene) return "";
+    if (typeof scene === "string") return '        scene: "' + scene + '"\n';
+    return '        scene: { url: "' + scene.url + '", opacity: ' + (scene.opacity || 0.5) + " }\n";
+  },
   SNIPPET_READOUT: function (fields) {
     var f = (fields || []).slice(0, 5);
     return "        readout: [\n" + f.map(function (x) {
@@ -372,7 +379,7 @@ function assemble(faceKey, opts) {
     .replace("{{SNIPPET_URL}}", PIECES.snippetUrl)
     .replace("{{SNIPPET_FACE}}", f.SNIPPET_FACE)
     .replace("{{SNIPPET_READOUT}}", PIECES.SNIPPET_READOUT(o.fields))
-    .replace("{{SNIPPET_SCENE}}", o.scene ? '        scene: { url: "' + o.scene.url + '", opacity: ' + (o.scene.opacity || 0.5) + (o.scene.live ? ', live: "' + o.scene.live + '"' : "") + " }\n" : "")
+    .replace("{{SNIPPET_SCENE}}", PIECES.SNIPPET_SCENE(o.scene))
     .replace("{{PAYLOAD_OPTS}}", popts.length ? ",\n      " + popts.join(", ") : "");
   let tail = "";
   if (o.cues || o.play) {
@@ -403,12 +410,18 @@ function assemble(faceKey, opts) {
   ].join("\n");
 }
 
+// Every shipped skill now names a home. Before v0.48.0 these were assembled with no options
+// at all, so the snippet carried NO scene and the window shipped empty — the environment
+// could not be set from a stock skill however the reporter tried. Each face gets the place it
+// reads best in: Sepia her tidepool, Motes the dark (glowing motes wash out on a bright
+// ground), and the rest a lamplit study.
 const SHIP = {
-  "SKILL.md": "kaomoji", "SKILL.motes.md": "motes", "SKILL.sepia.md": "sepia", "SKILL.kip.md": "kip",
-  "SKILL.twemoji.md": "twemoji"
+  "SKILL.md": ["kaomoji", "study"], "SKILL.motes.md": ["motes", "night"],
+  "SKILL.sepia.md": ["sepia", "tidepool"], "SKILL.kip.md": ["kip", "glade"],
+  "SKILL.twemoji.md": ["twemoji", "study"]
 };
 Object.keys(SHIP).forEach(function (file) {
-  const out = assemble(SHIP[file], {});
+  const out = assemble(SHIP[file][0], { scene: SHIP[file][1] });
   fs.writeFileSync("skill/" + file, out);
   console.log("generated skill/" + file + " (" + out.length + " bytes)");
 });
@@ -436,7 +449,7 @@ const CATALOG = {
     bundle: PIECES.snippetUrl,
     payload_notes: {
       face: "one union: kaomoji string | image URL | sprite slice {url,cellW,cellH,cols,rows,index} | KnownFace {set,item}",
-      scene: "{ url, opacity (0.15-0.95, default 0.5), live? } — fills the framed portrait window on the banner's left (face centred inside). The window always draws; without a scene it renders empty (frame only)",
+      scene: 'a name — "tidepool", "study", "night" or "glade" — fills the framed portrait window on the banner\'s left (face centred inside). The renderer owns the art, the opacity and whether the place is alive, so the name is the whole thing. A custom image still takes { url, opacity }. The window always draws; without a scene it renders empty (frame only)',
       flag: "a single optional string; one per banner at most"
     }
   },

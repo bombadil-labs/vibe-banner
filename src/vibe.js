@@ -424,6 +424,26 @@
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
   var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   var SEPIA_MOODS = MOODS.slice(0, 32);                        // the sheet's 32 cells; later moods fall back
+
+  // NAMED ENVIRONMENTS (v0.48.0). The renderer owns these URLs so a caller can write
+  // `scene: "tidepool"` and be done. Asking a reporter to reproduce a 40-character sha and a
+  // full asset path by hand was the wrong trade: it is long enough to crowd out the thing the
+  // skill is actually about, and the one time it comes out wrong the window just empties with
+  // no error. A name cannot be typo'd into a plausible-but-broken URL. Assets are immutable
+  // once committed, so any commit containing them serves the same bytes.
+  var SCENE_PIN = "106f3065d81c4c17c13547e7744eb9012e5792ee";
+  var SCENES = {
+    tidepool: { file: "scene-tidepool.png", live: "tidepool" },
+    study: { file: "scene-study.png", live: "study" },
+    night: { file: "scene-night.png" },
+    glade: { file: "scene-glade.png" }
+  };
+  function sceneNamed(name) {
+    var s = SCENES[String(name)];
+    if (!s) return null;
+    return { url: "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@" + SCENE_PIN + "/assets/" + s.file,
+             live: s.live || null, opacity: 0.62 };             // naming a place means you want to see it
+  }
   // ONE VOCABULARY FOR EVERY FACE (v0.41.0, the maintainer's call): the emoji packs used
   // to take raw codepoints, so a skill's face vocabulary changed shape depending on which
   // pack you picked. Now every pack speaks Sepia's 32 moods — the reporter always names a
@@ -650,7 +670,19 @@
     // ("tidepool", "study"); unknown names are ignored, static render ignores all.
     var scene = null;
     if (p.scene) {
-      scene = typeof p.scene === "string" ? { url: p.scene } : (p.scene === true ? {} : p.scene);
+      var rawScene = p.scene;
+      if (typeof rawScene === "string") {
+        var named = sceneNamed(rawScene);
+        // a bare word is an ENVIRONMENT NAME; only something url-shaped is taken as a url, so a
+        // typo'd name empties the window instead of requesting an image called "tidepool"
+        rawScene = named || (/[\/:]/.test(rawScene) ? { url: rawScene } : null);
+      } else if (rawScene === true) rawScene = {};
+      else if (rawScene && typeof rawScene === "object" && rawScene.name != null && rawScene.url == null) {
+        var nm = sceneNamed(rawScene.name);
+        rawScene = nm ? { url: nm.url, live: rawScene.live !== undefined ? rawScene.live : nm.live,
+                          opacity: rawScene.opacity == null ? nm.opacity : rawScene.opacity } : null;
+      }
+      scene = rawScene;
       if (scene && typeof scene === "object") {
         var scu = scene.url ? String(scene.url) : null;
         scene = {
