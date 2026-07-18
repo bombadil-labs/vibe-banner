@@ -219,103 +219,71 @@ const mixHex = (a, b, t) => {
   const A = hex(a), B = hex(b);
   return "#" + A.map((v, k) => Math.round(v + (B[k] - v) * t).toString(16).padStart(2, "0")).join("");
 };
-MOODS.forEach((mood, i) => { for (let frame = 0; frame < 2; frame++) {
-  const cx = (i % COLS) * CELL, cy = (Math.floor(i / COLS) + frame * FRAME_ROWS) * CELL;
-  const blink = frame === 1;
+// THE LAYER SPLIT (v0.30.0, the maintainer's call): the body is one SOLID SURFACE for
+// the living colour to wander over, and the features are a separate transparent layer
+// the renderer stacks ON TOP of the colour. No more carve-outs — the whole per-mood
+// mask system is deleted; the body cell's own alpha channel is the only mask needed.
+//   rows 0-3:  BODY per mood (tinted skin + traced 1px silhouette, nothing else)
+//   rows 4-7:  FEATURES per mood, open eyes (sockets, whites, pupils, mouth, extras)
+//   rows 8-11: FEATURES per mood, blinking
+MOODS.forEach((mood, i) => {
+  const colX = (i % COLS) * CELL, rowY = Math.floor(i / COLS) * CELL;
   const t = TINT[mood[0]] || 0;
   const skin = t > 0 ? mixHex(COLORS.b, mood[3], t) : t < 0 ? mixHex(COLORS.b, "#f9f4ea", -t) : COLORS.b;
-  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-    const k = BASE[y][x];
-    if (k !== ".") cellPut(cx, cy, x, y, skin);                // the old 2px 'o' ring paints as skin now — the outline went fine-ink (below)
-  }
-  // COMPOSE the face from components. Fins are the renderer's (smooth membranes,
-  // posture via FRILL_OF); spots are the renderer's (live layer); eyes and mouth
-  // draw themselves here from the mood's recipe.
-  const eyeSpec = mood[1], pair = Array.isArray(eyeSpec) ? eyeSpec : [eyeSpec, eyeSpec];
-  const feat = [];
-  drawEyes(feat, pair[0], pair[1], blink);
-  if (!FINE_MOUTH[mood[0]]) feat.push(...MOUTH[mood[2]].map(q => [q[0], q[1], "p"]));   // fine-mouth moods draw lips in the fine pass below
-  feat.push(...(mood[4] || []));
-  feat.forEach(q => cellPut(cx, cy, q[0], q[1], COLORS[q[2]]));
 
-  // ---- the fine pass: sub-pixel ink. Doctrine: the BODY lives on the 4px grid (the
-  // chunkiness is the body); body *definition* may use 2px half-resolution ink; objects
-  // from the high-resolution world (headband, future props) render at true 1px detail —
-  // a low-resolution entity interfacing with a higher-resolution reality.
-  const fpx = (x, y, c) => { if (x >= 0 && x < CELL && y >= 0 && y < CELL) put(cx + x, cy + y, c); };
-  const frect = (x, y, w, h, c) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) fpx(xx, yy, c); };
-  // (The old plum lash-lines and corner-clips retired with the socket outline: the
-  // eye component now carries its own full ring — possible because the whites are
-  // inset from the silhouette instead of flush against it.)
-
-  // The SILHOUETTE goes fine-ink (v0.24.0): a traced single-pixel edge instead of the
-  // 2px cell ring — softer, and it follows every carve of the body automatically. The
-  // renderer's fins wear a matching 1px rim, so one thin line wraps the whole creature.
+  // ---- PASS A: the body — a solid surface, edge-traced, featureless
+  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++)
+    if (BASE[y][x] !== ".") cellPut(colX, rowY, x, y, skin);
   {
     const solid = (gx, gy) => gx >= 0 && gx < 32 && gy >= 0 && gy < 32 && BASE[gy][gx] !== ".";
     const EDGE = "#5a4a52";
+    const fpx = (x, y, c) => { if (x >= 0 && x < CELL && y >= 0 && y < CELL) put(colX + x, rowY + y, c); };
+    const frect = (x, y, w, h, c) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) fpx(xx, yy, c); };
     for (let gy = 0; gy < 32; gy++) for (let gx = 0; gx < 32; gx++) {
       if (BASE[gy][gx] === ".") continue;
       const rx = gx * 2, ry = gy * 2;
       if (!solid(gx - 1, gy)) frect(rx, ry, 1, 2, EDGE);
       if (!solid(gx + 1, gy)) frect(rx + 1, ry, 1, 2, EDGE);
       if (!solid(gx, gy - 1)) frect(rx, ry, 2, 1, EDGE);
-      if (!solid(gx, gy + 1) && gy < 25) frect(rx, ry + 1, 2, 1, EDGE);   // the hem's bottom edge is NOT baked — arms flow out of it; the renderer closes the gaps
+      if (!solid(gx, gy + 1) && gy < 25) frect(rx, ry + 1, 2, 1, EDGE);   // the hem stays open — arms flow out of it
     }
   }
 
-  // The baked chromatophore patterns are RETIRED (v0.20.0): the maintainer found the
-  // fixed bold patches distracting once the smooth roaming layer existed. All camo is
-  // alive now — drawn by the renderer, moving, in the live palette. The skin stays
-  // clean cream (plus the whole-body TINT states); the mask cell below still gates
-  // where the living colour may travel.
+  // ---- PASSES B (open) / C (blink): the features, on transparency, drawn by the
+  // renderer OVER the wandering colour
+  for (let frame = 0; frame < 2; frame++) {
+    const cx = colX, cy = rowY + (1 + frame) * FRAME_ROWS * CELL;
+    const blink = frame === 1;
+    const eyeSpec = mood[1], pair = Array.isArray(eyeSpec) ? eyeSpec : [eyeSpec, eyeSpec];
+    const feat = [];
+    drawEyes(feat, pair[0], pair[1], blink);
+    if (!FINE_MOUTH[mood[0]]) feat.push(...MOUTH[mood[2]].map(q => [q[0], q[1], "p"]));
+    feat.push(...(mood[4] || []));
+    feat.forEach(q => cellPut(cx, cy, q[0], q[1], COLORS[q[2]]));
 
-  if (FINE_MOUTH[mood[0]] === "pressed") {      // pressed-thin lips: two real pixels of long-suffering, in the lash register
-    frect(27, 40, 11, 2, COLORS.p);             // the line itself, slightly narrower than a block mouth
-    fpx(26, 41, COLORS.p); fpx(38, 41, COLORS.p);   // corners dip — the jaw is set
-    frect(28, 42, 9, 1, "#c8b6c2");             // soft under-shadow so the line sits IN the face, not on it
-  }
-  if (mood[0] === "resolute") {                 // the hachimaki: crisp cloth from the high-res world
-    const R = "#c04a48", Rd = "#8a3230", Rh = "#e07a70";
-    frect(10, 15, 44, 7, R);                    // band across the brow, wrapping past the body edge
-    frect(10, 15, 44, 1, Rh);                   // 1px catch-light along the top
-    frect(10, 21, 44, 1, Rd);                   // 1px shadow along the bottom
-    frect(52, 14, 5, 9, R); frect(52, 14, 5, 1, Rh); frect(52, 22, 5, 1, Rd);   // the knot
-    for (let t = 0; t < 8; t++) {               // two tails, stepping down 1px at a time
-      frect(57 + Math.floor(t / 2), 17 + t, 3, 1, R);
-      frect(55 + Math.floor(t / 3), 23 + t, 2, 1, t % 3 === 2 ? Rd : R);
+    const fpx = (x, y, c) => { if (x >= 0 && x < CELL && y >= 0 && y < CELL) put(cx + x, cy + y, c); };
+    const frect = (x, y, w, h, c) => { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) fpx(xx, yy, c); };
+    if (FINE_MOUTH[mood[0]] === "pressed") {    // pressed-thin lips: two real pixels of long-suffering, in the lash register
+      frect(27, 40, 11, 2, COLORS.p);
+      fpx(26, 41, COLORS.p); fpx(38, 41, COLORS.p);
+      frect(28, 42, 9, 1, "#c8b6c2");
+    }
+    if (mood[0] === "resolute") {               // the hachimaki: crisp cloth from the high-res world, worn over everything
+      const R = "#c04a48", Rd = "#8a3230", Rh = "#e07a70";
+      frect(10, 15, 44, 7, R);
+      frect(10, 15, 44, 1, Rh);
+      frect(10, 21, 44, 1, Rd);
+      frect(52, 14, 5, 9, R); frect(52, 14, 5, 1, Rh); frect(52, 22, 5, 1, Rd);
+      for (let t2 = 0; t2 < 8; t2++) {
+        frect(57 + Math.floor(t2 / 2), 17 + t2, 3, 1, R);
+        frect(55 + Math.floor(t2 / 3), 23 + t2, 2, 1, t2 % 3 === 2 ? Rd : R);
+      }
     }
   }
-} });
-
-// ---- PER-MOOD mantle masks (rows 12-15, one cell per mood): white where smooth
-// chromatophores may glide FOR THAT EXPRESSION. A single shared mask excluded the union
-// of every possible mouth position — a fixed rectangle that left dead clean-skin
-// corners around small mouths, reading as a grid overlay on the flow (the maintainer's
-// catch). Each mask now excludes only this mood's ACTUAL feature pixels + 1px margin.
-MOODS.forEach((mood, i) => {
-  const mx0 = (i % COLS) * CELL, my0 = (8 + Math.floor(i / COLS)) * CELL;
-  const ex = new Uint8Array(CELL * CELL);                      // real-px exclusion: this mood's mouth + extras, with margin
-  const mark = (gx, gy) => {
-    for (let y = gy * SCALE - 1; y <= gy * SCALE + SCALE; y++)
-      for (let x = gx * SCALE - 1; x <= gx * SCALE + SCALE; x++)
-        if (x >= 0 && x < CELL && y >= 0 && y < CELL) ex[y * CELL + x] = 1;
-  };
-  const mouthCells = FINE_MOUTH[mood[0]] ? up2([[6, 10], [7, 10], [8, 10], [9, 10]]) : MOUTH[mood[2]];   // the mouth COMPONENT's own cells; fine mouths reserve only their thin row
-  mouthCells.forEach(q => mark(q[0], q[1]));                   // the actual mouth, whatever shape this expression wears
-  (mood[4] || []).forEach(q => mark(q[0], q[1]));              // extras that sit on the mantle (brows, blush, flower…)
-  const okM = (x, y) => {
-    if (x < 0 || x >= CELL || y < 0 || y >= CELL) return false;
-    if (BASE[y >> 1][x >> 1] !== "b") return false;            // 2px body grid
-    if (y >= 17 && y <= 34 && ((x >= 13 && x <= 28) || (x >= 35 && x <= 50))) return false;   // eye sockets incl. outline, inset from the flanks (constant anatomy)
-    if (ex[y * CELL + x]) return false;
-    if (mood[0] === "resolute" && x >= 8 && x <= 61 && y >= 13 && y <= 32) return false;      // the hachimaki band, knot, and tails
-    return true;
-  };
-  const okE = (x, y) => okM(x, y) && okM(x - 1, y) && okM(x + 1, y) && okM(x, y - 1) && okM(x, y + 1);
-  for (let y = 0; y < CELL; y++) for (let x = 0; x < CELL; x++)
-    if (okE(x, y)) put(mx0 + x, my0 + y, "#ffffff");
 });
+
+// (the per-mood mask system was deleted in v0.30.0: the body cell IS the mask —
+// its alpha channel gates the colour, and the features layer stacks above it)
 
 // minimal PNG encoder: signature + IHDR + IDAT (deflated 0-filtered scanlines) + IEND
 const CRC_TABLE = (() => {
