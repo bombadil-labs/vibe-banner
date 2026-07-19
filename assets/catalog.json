@@ -1,6 +1,6 @@
 {
   "what": "Machine-readable catalog of the vibe-banner ecosystem: face-packs, first-party scenes, skill variants, site surfaces. Fetched by Claude during settings conversations.",
-  "version": "0.74.0",
+  "version": "0.75.0",
   "builder": "https://bombadil-labs.github.io/vibe-banner/#builder",
   "whatsNew": "0.45.0 — Motes flies FLIGHT PATHS: a mood is a set of curves with share, align, cluster and flow. Motes and the weather vocabulary are on the site.",
   "renderer": {
