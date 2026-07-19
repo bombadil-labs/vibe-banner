@@ -118,7 +118,8 @@ const EYES = {
   spiral: { rx: 5.0, ry: 5.2, spiral: true },
   heart:  { heart: true },
   wink:   { winkL: true, rx: 4.6, ry: 5.0, pupil: 2.2 },
-  glare:  { rx: 4.8, ry: 3.0, pupil: 2.3, py: -0.4, brow: 1 }
+  glare:  { rx: 4.8, ry: 3.0, pupil: 2.3, py: -0.4, brow: 1 },
+  wrath:  { rx: 5.6, ry: 4.2, pupil: 1.5, wedge: 1, brow: 1 }   // angular, not round: the whole point
 };
 const MOUTHS = {
   line:   { kind: "arc", w: 1.9, span: 0.30, bend: 0.0 },
@@ -130,7 +131,8 @@ const MOUTHS = {
   small:  { kind: "arc", w: 1.8, span: 0.16, bend: 0.2 },
   wave:   { kind: "wave", w: 1.8 },
   flat:   { kind: "arc", w: 2.2, span: 0.40, bend: 0.0 },
-  pucker: { kind: "open", rx: 2.2, ry: 2.6 }
+  pucker: { kind: "open", rx: 2.2, ry: 2.6 },
+  snarl:  { kind: "snarl", w: 13.5, h: 7.5 }
 };
 
 // THE BOIL IS THE EXPRESSION (v3). Every other face here animates per mood; this one only
@@ -161,8 +163,8 @@ const M = {
   laugh:      ["shut", "wide", 0.3, 0.8, -0.07, 1, 1, 1.9, "spread", "up", 0],
   groan:      ["shut", "wave", 0.35, -0.5, 0.11, 0, 0, 0.8, "droop", "cover", "drop"],
   oops:       ["wide", "open", 0.4, 0.3, 0.06, 1, 0, 2.1, "spread", "up", 0],
-  frustrated: ["glare", "flat", -0.5, -0.3, 0, 0, 0, 1.9, "fold", "grip", 0],
-  angry:      ["glare", "frown", -0.7, -0.4, 0, 0, 0, 2.3, "raise", "grip", 0],
+  frustrated: ["wrath", "flat", -0.5, -0.3, 0, 0, 0, 1.9, "fold", "grip", 0],
+  angry:      ["wrath", "snarl", -0.7, -0.4, 0, 0, 0, 2.3, "raise", "grip", 0],
   dramatic:   ["side", "open", -0.2, 0.9, -0.08, 0, 1, 1.1, "spread", "one", "scroll"],
   at_peace:   ["shut", "smile", 0.1, 0.3, 0, 0, 1, 0.3, "fold", "grip", 0],
   solemn:     ["narrow", "flat", -0.1, -0.1, 0, 0, 0, 0.4, "fold", "grip", 0],
@@ -288,6 +290,19 @@ function build(mood, frame) {
       S.push(poly([[c[0] - 4.3, c[1] - 1.3], [c[0] + 4.3, c[1] - 1.3], [c[0], c[1] + 4.4]], C.rose));
       return;
     }
+    if (E.wedge) {
+      // upper lid falls steeply toward the nose; almost no white left showing
+      const w = E.rx * 1.25, h = E.ry * 1.25;
+      const ox = c[0] + sd * w, ix = c[0] - sd * w;
+      const out = [[ox, c[1] - h * 1.05], [ix, c[1] + h * 0.05], [ix, c[1] + h * 1.0], [ox, c[1] + h * 0.9]];
+      S.push(poly(out.map((q) => [q[0] + sd * 1.4, q[1] + 1.4]), C.ink));
+      S.push(poly(out, C.ink));
+      const inn = [[ox + sd * -1.6, c[1] - h * 0.62], [ix + sd * 1.2, c[1] + h * 0.16],
+                   [ix + sd * 1.2, c[1] + h * 0.72], [ox + sd * -1.6, c[1] + h * 0.66]];
+      S.push(poly(inn, C.parch));
+      S.push(disc(c[0] - sd * w * 0.42, c[1] + h * 0.42, E.pupil, C.ink));
+      return;
+    }
     S.push(ell(c[0], c[1], E.rx * 1.22 + 1.5, E.ry * 1.22 + 1.5, 0, C.ink));
     S.push(ell(c[0], c[1], E.rx * 1.22, E.ry * 1.22, 0, C.parch));
     if (E.spiral) {
@@ -308,9 +323,10 @@ function build(mood, frame) {
 
   if (brow !== 0 || EYES[eyeK].brow) {
     [-1, 1].forEach((sd) => {
-      const inner = P(hx + sd * 3.2, ey - 9.2 + brow * 3.8 * sd * -1);
-      const outer = P(hx + sd * 13.5, ey - 10.6 - brow * 2.6 * sd * -1);
-      S.push(capsule(inner[0], inner[1], outer[0], outer[1], 2.9, C.ink));
+      const heavy = EYES[eyeK].wedge ? 1 : 0;                // wrath: lower, thicker, touching the lid
+      const inner = P(hx + sd * 3.2, ey - (heavy ? 5.4 : 9.2) + brow * 3.8 * sd * -1);
+      const outer = P(hx + sd * 13.5, ey - (heavy ? 9.0 : 10.6) - brow * 2.6 * sd * -1);
+      S.push(capsule(inner[0], inner[1], outer[0], outer[1], heavy ? 4.2 : 2.9, C.ink));
     });
   }
 
@@ -332,6 +348,17 @@ function build(mood, frame) {
     const n = 12, pts = [];
     for (let i = 0; i <= n; i++) { const u = i / n; pts.push(P(hx + (u - 0.5) * 15, my + Math.sin(u * Math.PI * 3) * 1.9)); }
     for (let i = 1; i < pts.length; i++) S.push(capsule(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], mo.w * 1.15, C.ink));
+  } else if (mo.kind === "snarl") {
+    const w = mo.w, h = mo.h, y0 = my - 1;
+    const gash = [P(hx - w, y0 - h * 0.30), P(hx + w, y0 - h * 0.30), P(hx + w * 0.72, y0 + h), P(hx - w * 0.72, y0 + h)];
+    S.push(poly(gash.map((q) => [q[0], q[1]]), C.ink));
+    const inner = [P(hx - w * 0.84, y0 - h * 0.08), P(hx + w * 0.84, y0 - h * 0.08),
+                   P(hx + w * 0.60, y0 + h * 0.76), P(hx - w * 0.60, y0 + h * 0.76)];
+    S.push(poly(inner, [92, 18, 16, 255]));
+    for (let k = -2; k <= 2; k++) {                          // upper teeth, bared
+      const a = P(hx + k * 4.6 - 2.2, y0 - h * 0.06), b = P(hx + k * 4.6 + 2.2, y0 - h * 0.06), t = P(hx + k * 4.6, y0 + h * 0.40);
+      S.push(poly([[a[0], a[1]], [b[0], b[1]], [t[0], t[1]]], C.parch));
+    }
   } else {
     const c = P(hx, my + 0.6);
     S.push(ell(c[0], c[1], mo.rx * 1.15 + 1.6, mo.ry * 1.15 + 1.6, 0, C.ink));
@@ -339,8 +366,9 @@ function build(mood, frame) {
     if (mo.tongue) S.push(ell(c[0], c[1] + mo.ry * 0.5, mo.rx * 0.6, mo.ry * 0.46, 0, C.body));
   }
   [-1, 1].forEach((sd) => {                                 // the fangs, always
-    const t0 = P(hx + sd * 5.2, hy + 9.2), t1 = P(hx + sd * 4.2, hy + 13.4);
-    S.push(poly([[t0[0] - 1.9, t0[1]], [t0[0] + 1.9, t0[1]], [t1[0], t1[1]]], C.parch));
+    const big = EYES[eyeK].wedge ? 1.55 : 1;
+    const t0 = P(hx + sd * 5.2 * big, hy + 9.2), t1 = P(hx + sd * 4.2 * big, hy + 13.4 + (big - 1) * 4);
+    S.push(poly([[t0[0] - 1.9 * big, t0[1]], [t0[0] + 1.9 * big, t0[1]], [t1[0], t1[1]]], C.parch));
   });
 
   if (prop) drawProp(S, prop, hx, hy, P, C, disc, ell, capsule, poly);
