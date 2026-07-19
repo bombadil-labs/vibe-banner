@@ -334,6 +334,17 @@ ok(M.pathsFor("working", 1.2).k === 0, "mid-hold, it rests on one shape rather t
 let fl = M.pathsFor("puzzled", 0.2);
 ok(fl.k > 0 && fl.k < 1, "flash ramps in too — the question mark gathers rather than appearing");
 
+console.log("\nmulti-line faces (v0.55.0): whitespace is never trimmed; alignment defers to the author");
+let bloomSVG = buildSVG(Object.assign({}, base, { kaomoji: "✧ ･ ✧\n( ˶ˆ ꓳ ˆ˵ )\n✧ ･ ✧" }));
+ok(/class="txt fkt vk" text-anchor="middle"/.test(bloomSVG), "an UNPADDED bloom centres — flush left reads as though the spaces had been eaten");
+let padSVG = buildSVG(Object.assign({}, base, { kaomoji: "  ∧,,∧\n( ̳•  ·  • ̳)\n/    づ♡" }));
+ok(!/text-anchor="middle"/.test(/<text[^>]*class="txt fkt vk"[^>]*>/.exec(padSVG)[0]),
+   "HAND-ALIGNED art keeps the author's alignment — centring would move what they deliberately placed");
+let padT = [...padSVG.matchAll(/<tspan[^>]*>([^<]*)<\/tspan>/g)].map((m) => m[1]).slice(0, 3);
+ok(padT[0].indexOf("  ") === 0, "the leading indent survives, as NBSP");
+ok(padT.join("").indexOf(" ") < 0, "not one plain space left unconverted — nothing collapses");
+ok(padT.reduce((n, t) => n + t.split(" ").length - 1, 0) === 12, "all twelve spaces of the padded art survive");
+
 console.log("\nKip is STEPPED (v0.52.0): a discrete clock, never a tween");
 const K = require("../src/vibe.js").__kip;
 let held = [0, 0.04, 0.09, 0.14].map((d) => K.frameAt("delighted", 0.5 + d, 6));

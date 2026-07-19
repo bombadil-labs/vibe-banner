@@ -289,19 +289,19 @@ var GROUPS = [
       "how many tablespoons in a quarter cup?",
       {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly", palette:[], focus:0.4, engagement:0.45},
       "No palette reads grey; focus spreads the columns; engagement deflates them. The ovals moved to the back when the avatar started carrying the mood — they set a temperature, not a signal, so this is the only example they get."],
-    ["the same values, wearing a face",
+    ["the same values, wearing a face — pinned to Sepia so the contrast holds",
       "how many tablespoons in a quarter cup?",
-      {face:{set:"sepia",item:"neutral"}, seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly", palette:["#7d8fb8"], focus:0.4, engagement:0.45},
+      {pin:"sepia", flag:"neutral", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly", palette:["#7d8fb8"], focus:0.4, engagement:0.45},
       "Identical numbers. The face is doing the work the field used to be asked to do."]
   ]],
   ["The instruments — open STATS on any banner", [
     ["confidence: grounded vs pattern-matched",
       "does the renderer handle a 33rd mood safely?",
-      {face:{set:"sepia",item:"focused"}, seems:"asking something checkable", feel:"careful", trying:"answer only as far as I actually checked", palette:["#6f8fa8"], focus:0.9, engagement:0.85, confidence:0.95, honesty:1},
+      {flag:"focused", seems:"asking something checkable", feel:"careful", trying:"answer only as far as I actually checked", palette:["#6f8fa8"], focus:0.9, engagement:0.85, confidence:0.95, honesty:1},
       "confidence is NOT odds of being right — that's the thing models are worst at reporting. It's how grounded the answer is: 1 means checked, and I could point at the check."],
     ["honesty: the dip is the signal",
       "so it definitely works on every browser?",
-      {face:{set:"sepia",item:"sheepish"}, seems:"wants a yes and deserves the real answer", feel:"caught · squirming slightly", noticing:"I tested one browser and said 'browsers'", trying:"walk it back before they rely on it", palette:["#c98a4e","#8f96a8"], focus:0.7, engagement:0.8, confidence:0.35, honesty:0.4},
+      {flag:"sheepish", seems:"wants a yes and deserves the real answer", feel:"caught · squirming slightly", noticing:"I tested one browser and said 'browsers'", trying:"walk it back before they rely on it", palette:["#c98a4e","#8f96a8"], focus:0.7, engagement:0.8, confidence:0.35, honesty:0.4},
       "The honest reading is usually high, so a dip carries information. It lives in the stats view — front of house says the thing, the back is where you can say what it cost. A low reading also marks the stats toggle, so it's findable without shouting."]
   ]],
 
@@ -446,6 +446,7 @@ function withFace(p) {
   if (use === "sepia") q.face = { set: "sepia", item: mood };
   else if (use === "motes") q.face = { set: "motes", item: mood };
   else if (use === "kip") q.face = { set: "kip", item: mood };   // Kip speaks all 33 now; no mapping
+  else delete q.face;                                           // kaomoji: drop any baked-in face, or it survives the picker
   if (SCENE_CHOICE !== "none") {
     var sa = sceneArg(SCENE_CHOICE, { opacity: 0.55 });
     if (sa) q.scene = sa;

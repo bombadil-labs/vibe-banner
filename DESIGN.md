@@ -679,6 +679,28 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   hand-written, a thing that DESCRIBES the system drifts silently unless something checks it
   against the system. Nothing here throws when a caption lies.
 
+- **Two gallery bugs, and one of them wasn't the reported one (v0.55.0).**
+  *The picker.* `withFace()` overwrote the face for sheet and procedural packs but had NO
+  branch for kaomoji — so choosing kaomoji simply left whatever face a cell had baked in.
+  Three cells sat there in Sepia while the picker insisted on kaomoji. The fix is one `else
+  delete q.face`, and the deeper fix is that a cell which genuinely wants a specific face now
+  says so with `pin` and prints that in its caption, so the exception is legible instead of
+  looking like the bug next to it.
+  *The whitespace.* Reported as trimming; it is not trimming. Both paths preserve it exactly —
+  the static SVG converts every space to NBSP (all twelve of a padded test face survive) and
+  the live mount sets `white-space: pre`. What was actually wrong is ALIGNMENT: `.vft` is
+  left-aligned, so a symmetric bloom typed without padding renders flush left with its short
+  lines hanging off one edge, which looks precisely like the spaces were eaten. The report was
+  right about the symptom and wrong about the cause, which is the useful kind of report.
+  The fix has to respect a real conflict. Centring every multi-line face would move art whose
+  author aligned it BY HAND with leading spaces — their padding plus CSS centring double-counts.
+  So the rule is: if any line opens with whitespace, the author expressed an alignment and it
+  is left strictly alone; otherwise the lines centre. Unpadded blooms look right, hand-set art
+  is untouched, and nothing is ever trimmed to achieve either.
+  Worth noting for future debugging: the site loads the renderer from the pinned CDN, so a
+  local `npm run build` is invisible there. Verifying live behaviour needs a harness pointed at
+  `./dist` — twice now I have briefly believed a fix had failed when I was reading old bytes.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately

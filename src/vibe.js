@@ -701,6 +701,11 @@
 
     var kaoLines = kaoText.split("\n");
     var multiline = !faceImg && kaoLines.length > 1, kaoLh = multiline ? 20 : 0;
+    // Whitespace is NEVER trimmed — but a symmetric bloom typed without padding renders
+    // ragged when every line sits flush left, which reads exactly like the spaces were eaten.
+    // So: if any line opens with whitespace the author hand-aligned it, and their alignment is
+    // left strictly alone. Otherwise the lines centre, which is what an unpadded bloom wants.
+    var kaoCenter = multiline && !kaoLines.some(function (l) { return /^[ \t ]/.test(l); });
 
     function line(label, value, cls, x, key, fullTitle) {
       x = x == null ? TEXT_X : x;
@@ -843,14 +848,15 @@
       // carry their own bodies, bare text gets lent one. It rides every pose/animation.
       var plX = kaoX - 6, plY = faceCy - kaoHE / 2 - 4, plW = wAfter + 12, plH = kaoHE + 8;
       textPivot = [plX + plW / 2, faceCy];
-      faceMeta = { kind: "text", fs: kfs0 * krat, lh: klhE, lines: kaoLines, multiline: multiline, box: { x: plX, y: plY, w: plW, h: plH } };
+      faceMeta = { kind: "text", fs: kfs0 * krat, lh: klhE, lines: kaoLines, multiline: multiline, centered: kaoCenter, box: { x: plX, y: plY, w: plW, h: plH } };
       var plateSVG = '<rect class="vkp" x="' + g(plX) + '" y="' + g(plY) + '" width="' + g(plW) + '" height="' + g(plH) + '" rx="8"/>';
       // spaces become NBSP: SVG text collapses leading spaces and internal runs, which
       // would destroy the indentation multi-line kaomoji art depends on
       var nb = function (s) { return esc(s).replace(/ /g, "\u00A0"); };
+      var kaoMid = kaoX + wAfter / 2;                          // the block's own centre line
       kaoSVG = plateSVG + (multiline
-        ? '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk"' + fsAttr + '>' +
-        kaoLines.map(function (l, i) { return '<tspan x="' + g(kaoX) + '"' + (i === 0 ? "" : ' dy="' + g(klhE) + '"') + '>' + nb(l) + '</tspan>'; }).join("") + '</text>'
+        ? '<text x="' + g(kaoCenter ? kaoMid : kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fkt vk"' + (kaoCenter ? ' text-anchor="middle"' : "") + fsAttr + '>' +
+        kaoLines.map(function (l, i) { return '<tspan x="' + g(kaoCenter ? kaoMid : kaoX) + '"' + (i === 0 ? "" : ' dy="' + g(klhE) + '"') + '>' + nb(l) + '</tspan>'; }).join("") + '</text>'
         : '<text x="' + g(kaoX) + '" y="' + g(kaoAbs[0]) + '" class="txt fk vk"' + fsAttr + '>' + nb(kaoText) + '</text>');
     }
     // every readout row carries a <title> tooltip with its full text — excited reporters
@@ -1194,6 +1200,7 @@
       } else if (fm.kind === "text") {
         kaoEl = document.createElement("span");
         kaoEl.className = "vft" + (fm.multiline ? " vftm" : "");
+        if (fm.centered) kaoEl.style.textAlign = "center";
         kaoEl.textContent = fm.lines.join("\n");
       } else {
         kaoEl = document.createElement("div");
