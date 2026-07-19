@@ -345,6 +345,21 @@ ok(padT[0].indexOf("  ") === 0, "the leading indent survives, as NBSP");
 ok(padT.join("").indexOf(" ") < 0, "not one plain space left unconverted — nothing collapses");
 ok(padT.reduce((n, t) => n + t.split(" ").length - 1, 0) === 12, "all twelve spaces of the padded art survive");
 
+console.log("\nthe echo (v0.58.0): rhyme doubles the creature, quietly");
+const echoOf = (set, item) => {
+  const q = buildSVG(Object.assign({}, base, { face: { set: set, item: item } }));
+  const m = /opacity="0\.2" transform="translate\((-?[0-9.]+),0\)"/.exec(q);
+  return m ? +m[1] : null;
+};
+ok(echoOf("sepia", "rhyme") !== null, "sepia rhymes with itself");
+ok(echoOf("kip", "rhyme") !== null, "kip rhymes with itself");
+ok(echoOf("sepia", "content") === null && echoOf("kip", "solemn") === null, "no other mood echoes");
+ok(echoOf("motes", "rhyme") === null, "Motes does NOT echo — it already dissolves and re-forms; doubling reads as noise");
+ok(Math.abs(echoOf("sepia", "rhyme") / 56 + 0.8) < 0.001, "offset is 80% of the face's own width, left (" + echoOf("sepia", "rhyme") + "px of 56)");
+let echoSVG = buildSVG(Object.assign({}, base, { face: { set: "kip", item: "rhyme" } }));
+ok((echoSVG.match(/kip-sheet\.png/g) || []).length >= 2, "the echo is a real replica, not a smudge — the sheet is drawn twice");
+ok(/aria-hidden="true"[^>]*>|<g opacity="0\.2"[^>]*aria-hidden="true"/.test(echoSVG), "the echo is hidden from assistive tech: it says nothing new");
+
 console.log("\nKip is STEPPED (v0.52.0): a discrete clock, never a tween");
 const K = require("../src/vibe.js").__kip;
 let held = [0, 0.04, 0.09, 0.14].map((d) => K.frameAt("delighted", 0.5 + d, 6));

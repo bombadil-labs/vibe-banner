@@ -161,6 +161,12 @@
   // A pack whose art predates a mood borrows its nearest neighbour rather than blocking the
   // vocabulary from growing. Sepia's sheet is 32 cells; "working" waits for the next redraw.
   var MOOD_FALLBACK = { working: "focused" };
+  // THE ECHO (restored v0.58.0). A verse and its rhyme: an exact replica of the avatar,
+  // 20% opaque, offset LEFT by 80% of its own width, mirroring every frame and transform.
+  // It reads as memory — the same shape a moment ago and a little way behind. Sheet packs
+  // only: Motes already dissolves and re-forms, so doubling it would just read as noise.
+  var ECHO = { moods: { rhyme: 1 }, alpha: 0.2, dx: -0.8 };
+  function echoes(set, item) { return (set === "sepia" || set === "kip") && ECHO.moods[item] === 1; }
 
   // ── MOTES ─────────────────────────────────────────────────────────────────────────
   // The first avatar with NO SHEET. Sepia and Kip are spritesheets — art, pinned by hash,
@@ -471,7 +477,7 @@
       if (i < 0) i = KIP_MOODS.indexOf(MOOD_FALLBACK[item] || item);
       if (i < 0) i = Math.max(0, Math.min(32, parseInt(item, 10) || 0));
       return {
-        url: KIP_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 10, index: i,
+        url: KIP_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 10, index: i, echo: echoes("kip", item),
         anim: {
           frames: 2, frameRows: 5, stride: 40,
           stepped: 6,                                          // frames per second — his whole clock
@@ -486,7 +492,7 @@
       var i = SEPIA_MOODS.indexOf(MOOD_FALLBACK[item] || item);
       if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
       return {
-        url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 12, index: i,
+        url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 12, index: i, echo: echoes("sepia", item),
         anim: {
           frames: 2, frameRows: 4, stride: 32, split: true,   // LAYERED sheet: rows 0-3 body (solid, the colour's canvas+mask), 4-7 features, 8-11 blink features
           fins: "rrftdtfrfffrdtrfdtttfcdrtrcrrdrf",           // per-mood fin posture (derives from gen-sepia's FRILL_OF — keep in sync): r ripple, f flared, d drooped, t tucked, c calm
@@ -662,7 +668,8 @@
       h: Math.max(24, Math.min(84, faceImg.h || 56)),
       cellW: faceImg.cellW || 0, cellH: faceImg.cellH || 0,
       cols: faceImg.cols || 1, rows: faceImg.rows || 1, index: faceImg.index || 0,
-      anim: faceImg.anim || null
+      anim: faceImg.anim || null,
+      echo: !!faceImg.echo                                     // this literal rebuild drops any key not listed — echo has to be named
     };
     if (kaoText == null) kaoText = p.kaomoji != null ? String(p.kaomoji) : "( ˘ ᵕ ˘ )";
 
@@ -805,7 +812,7 @@
       var iy = faceCy - faceImg.h / 2;
       var ix = portrait.x + (portrait.s - faceImg.w) / 2;                // centre the image in the window
       faceMeta = faceImg.cellW && faceImg.cellH
-        ? { kind: "sprite", url: faceImg.url, cols: faceImg.cols, rows: faceImg.rows, index: faceImg.index, anim: faceImg.anim, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } }
+        ? { kind: "sprite", url: faceImg.url, cols: faceImg.cols, rows: faceImg.rows, index: faceImg.index, anim: faceImg.anim, echo: faceImg.echo, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } }
         : { kind: "img", url: faceImg.url, box: { x: ix, y: iy, w: faceImg.w, h: faceImg.h } };
       faceBox = { x: ix, y: iy, w: faceImg.w, h: faceImg.h };            // authoritative banner-space box — getBBox on a nested sprite svg reports sheet coords, never use it
       if (faceImg.cellW && faceImg.cellH) {                    // spritesheet: crop one cell via a nested viewport
@@ -823,9 +830,14 @@
           if (pg) propGlyph = '<text x="' + g(ix + faceImg.w * 0.8) + '" y="' + g(iy + faceImg.h * 0.18) +
             '" font-size="' + g(faceImg.w * 0.16) + '" text-anchor="middle" font-weight="600" fill="#7a6a55">' + pg + '</text>';
         }
-        kaoSVG = faceImg.anim && faceImg.anim.split            // split sheet: the static render stacks body + features
+        var body = faceImg.anim && faceImg.anim.split          // split sheet: the static render stacks body + features
           ? '<g class="vk">' + mkCell(faceImg.index, "") + mkCell(faceImg.index + faceImg.anim.frameRows * faceImg.cols, "") + propGlyph + '</g>'
           : mkCell(faceImg.index, "vk") + propGlyph;
+        // the echo renders in the fallback too — it is part of the creature, not an
+        // animation flourish, so a still frame that omitted it would be a different avatar
+        kaoSVG = faceImg.echo
+          ? '<g opacity="' + ECHO.alpha + '" transform="translate(' + g(ECHO.dx * faceImg.w) + ',0)" aria-hidden="true">' + body + '</g>' + body
+          : body;
       } else {
         kaoSVG = '<image class="vk" x="' + g(ix) + '" y="' + g(iy) + '" width="' + faceImg.w + '" height="' + faceImg.h +
           '" preserveAspectRatio="xMidYMid meet" href="' + esc(faceImg.url) + '"/>';
@@ -1186,6 +1198,9 @@
     // lies); transforms pivot on the element's own centre, as CSS intends. The static
     // fallback (buildSVG) keeps the SVG face.
     var fm = L.faceMeta, kaoEl = null, featEl = null, faceLayerEl = null, procC = null, baseFill = [92, 67, 32];
+    var echoKao = null, echoFeat = null;                       // declared HERE: the face layer below builds them, and a
+                                                               // later `var echoKao = null` used to run afterwards and wipe it
+
     if (fm) {
       var faceLayer = document.createElement("div");
       faceLayer.style.cssText = "position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;" +
@@ -1224,6 +1239,23 @@
           "background-size:" + (fm.cols * 100) + "% " + (fm.rows * 100) + "%;" +
           "background-position:" + g(fm.cols > 1 ? (fm.index % fm.cols) / (fm.cols - 1) * 100 : 0) + "% " + g(featRow / (fm.rows - 1) * 100) + "%;" +
           "image-rendering:pixelated;";
+      }
+      // THE ECHO. Built here so it can be inserted BEHIND the real face in the same layer,
+      // which is what makes it read as something the creature is trailing rather than a
+      // second creature standing next to it. Offset is a share of the face's OWN width, so
+      // it holds at any window size. Non-interactive: taps belong to the original.
+      if (fm.echo) {
+        echoKao = kaoEl.cloneNode(true);
+        echoKao.style.pointerEvents = "none";
+        echoKao.style.opacity = String(ECHO.alpha);
+        echoKao.style.setProperty("--echo-dx", (ECHO.dx * 100) + "%");
+        echoKao.setAttribute("aria-hidden", "true");
+        if (featEl) { echoFeat = featEl.cloneNode(true); echoKao.appendChild(echoFeat); }
+        var eWrap = document.createElement("div");             // its own positioning context, shifted once
+        eWrap.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:0;" +
+          "transform:translateX(" + (ECHO.dx * 100) + "%);";
+        eWrap.appendChild(echoKao);
+        faceLayer.appendChild(eWrap);                          // appended FIRST → drawn under the real face
       }
       faceLayer.appendChild(kaoEl); wrap.appendChild(faceLayer);
       faceLayerEl = faceLayer;
@@ -1306,7 +1338,7 @@
     // THE ECHO (v0.40.0, rhyme): an exact replica of the face, 25 banner-px to the LEFT,
     // 25% alpha, non-interactive, mirroring every action — transform, sprite frames, and
     // the fin/chromatophore canvases blitted each frame. A verse and its rhyme.
-    var echoKao = null, echoFeat = null, echoFins = null, echoChromo = null, echoTint = null;
+    var echoFins = null, echoChromo = null, echoTint = null;   // echoKao/echoFeat are built with the face layer, above
     // Every banner-generated message carries this prefix so it never reads as typed text —
     // the skill tells the reporter to receive these as gestures, not prompts. Each one also
     // ends with a blank line: consecutive taps (a boop then a feeding) land as separate

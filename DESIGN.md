@@ -679,6 +679,28 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   hand-written, a thing that DESCRIBES the system drifts silently unless something checks it
   against the system. Nothing here throws when a caption lies.
 
+- **The echo comes back, as an avatar trait (v0.58.0).** It died in v0.44.0 as collateral when
+  flags became weather — and that was the error, because it was never weather. The ROOM isn't
+  doing anything when a thought rhymes; the CREATURE is doubled. Filing it under the thing that
+  describes the room is what got it deleted. It now lives on the face, where `sepia` and `kip`
+  declare `echo` for the `rhyme` mood: an exact replica at 20% opacity, offset left by 80% of
+  the face's OWN width (a share, not a pixel count, so it holds at any window size), mirroring
+  every frame and transform. Motes is deliberately excluded — a swarm that already dissolves
+  and re-forms has nothing to double, and it would read as noise.
+  Three bugs on the way in, all mine, all caught by verifying rather than reasoning:
+  - I referenced `faceImg` inside `mount()`, where it does not exist — it is layout-scoped. The
+    ReferenceError was swallowed by `vibe()`'s try/catch, which quietly fell back to the static
+    SVG: **zero canvases, every sprite banner dead**, no error anywhere. The same silent-fallback
+    shape as the flat-Sepia bug, and it would have shipped looking merely "not animated".
+  - The literal rebuild of `faceImg` in layout drops any key not explicitly listed, so `echo`
+    vanished before it reached the renderer.
+  - `var echoKao = null` sat AFTER the code that builds it, so the assignment was wiped a few
+    lines later and the frame loop mirrored nothing. The ghost sat frozen on its cloned frame
+    while the real Kip stepped past it.
+  The last one is the instructive one: the echo LOOKED present in the DOM at the right opacity
+  and offset, and only sampling it over time showed it never moved. A thing can be correctly
+  built and still be dead.
+
 - **The gallery controls ride along, and each face introduces itself (v0.57.0).** Two small
   maintainer asks that share a reason: the gallery is where you COMPARE, and both changes
   reduce what comparing costs you.
