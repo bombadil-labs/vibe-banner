@@ -679,6 +679,24 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   hand-written, a thing that DESCRIBES the system drifts silently unless something checks it
   against the system. Nothing here throws when a caption lies.
 
+- **The gallery controls ride along, and each face introduces itself (v0.57.0).** Two small
+  maintainer asks that share a reason: the gallery is where you COMPARE, and both changes
+  reduce what comparing costs you.
+  The pickers are a sticky bar now. Comparing faces on one specific mood meant scrolling down
+  to the cell, back up to change face, and down again hunting for where you were — losing your
+  place every single time, which is exactly the friction that stops anyone from actually
+  looking. The bar backdrop-blurs so cells stay readable sliding underneath.
+  Each face also gets a BIO — and the important design point is where it does NOT go. It is
+  rendered in the Gallery, Explorer and Builder, and it is deliberately unreachable from
+  `assemble()`. A skill file should name who you are wearing in one line and get out of the
+  way; three rounds of trimming exist precisely because charm in the payload docs is bloat the
+  reporter has to read past every turn. The same characters, addressed to a different audience:
+  a human browsing and deciding, who benefits from knowing that cuttlefish are colourblind or
+  that Kip is drawn on half a grid. In the Gallery the bio carries a live tile of the creature
+  beside it, so "amber feet that stay planted" arrives next to a Kip actually doing it. The
+  tile is marked `aria-hidden`, because the banner's own `<title>`/`<desc>` would otherwise be
+  read out mid-sentence by a screen reader.
+
 - **Pinning was the wrong instrument (v0.56.0).** v0.55.0 let a gallery cell PIN its face so
   the caption could stop lying about what was on screen. The maintainer rejected it in one
   line: *"If I'm looking at Sepia, I don't need or want to see a tall kaomoji cell in this

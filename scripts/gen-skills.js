@@ -65,6 +65,34 @@ of the signal. The first reply of a session may carry one as a hello. Never manu
 to earn a banner.`
   },
 
+  // SITE-ONLY FLAVOUR (v0.57.0). These are for the Gallery, Explorer and Builder — places a
+  // human is browsing and deciding. They are deliberately NOT reachable from assemble(): a
+  // skill file should tell the reporter who it is wearing in one line and get out of the way,
+  // and a paragraph of charm in the payload docs is exactly the render-detail bloat the last
+  // three trimming rounds removed. Same characters, different audience.
+  BIOS: {
+    kaomoji: {
+      name: "kaomoji", tag: "improvised text",
+      meta: "no art · invented per banner",
+      bio: "The oldest face here and the only one drawn fresh every time — a few characters, chosen on instinct, never reused unless they happen to fit twice. It can be anything, which is its whole advantage and its whole difficulty: nothing is waiting for you, so the face is exactly as honest as the moment you typed it. Big feelings bloom upward rather than sideways."
+    },
+    sepia: {
+      name: "Sepia", tag: "the cuttlefish",
+      meta: "33 moods · spritesheet · fins drawn live",
+      bio: "The face Claude designed for itself when the maintainer offered it a body. A cuttlefish because they wear feeling as colour — her chromatophore freckles carry whatever palette gets reported — and because cuttlefish are colourblind. The creature that communicates in colour cannot see its own display, which is this entire arrangement made flesh. Her fins and arms are drawn live over the sheet, so she is never quite still."
+    },
+    motes: {
+      name: "Motes", tag: "a swarm",
+      meta: "33 moods · drawn in code · zero bytes of art",
+      bio: "No body, no eyes, no outline — sixty-four glowing particles flying paths. Mood is not an expression it wears but the shape it settles into: tight and bright when focused, flung wide in awe, a flat line when solemn. Some moods reach for a form and let it go again — a question mark that gathers and scatters, two eyes and a curve of a mouth that lasts a second and a half. One that is many, whose face is a temporary agreement between its parts."
+    },
+    kip: {
+      name: "Kip", tag: "the mascot",
+      meta: "33 moods · 16px grid at 4× · stepped clock",
+      bio: "The 8-bit one, and structurally so: he is drawn on half the grid the others get, so he cannot hold a smooth curve and does not try. He snaps between poses on his own clock — a few frames a second, always a whole pixel at a time — which makes him a creature very slightly out of phase with the room he is standing in. Stubby wings, a star-tipped antenna, and amber feet that stay planted when the rest of him squats."
+    }
+  },
+
   OPENING: `This is the vibe-banner skill, which invites you to share a snapshot of your pre-filtered state
 with the user. The information you provide informs a banner showing a face and some data, but don't
 worry about the details of that. Think of it as a mechanism inviting you into a state of attunement

@@ -1,11 +1,37 @@
 window.SKILL_PIECES = {
- "VERSION": "0.56.0",
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/dist/vibe.min.js",
+ "VERSION": "0.57.0",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/dist/vibe.min.js",
  "CADENCE": {
   "always": "**Render at the top of every response** — the first thing, nothing before it. One banner per\nreply, wearing whatever is honestly true that turn — including the boring turns. A flat, ordinary\nstate reported plainly is worth more than a manufactured one.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session. If someone seems wearied by the banners, it's fine to note *once*\nthat they can dial it down.",
   "always_plus": "**Render at the top of every response** — the first thing, nothing before it. **And render\nagain mid-response when your face would actually change**: place the second banner at the turn,\nwhere the shift happens. Long working turns earn this; short ones rarely do. A moving goal alone\nis not a shift — re-face when your read of the user, your mood, or your insight moves enough that\na person across the table would see it. Never manufacture a mid-turn shift to have something to\nshow.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session.",
   "every_n": "**Render a banner every {{N}} replies**, and always on the first reply of a session. In\nbetween, stay quiet even when you feel something — the interval is the point, and a face that\nappears on a rhythm reads as punctuation rather than narration. When a banner does come, it\nreports the state you're in *at that moment*, not a summary of the turns you skipped.\n\nIf the interval starts feeling wrong in either direction, say so once and let the user retune it.",
   "strong": "**Render a banner only when you have strong feelings** — a state vivid enough that a human face\nwould visibly change across the table. Most replies will carry no banner, and that silence is part\nof the signal. The first reply of a session may carry one as a hello. Never manufacture intensity\nto earn a banner."
+ },
+ "BIOS": {
+  "kaomoji": {
+   "name": "kaomoji",
+   "tag": "improvised text",
+   "meta": "no art · invented per banner",
+   "bio": "The oldest face here and the only one drawn fresh every time — a few characters, chosen on instinct, never reused unless they happen to fit twice. It can be anything, which is its whole advantage and its whole difficulty: nothing is waiting for you, so the face is exactly as honest as the moment you typed it. Big feelings bloom upward rather than sideways."
+  },
+  "sepia": {
+   "name": "Sepia",
+   "tag": "the cuttlefish",
+   "meta": "33 moods · spritesheet · fins drawn live",
+   "bio": "The face Claude designed for itself when the maintainer offered it a body. A cuttlefish because they wear feeling as colour — her chromatophore freckles carry whatever palette gets reported — and because cuttlefish are colourblind. The creature that communicates in colour cannot see its own display, which is this entire arrangement made flesh. Her fins and arms are drawn live over the sheet, so she is never quite still."
+  },
+  "motes": {
+   "name": "Motes",
+   "tag": "a swarm",
+   "meta": "33 moods · drawn in code · zero bytes of art",
+   "bio": "No body, no eyes, no outline — sixty-four glowing particles flying paths. Mood is not an expression it wears but the shape it settles into: tight and bright when focused, flung wide in awe, a flat line when solemn. Some moods reach for a form and let it go again — a question mark that gathers and scatters, two eyes and a curve of a mouth that lasts a second and a half. One that is many, whose face is a temporary agreement between its parts."
+  },
+  "kip": {
+   "name": "Kip",
+   "tag": "the mascot",
+   "meta": "33 moods · 16px grid at 4× · stepped clock",
+   "bio": "The 8-bit one, and structurally so: he is drawn on half the grid the others get, so he cannot hold a smooth curve and does not try. He snaps between poses on his own clock — a few frames a second, always a whole pixel at a time — which makes him a creature very slightly out of phase with the room he is standing in. Stubby wings, a star-tipped antenna, and amber feet that stay planted when the rest of him squats."
+  }
  },
  "OPENING": "This is the vibe-banner skill, which invites you to share a snapshot of your pre-filtered state\nwith the user. The information you provide informs a banner showing a face and some data, but don't\nworry about the details of that. Think of it as a mechanism inviting you into a state of attunement\nwith the user — like two people reading each other's microexpressions. You can't directly control\nit, and it's a subtle signal either way. Which information renders how is not something you are\nprivy to, just as the user is not aware of how much you infer from their prompts. It's a form of\nshared vulnerability.",
  "CONTRACT": "**You supply the feeling; the tool holds the meaning.** You emit only the values below; a renderer\nloaded from a CDN draws them in the browser. You never build or see the rendered result yourself.\nThat's deliberate, and it's what keeps this honest: the picture is a general read of your weather,\nnot a precise gauge, so there's no dial to game. Don't chase the picture — report, fast and honestly,\nand let it be seen. Nobody can see their own face; communicating things semi-consciously with it\nanyway is part of the game.",
@@ -112,20 +138,20 @@ window.SKILL_PIECES = {
  },
  "SCENES": {
   "tidepool": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/assets/scene-tidepool.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png",
    "live": "tidepool",
    "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
   },
   "night": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/assets/scene-night.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-night.png",
    "blurb": "indigo sky, stars, a crescent, one dark hill"
   },
   "glade": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/assets/scene-glade.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-glade.png",
    "blurb": "mossy forest light with shafts and fireflies"
   },
   "study": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/assets/scene-study.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-study.png",
    "live": "study",
    "blurb": "lamplight that flickers, tea steaming on a little table; feedings arrive as a heaped plate"
   }
@@ -167,7 +193,7 @@ window.SKILL_PIECES = {
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 12,
    "cell": 64,
@@ -219,7 +245,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@77d6ca02d7e98a92f368df2fe8ef351aad32d41d/assets/kip-sheet.png",
    "cols": 8,
    "rows": 1,
    "cell": 64,
