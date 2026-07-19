@@ -365,6 +365,12 @@ ok(maskOf("dramatic"), "dramatic wears the mask in the still frame too — it IS
 ok(!maskOf("tender") && !maskOf("content") && !maskOf("laugh"),
    "no other mood wears an emoji: the swarm says everything else with its own shape");
 
+console.log("\nthe language pill (v0.60.0): a readout row, not a footnote");
+let langSVG = buildSVG(Object.assign({}, base, { languages: ["ru", "ja"] }));
+ok(/\[Reasoned in\]/.test(langSVG), "the STATIC fallback keeps its caption — there is no panel there to straddle");
+ok(!/class="txt fl"/.test(buildSVG(base)), "no languages → nothing rendered at all");
+ok(/viewBox="0 0 680 164"/.test(langSVG), "the static banner grows a row for its caption — the live pill straddles instead, so it needs none");
+
 console.log("\nthe echo (v0.58.0): rhyme doubles the creature, quietly");
 const echoOf = (set, item) => {
   const q = buildSVG(Object.assign({}, base, { face: { set: set, item: item } }));

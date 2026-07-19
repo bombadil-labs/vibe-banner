@@ -166,6 +166,9 @@
   // It reads as memory — the same shape a moment ago and a little way behind. Sheet packs
   // only: Motes already dissolves and re-forms, so doubling it would just read as noise.
   var ECHO = { moods: { rhyme: 1 }, alpha: 0.2, dx: -0.8 };
+  // Applied to the CLONE, whose width is the face's — so the percentage means 80% of the
+  // avatar, which is what was asked for. Every live transform composes AFTER it.
+  var ECHO_TF = "translateX(" + (ECHO.dx * 100) + "%)";
   // The ONE emoji Motes wears. `dramatic` already clusters part of the swarm onto a single
   // centre point — a spotlight with nothing standing in it. The mask is what the light is FOR,
   // and theatre is the one register where a literal symbol is honest rather than a shortcut.
@@ -926,7 +929,9 @@
     var L = {
       H: H, W: Wl, square: square, coreCy: coreCy, blobs: square ? [] : blobs, textSVG: kaoSVG + readSVG + langSVG + capSVG,
       restSVG: readSVG + langSVG + capSVG, sceneSVG: sceneSVG, portrait: portrait,
-      mountSVG: langSVG, faceMeta: faceMeta, oItems: oItems, readout: rows, caption: !!moodName, moodName: moodName, flagName: activeFlag,
+      // the live mount builds the language PILL in HTML; langSVG stays for the static fallback
+      mountSVG: "", langs: langs,
+      faceMeta: faceMeta, oItems: oItems, readout: rows, caption: !!moodName, moodName: moodName, flagName: activeFlag,
       kaoSVG: kaoSVG, kaoAbs: kaoAbs, kaoLines: kaoLines, multiline: multiline, faceImg: faceImg, faceBox: faceBox, textPivot: textPivot, scene: scene, hasLangs: langs.length > 0,
       env: env, focus: focus, usesCols: usesCols, seed: seed,
       stance: stance, conson: conson
@@ -1030,6 +1035,17 @@
       ".vo-vt{position:absolute;top:-0.72em;left:0.9em;z-index:3;pointer-events:auto;display:flex;border-radius:1em;overflow:hidden;box-shadow:0 0 0 1.5px rgba(36,26,6,0.35)}" +   // ONE pill, two halves, straddling the panel's top edge
       ".vo-vt span{cursor:pointer;font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.68em;padding:0.12em 0.7em 0.16em;background:rgba(48,34,16,0.85);color:rgba(246,234,208,0.7);letter-spacing:0.04em;text-shadow:none}" +
       ".vo-vt span:hover{color:#f6ead0}" +
+      // THE LANGUAGE PILL (v0.60.0). `[Reasoned in]:` was the last thing still wearing the old
+      // bracketed-SVG-caption format, sat in the bottom-right corner looking like a footnote
+      // from a different document. It is a readout row like any other now — same label
+      // treatment as user/mood/goal below — just straddling the panel's TOP-RIGHT edge, the
+      // mirror of the view toggle on the left.
+      ".vo-lp{position:absolute;top:-0.72em;right:0.9em;z-index:3;pointer-events:auto;display:flex;" +
+      "border-radius:1em;overflow:hidden;box-shadow:0 0 0 1.5px rgba(36,26,6,0.35)}" +
+      ".vo-lp b{font-weight:normal;font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.68em;" +
+      "padding:0.12em 0.6em 0.16em;background:rgba(69,49,24,0.58);color:#f6ead0;letter-spacing:0.04em;text-shadow:none}" +
+      ".vo-lp i{font-style:normal;font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.68em;" +
+      "padding:0.12em 0.65em 0.16em;background:rgba(48,34,16,0.85);color:rgba(246,234,208,0.92);letter-spacing:0.06em;text-shadow:none}" +
       ".vo-vt span.on{background:#f6ead0;color:#452f14;cursor:default}" +
       ".vo-stats{pointer-events:auto;padding:0.55em 0.9em 0.6em;border-radius:10px;max-height:100%;overflow-y:auto;" +
       "display:flex;flex-direction:column;justify-content:center;justify-content:safe center;" +
@@ -1045,6 +1061,8 @@
       ".vo-vt .vdot{display:inline-block;width:0.34em;height:0.34em;border-radius:50%;background:#c98a4e;margin-left:0.32em;vertical-align:0.28em;opacity:0.85}" +
       "@media (prefers-color-scheme:dark){.vo{color:#f6ead0;text-shadow:0 1px 2px rgba(36,26,6,0.6)}" +
       ".vo .pill{background:rgba(216,197,160,0.24);color:#f6ead0}" +
+      ".vo-lp b{background:rgba(216,197,160,0.24);color:#f6ead0}" +   // tracks the readout labels in BOTH themes — it IS one of them
+      ".vo-lp i{background:rgba(30,22,10,0.82)}" +
       ".vo-stats .slbl{background:rgba(216,197,160,0.24)}" +
       ".vo-stats .sctr{background:rgba(216,197,160,0.55)}" +
       ".vo-stats{background:rgba(30,24,16,0.22);box-shadow:inset 0 0 0 1px rgba(246,234,208,0.08)}" +
@@ -1062,7 +1080,7 @@
     var ov = document.createElement("div");
     ov.style.cssText = "position:absolute;z-index:2;display:flex;flex-direction:column;justify-content:center;pointer-events:none;" +
       "left:" + g(TEXT_X / W * 100) + "%;right:1.2%;top:2%;bottom:" +
-      (L.hasLangs ? g(14 / L.H * 100) + "%" : "2%") + ";";     // clearance for [Reasoned in]; the flag pill lives in the window
+      "2%" + ";";                                             // the language pill straddles the TOP edge now — no bottom clearance needed
     var pn = document.createElement("div");
     pn.className = "vo vo-panel";
     L.oItems.forEach(function (it) {
@@ -1188,6 +1206,20 @@
       try { localStorage.setItem("vibeView", view); } catch (e2) { }
     });
     pwrap.appendChild(vt);
+    // THE LANGUAGE PILL: the mirror of the view toggle, straddling the panel's top-RIGHT
+    // edge. Its label half wears the same treatment as the readout labels below, because
+    // that is what it is — one more row of the readout, moved to where there was room.
+    if (L.langs && L.langs.length) {
+      var lp = document.createElement("div");
+      lp.className = "vo vo-lp";
+      var lpInner = '<b>reasoned in</b>';
+      L.langs.forEach(function (e2, i2) {
+        lpInner += '<i' + (e2.name ? ' title="' + esc(e2.name) + '"' : '') + '>' + esc(e2.flag ? e2.flag : e2.code) +
+          (i2 < L.langs.length - 1 ? ' ' : '') + '</i>';
+      });
+      lp.innerHTML = lpInner;
+      pwrap.appendChild(lp);
+    }
     var fpill = null;
     if (L.moodName) {                                          // the mood caption as a pill, tucked into the window's bottom-left corner
       fpill = document.createElement("div");
@@ -1261,12 +1293,17 @@
         echoKao = kaoEl.cloneNode(true);
         echoKao.style.pointerEvents = "none";
         echoKao.style.opacity = String(ECHO.alpha);
-        echoKao.style.setProperty("--echo-dx", (ECHO.dx * 100) + "%");
         echoKao.setAttribute("aria-hidden", "true");
         if (featEl) { echoFeat = featEl.cloneNode(true); echoKao.appendChild(echoFeat); }
-        var eWrap = document.createElement("div");             // its own positioning context, shifted once
+        // The offset MUST live on the clone, not on a wrapper: a percentage translate resolves
+        // against the element's OWN width, and the wrapper filled the whole window — so -80%
+        // meant 80% of the WINDOW (~112px) rather than of the avatar (~45px) and shoved the
+        // ghost almost entirely out of frame, leaving a sliver at the frame edge. The clone
+        // has the face's width, so the same percentage now means what it says.
+        var eWrap = document.createElement("div");             // mirrors the layer's centring so the clone lands where the face does
         eWrap.style.cssText = "position:absolute;inset:0;pointer-events:none;z-index:0;" +
-          "transform:translateX(" + (ECHO.dx * 100) + "%);";
+          "display:flex;align-items:center;justify-content:center;";
+        echoKao.style.transform = ECHO_TF;
         eWrap.appendChild(echoKao);
         faceLayer.appendChild(eWrap);                          // appended FIRST → drawn under the real face
       }
@@ -2160,7 +2197,7 @@
           else if (kaoEl.style.transform) kaoEl.style.transform = "";                // rest cleanly
         }
         if (echoKao) {                                                               // the echo mirrors everything, a beat behind nothing
-          echoKao.style.transform = kaoEl.style.transform;
+          echoKao.style.transform = ECHO_TF + (kaoEl.style.transform ? " " + kaoEl.style.transform : "");   // compose: the offset survives every mirrored pose
           if (kaoEl.style.backgroundPosition) echoKao.style.backgroundPosition = kaoEl.style.backgroundPosition;
           if (echoFeat && featEl) echoFeat.style.backgroundPosition = featEl.style.backgroundPosition;
           if (echoFins && finC && finC.width > 0) {
