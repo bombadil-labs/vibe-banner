@@ -398,12 +398,9 @@ him when that is funny, or when it is true.`,
 
   // Builder-only: face previews for the narrator callouts and mood strips.
   PREVIEW: {
-    sepia: { kind: "sheet", url: SEPIA_SHEET, cols: 8, rows: 12, cell: 64, split: 4,
-      moods: ["neutral","content","delighted","focused","sleepy","sheepish","booped","thinking",
-        "spark","excited","surprised","tender","melancholy","anxious","mirth","laugh",
-        "groan","oops","frustrated","angry","dramatic","at_peace","solemn","rhyme",
-        "awe","vertigo","resolute","puzzled","asking","weary","wink","love"],
-      strip: ["content","delighted","thinking","tender","puzzled","at_peace","wink","love"] },
+    sepia: { kind: "sheet", url: SEPIA_SHEET, cols: 8, rows: 15, cell: 64, split: 5,
+      moods: MOOD_LIST,
+      strip: ["content","delighted","thinking","tender","puzzled","at_peace","wink","working"] },
     // Kip outgrew the 8-cell sheet in v0.52.0; this preview still described the retired one.
     kip: { kind: "sheet", url: KIP_SHEET, cols: 8, rows: 10, cell: 64,
       moods: MOOD_LIST,

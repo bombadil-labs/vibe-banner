@@ -160,7 +160,7 @@
     "working"];
   // A pack whose art predates a mood borrows its nearest neighbour rather than blocking the
   // vocabulary from growing. Sepia's sheet is 32 cells; "working" waits for the next redraw.
-  var MOOD_FALLBACK = { working: "focused" };
+  var MOOD_FALLBACK = {};                                      // empty: every pack now has art for every mood. The mechanism stays for the next one.
   // THE ECHO (restored v0.58.0). A verse and its rhyme: an exact replica of the avatar,
   // 20% opaque, offset LEFT by 80% of its own width, mirroring every frame and transform.
   // It reads as memory — the same shape a moment ago and a little way behind. Sheet packs
@@ -465,7 +465,7 @@
   // Drollery: a marginalia grotesque. Analytic art (not pixels) that BOILS — three frames
   // cycled a few times a second, each the same drawing re-inked with a sub-pixel wobble.
   var DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@07a55ae18c62eea427a028b0088e4e80ca77278b/assets/drollery-sheet.png";
-  var SEPIA_MOODS = MOODS.slice(0, 32);                        // the sheet's 32 cells; later moods fall back
+  var SEPIA_MOODS = MOODS;                                     // v0.68.0: she covers the whole vocabulary again
 
   // NAMED ENVIRONMENTS (v0.48.0). The renderer owns these URLs so a caller can write
   // `scene: "tidepool"` and be done. Asking a reporter to reproduce a 40-character sha and a
@@ -530,10 +530,10 @@
       var i = SEPIA_MOODS.indexOf(MOOD_FALLBACK[item] || item);
       if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
       return {
-        url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 12, index: i, echo: echoes("sepia", item),
+        url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 15, index: i, echo: echoes("sepia", item),
         anim: {
-          frames: 2, frameRows: 4, stride: 32, split: true,   // LAYERED sheet: rows 0-3 body (solid, the colour's canvas+mask), 4-7 features, 8-11 blink features
-          fins: "rrftdtfrfffrdtrfdtttfcdrtrcrrdrf",           // per-mood fin posture (derives from gen-sepia's FRILL_OF — keep in sync): r ripple, f flared, d drooped, t tucked, c calm
+          frames: 2, frameRows: 5, stride: 40, split: true,   // LAYERED sheet: rows 0-3 body (solid, the colour's canvas+mask), 4-7 features, 8-11 blink features
+          fins: "rrftdtfrfffrdtrfdtttfcdrtrcrrdrft",   // 33rd: working holds a tucked, businesslike frill           // per-mood fin posture (derives from gen-sepia's FRILL_OF — keep in sync): r ripple, f flared, d drooped, t tucked, c calm
           arms: true,                                          // three independently swaying arms, drawn from the hem (the baked stubs retired)
           ink: { 17: 1, 13: 0.4 },                             // her namesake pigment: oops sprays a full startled puff, anxious leaks nervous wisps
           cycle: { 15: 0.32 },                                 // beat moods: laugh's frame 1 is the guffaw, cycled in slow deep HAs (belly laugh, not cackle — the maintainer's note)

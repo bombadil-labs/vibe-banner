@@ -401,6 +401,31 @@ ok(K.beat.split("").every((c) => K.pattern[c]), "every beat char names a real pa
 ok(["delighted", "excited", "laugh", "working"].every((m) => K.pattern[K.beat[K.moods.indexOf(m)]].length <= 2),
    "energetic moods get the short pattern — stillness is not distributed at random");
 
+console.log("\nTHE INVENTORY (v0.68.0): every pack has its OWN art for every mood");
+// Resolving is not the same as having art. Sepia covered all 33 for six releases while
+// `working` quietly shared a cell with `focused` — it rendered, it just rendered the wrong
+// creature. Two moods landing on one cell is the only way to see that from outside.
+const CANON = ["neutral", "content", "delighted", "focused", "sleepy", "sheepish", "booped",
+  "thinking", "spark", "excited", "surprised", "tender", "melancholy", "anxious", "mirth",
+  "laugh", "groan", "oops", "frustrated", "angry", "dramatic", "at_peace", "solemn", "rhyme",
+  "awe", "vertigo", "resolute", "puzzled", "asking", "weary", "wink", "love", "working"];
+ok(CANON.length === 33, "the canonical vocabulary is 33 moods");
+["sepia", "kip", "drollery"].forEach((set) => {
+  const byCell = {};
+  CANON.forEach((mood) => {
+    const q = buildSVG(Object.assign({}, base, { face: { set: set, item: mood } }));
+    const r = /viewBox="(\d+) (\d+) 64 64"[^>]*>\s*<image[^>]*-sheet/.exec(q);
+    const key = r ? r[1] + "," + r[2] : "MISSING";
+    (byCell[key] = byCell[key] || []).push(mood);
+  });
+  const shared = Object.keys(byCell).filter((k) => byCell[k].length > 1).map((k) => byCell[k].join("="));
+  ok(!byCell.MISSING && !shared.length,
+     set + " draws all 33 from its own cells" + (shared.length ? " — SHARING: " + shared.join(" ") : ""));
+});
+let moteGaps = CANON.filter((m) => !M.moods[m]);
+ok(!moteGaps.length, "motes has a formation for all 33" + (moteGaps.length ? " — missing " + moteGaps : ""));
+ok(Object.keys(M.moods).length === 33, "and no formations beyond the vocabulary");
+
 console.log("\nevery mood resolves in every pack that advertises it");
 const MOODS_ALL = ["neutral","content","delighted","focused","sleepy","sheepish","booped","thinking",
   "spark","excited","surprised","tender","melancholy","anxious","mirth","laugh","groan","oops",

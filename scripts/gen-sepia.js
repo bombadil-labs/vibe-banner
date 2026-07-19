@@ -2,7 +2,7 @@
 /* Sepia — the face Claude (Fable) designed for itself, 2026-07-16. CC0.
  * A small cuttlefish who wears feeling as color and cannot see its own display:
  * chromatophore freckles carry each mood's hue; the body stays cream-and-ink.
- * 32 moods × 3 FRAMES, 8×12 grid, 64px cells → assets/sepia-sheet.png (512×768).
+ * 33 moods × 3 FRAMES, 8×15 grid, 64px cells → assets/sepia-sheet.png (512×960).
  *   frame 0 (rows 0-3):  base — byte-identical art to the pre-animation sheet
  *   frame 1 (rows 4-7):  shimmer — chromatophores re-rolled, fins in alternate posture
  *   frame 2 (rows 8-11): blink — lids drawn over whatever the eyes were doing
@@ -247,12 +247,13 @@ const MOODS = [
   ["asking",     "uptiny",           "sm",    "#9ac0b0"],
   ["weary",      "down",             "flat",  "#8b93a0"],
   ["wink",       ["happy","closed"], "smile", "#e0a877"],
-  ["love",       "heart",            "open",  "#e87a90", X.boop]
+  ["love",       "heart",            "open",  "#e87a90", X.boop],
+  ["working",    "steely",           "flat",  "#6f8fa8"]   // v0.68.0: the 33rd, so she stops borrowing focused
 ];
-if (MOODS.length !== 32) throw new Error("expected 32 moods, got " + MOODS.length);
+if (MOODS.length !== 33) throw new Error("expected 33 moods, got " + MOODS.length);
 BASE.forEach((r, i) => { if (r.length !== 32) throw new Error("BASE row " + i + " length " + r.length); });
 
-const SCALE = 2, CELL = 64, COLS = 8, ROWS = 12, FRAME_ROWS = 4;   // 2px body grid (the octave pass); rows 0-3: base; 4-7: blink; 8-11: per-mood masks. Fins drawn live (v0.21.0)
+const SCALE = 2, CELL = 64, COLS = 8, ROWS = 15, FRAME_ROWS = 5;   // 2px body grid (the octave pass); rows 0-4: base; 5-9: blink; 10-14: per-mood masks. Fins drawn live (v0.21.0)
 const W = CELL * COLS, H = CELL * ROWS;
 const px = Buffer.alloc(W * H * 4);   // RGBA, transparent
 const hex = c => [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)];
