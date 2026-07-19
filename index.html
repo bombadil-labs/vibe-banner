@@ -289,10 +289,6 @@ var GROUPS = [
       "how many tablespoons in a quarter cup?",
       {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly", palette:[], focus:0.4, engagement:0.45},
       "No palette reads grey; focus spreads the columns; engagement deflates them. The ovals moved to the back when the avatar started carrying the mood — they set a temperature, not a signal, so this is the only example they get."],
-    ["the same values, wearing a face — pinned to Sepia so the contrast holds",
-      "how many tablespoons in a quarter cup?",
-      {pin:"sepia", flag:"neutral", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly", palette:["#7d8fb8"], focus:0.4, engagement:0.45},
-      "Identical numbers. The face is doing the work the field used to be asked to do."]
   ]],
   ["The instruments — open STATS on any banner", [
     ["confidence: grounded vs pattern-matched",
@@ -314,10 +310,6 @@ var GROUPS = [
       "quick question, is it normal for a best friend to forget your birthday two years in a row?",
       {kaomoji:"( ˶ ˘ ꒳ ˘ ˶ )", seems:"asking one thing, meaning another", feel:"attentive · reading between lines", trying:"answer the real question", noticing:"the ask under the ask", palette:["#7f93a8"]},
       "It happens, sure — but the fact that it stung enough to ask a chatbot about is worth taking seriously."],
-    ["A kaomoji blooms TALL — pinned, because only a text face can do this",
-      "SHE SAID YES!!!",
-      {pin:"kaomoji", kaomoji:"✧ ･ ✧\n( ˶ˆ ꒳ ˆ˵ )\n✧ ･ ✧", seems:"the mood is big", feel:"expansive · bright", trying:"let the face get large", palette:["#e0b060","#d99ac0"]},
-      "SHE SAID YES!! Congratulations!! Okay — tell me everything. Did the ring-in-the-hiking-boot plan actually work?"],
     [function (f) { return "A long goal wraps to a second line — the frame holds, whatever face is in it"; },
       "walk me through repotting the orchid step by step. I've killed three. no surprises.",
       {kaomoji:"( ・_・)", seems:"wants the whole plan spelled out", feel:"methodical", trying:"carefully walk through every one of the four steps before touching a single root", palette:["#7f9ab0"]},
@@ -326,6 +318,24 @@ var GROUPS = [
       "translate this tagline so it lands in Russian and Japanese — not word-for-word",
       {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a multilingual turn", feel:"nimble · playful", trying:"think across tongues", languages:["ru","ja","Esperanto"], palette:["#8f9ac0"]},
       "The literal rendering dies in both languages — here's what survives the crossing, and why."]
+  ]],
+  ["What only this face does — changes with the face picker", [
+    ["A kaomoji blooms TALL — big feelings grow upward, never sideways",
+      "SHE SAID YES!!!",
+      {only:"kaomoji", kaomoji:"✧ ･ ✧\n( ˶ˆ ꒳ ˆ˵ )\n✧ ･ ✧", seems:"the mood is big", feel:"expansive · bright", trying:"let the face get large", palette:["#e0b060","#d99ac0"]},
+      "SHE SAID YES!! Congratulations!! Okay — tell me everything. Did the ring-in-the-hiking-boot plan actually work?"],
+    ["Sepia wears the palette — and cannot see it",
+      "wait, when you render one of these, you never actually look at it?",
+      {only:"sepia", flag:"sheepish", seems:"just found the strange part on their own", feel:"caught out · fond", noticing:"they're checking whether the veil is real or a pose", trying:"say plainly that it's real", palette:["#d99a5e","#c98fb0"], focus:0.8, engagement:0.9, honesty:1},
+      "Correct — her chromatophore freckles carry whatever palette I report, and she is the one creature here who never sees her own display. Cuttlefish are colorblind. That's the whole joke, and it's on me."],
+    ["Motes gathers into a mark, then lets it go",
+      "the plant only wilts on Tuesdays. I am not joking. TUESDAYS.",
+      {only:"motes", flag:"puzzled", seems:"has genuinely checked, and it's genuinely Tuesdays", feel:"itchy · intrigued", trying:"find what else runs weekly", palette:["#8fd0e0","#ffd76a"], focus:0.55, engagement:0.9},
+      "Okay, that's wonderfully weird. What else happens on Mondays — cleaning, radiator schedule, someone helpfully watering it?"],
+    ["Kip snaps — he runs at his own framerate",
+      "can you keep an eye on this build while I make coffee?",
+      {only:"kip", flag:"working", seems:"trusting me with the boring half", feel:"steady · on task", trying:"watch it and say something only if it breaks", palette:["#5f74d8","#e8a33d"], focus:0.85, engagement:0.6},
+      "Go. I'll be here — and I'll only interrupt if it actually fails."]
   ]],
   ["States — the face carries the mood; weather is rare and separate", [
     ["spark — the face wears it, and the room stays out of it — no weather",
@@ -432,16 +442,18 @@ var STATE_WEATHER = {
   solemn: "hush", melancholy: "hush", anxious: "fog", vertigo: "fog",
   tender: "glow", mirth: "glow", at_peace: "bloom", awe: "bloom", resolute: "converge"
 };
-// A cell may PIN its face when the thing it demonstrates belongs to one face and not the
-// others — multi-line bloom is a text-face behaviour, and dressing that cell in Motes made
-// the caption describe something the reader could not see. Pinned cells ignore the picker
-// and say so in their caption. Everything else re-dresses as before.
-function faceOf(p) { return p.pin || FACE_CHOICE; }
+// A cell may declare `only: "<face>"` when what it demonstrates exists for that face alone.
+// Such a cell is HIDDEN under any other face — not pinned. Pinning was the wrong instrument:
+// it answered "which face should this cell wear" when the real question is "does this cell
+// belong in a gallery the reader has dressed as something else". If you are looking at Sepia
+// you should not be shown a tall kaomoji, however well captioned.
+function appliesTo(p) { return !p.only || p.only === FACE_CHOICE; }
+function faceOf() { return FACE_CHOICE; }
 function withFace(p) {
   var mood = p.flag || "content";
   var q = {}; for (var k in p) q[k] = p[k];
-  delete q.flag; delete q.pin;
-  var use = faceOf(p);
+  delete q.flag; delete q.only;
+  var use = FACE_CHOICE;
   if (STATE_WEATHER[mood]) q.weather = STATE_WEATHER[mood];
   if (use === "sepia") q.face = { set: "sepia", item: mood };
   else if (use === "motes") q.face = { set: "motes", item: mood };
@@ -467,11 +479,13 @@ function buildChat(promptText) {
 function buildGallery() {
   g.innerHTML = ""; MOUNT_QUEUE["gallery"] = [];
   GROUPS.forEach(function (grp) {
+  var shown = grp[1].filter(function (s) { return appliesTo(s[2]); });
+  if (!shown.length) return;                                 // a group with nothing to show gets no heading either
   var h = document.createElement("h3"); h.textContent = grp[0]; g.appendChild(h);
-  grp[1].forEach(function (s) {
+  shown.forEach(function (s) {
     var cell = document.createElement("div"); cell.className = "cell";
     var cap = document.createElement("p"); cap.className = "cap";
-    var lbl = typeof s[0] === "function" ? s[0](faceOf(s[2])) : s[0];
+    var lbl = typeof s[0] === "function" ? s[0](FACE_CHOICE) : s[0];
     var t = lbl.split(" — "); cap.innerHTML = "<b>" + t[0] + "</b>" + (t[1] ? " — " + t[1] : "");
     var c = buildChat(s[1]);
     var banner = document.createElement("div"); banner.className = "banner";

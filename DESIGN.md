@@ -679,6 +679,22 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   hand-written, a thing that DESCRIBES the system drifts silently unless something checks it
   against the system. Nothing here throws when a caption lies.
 
+- **Pinning was the wrong instrument (v0.56.0).** v0.55.0 let a gallery cell PIN its face so
+  the caption could stop lying about what was on screen. The maintainer rejected it in one
+  line: *"If I'm looking at Sepia, I don't need or want to see a tall kaomoji cell in this
+  list."* Correct, and the mistake is visible once said — pinning answers "which face should
+  this cell wear", when the real question is "does this cell belong in a gallery the reader has
+  dressed as something else". A well-captioned wrong face is still a wrong face.
+  So `only: "<face>"` replaces it and the cell is HIDDEN under any other face; a group whose
+  cells all vanish drops its heading too. The mechanism then earns its keep by being used
+  properly: each face now has exactly one cell that appears only for it — the kaomoji bloom,
+  Sepia wearing a palette she cannot see, Motes gathering into a question mark and letting it
+  go, Kip snapping on his own clock. Whatever you have picked, you get its moment and nobody
+  else's.
+  Removed in the same pass: "the same values, wearing a face", a cell built to contrast a
+  faceless banner with a faced one. The picker dresses BOTH cells in the same face, so it had
+  never contrasted anything — it was a Sepia advert with a caption about contrast.
+
 - **Two gallery bugs, and one of them wasn't the reported one (v0.55.0).**
   *The picker.* `withFace()` overwrote the face for sheet and procedural packs but had NO
   branch for kaomoji — so choosing kaomoji simply left whatever face a cell had baked in.
