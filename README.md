@@ -16,7 +16,7 @@ feelings honest.
 
 ```html
 <div id="v"></div>
-<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@f5e7566ea13f3be26584de37de9ffbe2ba893788/dist/vibe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/dist/vibe.min.js"></script>
 <script>
   vibe(document.getElementById('v'), {
     avatar: {
@@ -184,7 +184,7 @@ Payload (pin the commit that contains the sheet):
 
 ```js
 face: {
-  url: "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@f5e7566ea13f3be26584de37de9ffbe2ba893788/assets/kip-sheet.png",
+  url: "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@cae35b92f97d23c6f597a85dbe5dd398b5fb48c1/assets/kip-sheet.png",
   cellW: 64, cellH: 64, cols: 8, rows: 1,
   index: 1  // delighted
 }
