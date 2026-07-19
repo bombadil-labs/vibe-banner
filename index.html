@@ -708,7 +708,7 @@ route();
     // The Builder opens in a HOME, not in the void. Defaulting to "none" is how the checked-in
     // skills shipped sceneless for months: an empty window looks like a considered choice
     // rather than an unmade one. Switching face follows that face's home unless you've picked.
-    face: "sepia", cadence: "always", every: 3, scene: "tidepool", sceneUrl: "", sceneOp: 0.5,
+    face: "sepia", cadence: "always", every: 3, scene: "tidepool", sceneUrl: "", sceneOp: 0.5, moods: null,
     scenePicked: false,
     fields: clone(P.DEFAULT_FIELDS),
     customLines: "content = https://cdn.jsdelivr.net/gh/you/faces@commit/content.png\ndelighted = https://cdn.jsdelivr.net/gh/you/faces@commit/delighted.png"
@@ -833,6 +833,65 @@ route();
   bBio.style.cssText = "border-top:none;padding-top:0;margin:10px 0 2px;";
   c2.appendChild(bBio);
   renderBio(bBio, S.face, false);                              // paint on creation, not before it exists
+
+  // MOOD SUBSET (v0.70.0). Every skill listed all 33. Trimming saves a little text, but the
+  // bigger effect is on the reporter: a menu of twelve is answered faster and more honestly
+  // than a menu of thirty-three, and this whole file is built around shooting from the hip.
+  // The renderer is unaffected — it accepts any mood in the canon; the skill simply stops
+  // offering the ones you left out.
+  var moodWrap = document.createElement('div');
+  moodWrap.style.cssText = 'margin:14px 0 2px;';
+  var moodHead = document.createElement('div');
+  moodHead.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;';
+  moodHead.innerHTML = '<span style="font-family:var(--font-mono,monospace);font-size:11px;color:var(--sub);letter-spacing:0.04em">moods</span>';
+  var moodCount = document.createElement('span');
+  moodCount.style.cssText = 'font-size:11.5px;color:var(--sub);';
+  ['all 33','core 14','none'].forEach(function (lbl) {
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn'; btn.textContent = lbl;
+    btn.style.cssText = 'font-size:11.5px;padding:3px 9px;';
+    btn.addEventListener('click', function () {
+      if (lbl === 'all 33') S.moods = null;
+      else if (lbl === 'core 14') S.moods = P.CORE_MOODS.slice();
+      else S.moods = [];
+      paintMoods(); status();
+    });
+    moodHead.appendChild(btn);
+  });
+  moodHead.appendChild(moodCount);
+  moodWrap.appendChild(moodHead);
+  var moodGrid = document.createElement('div');
+  moodGrid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+  moodWrap.appendChild(moodGrid);
+  c2.appendChild(moodWrap);
+
+  function activeMoods() { return S.moods === null ? P.MOOD_LIST_ALL.slice() : S.moods; }
+  function paintMoods() {
+    var on = activeMoods();
+    moodGrid.innerHTML = '';
+    P.MOOD_LIST_ALL.forEach(function (m) {
+      var chip = document.createElement('button');
+      chip.className = 'tab-btn' + (on.indexOf(m) >= 0 ? ' active' : '');
+      chip.textContent = m.replace('_', ' ');
+      chip.style.cssText = 'font-size:11px;padding:2px 7px;opacity:' + (on.indexOf(m) >= 0 ? '1' : '0.45');
+      chip.addEventListener('click', function () {
+        var cur = activeMoods().slice();
+        var i = cur.indexOf(m);
+        if (i >= 0) cur.splice(i, 1); else cur.push(m);
+        // a full selection stores as null, so the skill keeps saying 'all 33' rather than
+        // listing them back in a hand-picked order
+        S.moods = cur.length === P.MOOD_LIST_ALL.length ? null : cur;
+        paintMoods(); status();
+      });
+      moodGrid.appendChild(chip);
+    });
+    var n = on.length;
+    moodCount.textContent = n === P.MOOD_LIST_ALL.length ? 'the whole vocabulary'
+      : n === 0 ? 'none — the face still renders, you just never name a mood'
+      : n + ' of ' + P.MOOD_LIST_ALL.length;
+  }
+  paintMoods();
+
   // THE PREVIEW IS THE REAL RENDERER (v0.41.1). It used to be a row of sprite crops from
   // the sheet — body + features, no live layer — which is precisely what a BROKEN render
   // looks like: Sepia with no fins, no arms, no drifting colour. A still of a creature
@@ -1070,26 +1129,22 @@ route();
   snipPre.style.cssText = "font-size:11px;max-height:340px;overflow:auto;";
   c7.appendChild(snipPre);
 
+  // ONE ASSEMBLER (v0.70.0). This used to be a hand-written copy of the node-side
+  // assemble(), and it drifted: v0.53.0 moved to a universal OPENING and a pre-selected
+  // avatar bullet, and the copy kept emitting the old per-face preamble for sixteen
+  // releases. The copy is gone. P.ASSEMBLE is the same serialised function the CLI runs,
+  // so the Builder and the terminal cannot disagree again.
   function assembleAll() {
-    var f = faceDef();
-    var cad = (P.CADENCE[S.cadence] || P.CADENCE.always).replace(/\{\{N\}\}/g, String(S.every));
-    return [
-      "---\nname: " + NAME + '\ndescription: "' + f.DESC + '"\n---\n',
-      "# Vibe Banner" + f.TITLE + "\n",
-      f.PREAMBLE + "\n",
-      P.CONTRACT + "\n",
-      "## When\n", cad + "\n",
-      "## How to answer\n", P.HOWTO_HEAD + "\n",
-      "* **`face`** — " + f.FACE + "\n" + P.KAOMOJI_VALID,
-      P.FIELDS(S.fields),
-      P.BULLETS_LOCKED,
-      P.FLAGS_FULL + "\n",
-      P.HOWTO_TAIL + "\n",
-      "## Running it\n", P.RUNNING_HEAD + "\n", snippetText() + "\n",
-      P.RUNNING_TAIL + "\n" +
-        "\n## Attunement cues\n\n" + P.ATT_PROV + "\n\n" + P.ATT_CUES + "\n\n" + P.ATT_PLAY + "\n" +
-        "\n" + P.SETTINGS.replace("{{VERSION}}", P.VERSION) + "\n"
-    ].join("\n");
+    return P.ASSEMBLE(S.face, {
+      name: NAME, cadence: S.cadence, every: S.every, fields: S.fields,
+      scene: sceneArgForSkill(), moods: S.moods,
+      flags: true, cues: true, play: true
+    }, P);
+  }
+  function sceneArgForSkill() {
+    if (P.SCENES[S.scene]) return S.scene;
+    if (S.scene === "custom" && (S.sceneUrl || "").trim()) return { url: (S.sceneUrl || "").trim(), opacity: S.sceneOp };
+    return null;
   }
   function status() {
     var t = assembleAll();

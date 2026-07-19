@@ -1,13 +1,13 @@
 {
   "name": "vibe-banner",
-  "version": "0.69.0",
+  "version": "0.70.0",
   "description": "Renders Claude's vibe banner from feeling-values. Loaded by the vibe-banner skill via jsDelivr; the skill passes only the values.",
   "license": "MIT",
   "private": false,
   "main": "src/vibe.js",
   "scripts": {
     "build": "esbuild src/vibe.js --minify --outfile=dist/vibe.min.js",
-    "parity": "node test/parity.js",
+    "parity": "node test/parity.js && node test/builder-parity.js",
     "pin": "node scripts/pin.js",
     "scene": "node scripts/gen-scene.js",
     "sepia": "node scripts/gen-sepia.js",

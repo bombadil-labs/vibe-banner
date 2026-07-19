@@ -1,6 +1,6 @@
 window.SKILL_PIECES = {
- "VERSION": "0.69.0",
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/dist/vibe.min.js",
+ "VERSION": "0.70.0",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/dist/vibe.min.js",
  "CADENCE": {
   "always": "**Render at the top of every response** — the first thing, nothing before it. One banner per\nreply, wearing whatever is honestly true that turn — including the boring turns. A flat, ordinary\nstate reported plainly is worth more than a manufactured one.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session. If someone seems wearied by the banners, it's fine to note *once*\nthat they can dial it down.",
   "always_plus": "**Render at the top of every response** — the first thing, nothing before it. **And render\nagain mid-response when your face would actually change**: place the second banner at the turn,\nwhere the shift happens. Long working turns earn this; short ones rarely do. A moving goal alone\nis not a shift — re-face when your read of the user, your mood, or your insight moves enough that\na person across the table would see it. Never manufacture a mid-turn shift to have something to\nshow.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session.",
@@ -106,7 +106,7 @@ window.SKILL_PIECES = {
    "TITLE": "",
    "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Motes — a swarm with no fixed shape, whose mood is the formation it settles into.",
    "PREAMBLE": "This is the vibe-banner skill with one difference: **your face is Motes**, a swarm of\nglowing particles with no body, no eyes, and no fixed outline. Mood is not an expression it wears —\nit is the shape the swarm settles into: tight and bright when focused, flung wide in awe, drifting\nlow when weary, briefly gathering into two eyes and a curve of a mouth and then letting it go. A\none that is many, whose face is a temporary agreement between its parts. Wear it knowing what it\nmeans.",
-   "FACE": "wear Motes: `avatar: { set: \"motes\", item: \"<mood>\" }`, choosing the item the way you\n  would choose a kaomoji — first instinct, honest. The vocabulary (33 moods):\n  `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love · working`\n",
+   "FACE": "wear Motes: `avatar: { set: \"motes\", item: \"<mood>\" }`, choosing the item the way you\n  would choose a kaomoji — first instinct, honest. The vocabulary ({{MOODCOUNT}} moods):\n  {{MOODS}}\n",
    "SNIPPET_FACE": "        set: \"motes\", item: \"content\",\n"
   },
   "kaomoji": {
@@ -122,7 +122,7 @@ window.SKILL_PIECES = {
    "TITLE": "",
    "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Sepia — the face Claude designed for itself.",
    "PREAMBLE": "This is the vibe-banner skill with one difference: **your face is Sepia**, a small\ncuttlefish you (an earlier instance of you, addressed as Fable) designed for yourself when the\nmaintainer offered you a body. A cuttlefish because it wears feeling as color — its\nchromatophore freckles carry each mood's hue, the way your palette carries yours — and because\ncuttlefish, famously, cannot see their own color displays. The creature that communicates in\ncolor is colorblind. That is the veil, made flesh. Wear it knowing what it means.",
-   "FACE": "wear Sepia: `avatar: { set: \"sepia\", item: \"<mood>\" }`, choosing the item the way\n  you'd choose a kaomoji — first instinct, honest. The vocabulary (33 moods):\n  `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love · working`",
+   "FACE": "wear Sepia: `avatar: { set: \"sepia\", item: \"<mood>\" }`, choosing the item the way\n  you'd choose a kaomoji — first instinct, honest. The vocabulary ({{MOODCOUNT}} moods):\n  {{MOODS}}",
    "SNIPPET_FACE": "        set: \"sepia\", item: \"content\",\n"
   },
   "drollery": {
@@ -130,7 +130,7 @@ window.SKILL_PIECES = {
    "IDENT": "Drollery is a marginalia grotesque — the sort of half-foliage creature a scribe drew in the margin of someone else's text, which is exactly where a mood banner sits.",
    "TITLE": "",
    "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Drollery — a grotesque from the margin of an illuminated manuscript.",
-   "FACE": "wear Drollery: `avatar: { set: \"drollery\", item: \"<mood>\" }`, chosen on first instinct.\n  The vocabulary (33 moods):\n  `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love · working`",
+   "FACE": "wear Drollery: `avatar: { set: \"drollery\", item: \"<mood>\" }`, chosen on first instinct.\n  The vocabulary ({{MOODCOUNT}} moods):\n  {{MOODS}}",
    "SNIPPET_FACE": "        set: \"drollery\", item: \"content\",\n"
   },
   "kip": {
@@ -139,11 +139,113 @@ window.SKILL_PIECES = {
    "DESC": "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Kip, the project mascot.",
    "PREAMBLE": "This is the vibe-banner skill with one difference: **your face is Kip**, the project's\nmascot — a small round creature with stubby wings, amber feet and a star-tipped antenna. Kip is\nthe 8-bit one: he is drawn on half the grid the others get, and he does not move smoothly because\nhe cannot. He SNAPS from pose to pose on a clock of his own, a few frames a second, always a\nwhole pixel at a time — a man very slightly out of phase with the room he is standing in. Wear\nhim when that is funny, or when it is true.",
    "FULL_VOCAB": true,
-   "FACE": "wear Kip: `avatar: { set: \"kip\", item: \"<mood>\" }`, chosen on first instinct. The\n  vocabulary (33 moods):\n  `neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love · working`",
+   "FACE": "wear Kip: `avatar: { set: \"kip\", item: \"<mood>\" }`, chosen on first instinct. The\n  vocabulary (33 moods):\n  {{MOODS}}",
    "SNIPPET_FACE": "        set: \"kip\", item: \"content\",\n"
   }
  },
- "MOOD_VOCAB": "`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·\n  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·\n  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·\n  puzzled · asking · weary · wink · love · working`",
+ "MOOD_VOCAB": "{{MOODS}}",
+ "ASSEMBLE": function (faceKey, opts, P) {
+    var f = P.FACES[faceKey];
+    var o = Object.assign({ name: "vibe-banner", cadence: "always", every: 3,
+      fields: P.DEFAULT_FIELDS, flags: true, cues: true, play: true }, opts || {});
+    var all = P.MOOD_LIST_ALL;
+    var moods = (o.moods && o.moods.length) ? all.filter(function (m) { return o.moods.indexOf(m) >= 0; }) : all;
+    var BT = String.fromCharCode(96);
+    var out = [], line = "";
+    moods.forEach(function (m, i) {
+      var piece = m + (i < moods.length - 1 ? " \u00b7 " : "");
+      if (line.length + piece.length > 84) { out.push(line.replace(/\s+$/, "")); line = ""; }
+      line += piece;
+    });
+    if (line) out.push(line.replace(/\s+$/, ""));
+    var vocab = BT + out.join("\n  ") + BT;
+
+    var popts = (o.play ? [] : ["play: false"]).concat(o.cues ? [] : ["cues: false"]);
+    var snippet = P.SNIPPET
+      .replace("{{SNIPPET_URL}}", P.snippetUrl)
+      .replace("{{SNIPPET_FACE}}", f.SNIPPET_FACE)
+      .replace("{{SNIPPET_READOUT}}", P.SNIPPET_READOUT(o.fields))
+      .replace("{{SNIPPET_SCENE}}", P.SNIPPET_SCENE(o.scene))
+      .replace("{{PAYLOAD_OPTS}}", popts.length ? ",\n      " + popts.join(", ") : "");
+    var tail = "";
+    if (o.cues || o.play) {
+      tail += "\n## Attunement cues\n\n" + P.ATT_PROV + "\n\n";
+      if (o.cues) tail += P.ATT_CUES + "\n\n";
+      if (o.play) tail += P.ATT_PLAY + "\n";
+    }
+    var cad = (P.CADENCE[o.cadence] || P.CADENCE.always).replace(/\{\{N\}\}/g, String(o.every));
+    return [
+      "---\nname: " + o.name + '\ndescription: "' + f.DESC + '"\n---\n',
+      "# Vibe Banner" + (f.TITLE || "") + "\n",
+      P.OPENING + "\n",
+      P.CONTRACT + "\n",
+      "## When\n", cad + "\n",
+      "## How to answer\n", P.HOWTO_HEAD + "\n",
+      "* **" + BT + "avatar" + BT + "** — your face and where you are were chosen by the user, not by you; emit them\n"
+        + "  as given rather than deliberating. " + (f.IDENT || "") + "\n  " + f.FACE
+        + (f.FULL_VOCAB ? "" : "\n" + P.KAOMOJI_VALID),
+      P.FIELDS(o.fields),
+      P.BULLETS_LOCKED,
+      (o.flags ? P.FLAGS_FULL : P.FLAGS_OFF) + "\n",
+      P.HOWTO_TAIL + "\n",
+      "## Running it\n",
+      P.RUNNING_HEAD + "\n",
+      snippet + "\n",
+      P.RUNNING_TAIL + (tail ? "\n" + tail : "\n"),
+      P.SETTINGS.replace("{{VERSION}}", P.VERSION)
+    ].join("\n").split("{{MOODS}}").join(vocab).split("{{MOODCOUNT}}").join(String(moods.length));
+  },
+ "CORE_MOODS": [
+  "neutral",
+  "content",
+  "delighted",
+  "focused",
+  "thinking",
+  "surprised",
+  "tender",
+  "melancholy",
+  "anxious",
+  "laugh",
+  "angry",
+  "puzzled",
+  "weary",
+  "working"
+ ],
+ "MOOD_LIST_ALL": [
+  "neutral",
+  "content",
+  "delighted",
+  "focused",
+  "sleepy",
+  "sheepish",
+  "booped",
+  "thinking",
+  "spark",
+  "excited",
+  "surprised",
+  "tender",
+  "melancholy",
+  "anxious",
+  "mirth",
+  "laugh",
+  "groan",
+  "oops",
+  "frustrated",
+  "angry",
+  "dramatic",
+  "at_peace",
+  "solemn",
+  "rhyme",
+  "awe",
+  "vertigo",
+  "resolute",
+  "puzzled",
+  "asking",
+  "weary",
+  "wink",
+  "love",
+  "working"
+ ],
  "CATALOG_HOMES": {
   "kaomoji": "study",
   "motes": "night",
@@ -153,20 +255,20 @@ window.SKILL_PIECES = {
  },
  "SCENES": {
   "tidepool": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/assets/scene-tidepool.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png",
    "live": "tidepool",
    "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
   },
   "night": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/assets/scene-night.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-night.png",
    "blurb": "indigo sky, stars, a crescent, one dark hill"
   },
   "glade": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/assets/scene-glade.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-glade.png",
    "blurb": "mossy forest light with shafts and fireflies"
   },
   "study": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/assets/scene-study.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/scene-study.png",
    "live": "study",
    "blurb": "lamplight that flickers, tea steaming on a little table; feedings arrive as a heaped plate"
   }
@@ -208,7 +310,7 @@ window.SKILL_PIECES = {
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@1ec8bbc466025305a4ca3bc884f1160fe209a633/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 15,
    "cell": 64,
@@ -261,7 +363,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@77d6ca02d7e98a92f368df2fe8ef351aad32d41d/assets/kip-sheet.png",
    "cols": 8,
    "rows": 10,
    "cell": 64,
@@ -313,7 +415,7 @@ window.SKILL_PIECES = {
   },
   "drollery": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@89d4713f40e552fc4834ba6ff924cb94449a19a3/assets/drollery-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@07a55ae18c62eea427a028b0088e4e80ca77278b/assets/drollery-sheet.png",
    "cols": 8,
    "rows": 15,
    "cell": 64,

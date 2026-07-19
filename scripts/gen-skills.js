@@ -28,6 +28,27 @@ const MOOD_LIST = ["neutral","content","delighted","focused","sleepy","sheepish"
   "awe","vertigo","resolute","puzzled","asking","weary","wink","love",
   "working"];   // mirrors MOODS in src/vibe.js
 
+// Wrap a mood list to the skill's line width. Kept out of PIECES so it can be called while
+// PIECES is still being built (a lesson learned the hard way: PIECES cannot reference itself).
+function moodVocab(list) {
+  const out = [];
+  let line = "";
+  list.forEach((m, i) => {
+    const piece = m + (i < list.length - 1 ? " · " : "");
+    if (line.length + piece.length > 84) { out.push(line.replace(/\s+$/, "")); line = ""; }
+    line += piece;
+  });
+  if (line) out.push(line.replace(/\s+$/, ""));
+  // NOT escaped: this is substituted after the template literal has already been evaluated,
+  // so a backslash here lands verbatim in every composed skill
+  const BT = String.fromCharCode(96);
+  return BT + out.join("\n  ") + BT;
+}
+// A defensible reduced set: one mood per emotional neighbourhood, nothing redundant. Offered
+// as a preset because "pick 14 of 33" is a worse first question than "start here, then edit".
+const CORE_MOODS = ["neutral", "content", "delighted", "focused", "thinking", "surprised",
+  "tender", "melancholy", "anxious", "laugh", "angry", "puzzled", "weary", "working"];
+
 const PIECES = {
   VERSION: VERSION,
   snippetUrl: `https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@${PIN}/dist/vibe.min.js`,
@@ -289,11 +310,8 @@ low when weary, briefly gathering into two eyes and a curve of a mouth and then 
 one that is many, whose face is a temporary agreement between its parts. Wear it knowing what it
 means.`,
     FACE: `wear Motes: \`avatar: { set: "motes", item: "<mood>" }\`, choosing the item the way you
-  would choose a kaomoji — first instinct, honest. The vocabulary (33 moods):
-  \`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
-  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
-  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love · working\`
+  would choose a kaomoji — first instinct, honest. The vocabulary ({{MOODCOUNT}} moods):
+  {{MOODS}}
 `,
     SNIPPET_FACE: `        set: "motes", item: "content",
 `
@@ -322,11 +340,8 @@ chromatophore freckles carry each mood's hue, the way your palette carries yours
 cuttlefish, famously, cannot see their own color displays. The creature that communicates in
 color is colorblind. That is the veil, made flesh. Wear it knowing what it means.`,
       FACE: `wear Sepia: \`avatar: { set: "sepia", item: "<mood>" }\`, choosing the item the way
-  you'd choose a kaomoji — first instinct, honest. The vocabulary (33 moods):
-  \`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
-  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
-  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love · working\``,
+  you'd choose a kaomoji — first instinct, honest. The vocabulary ({{MOODCOUNT}} moods):
+  {{MOODS}}`,
       SNIPPET_FACE: `        set: "sepia", item: "content",
 `
     },
@@ -336,11 +351,8 @@ color is colorblind. That is the veil, made flesh. Wear it knowing what it means
       TITLE: "",
       DESC: "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Drollery — a grotesque from the margin of an illuminated manuscript.",
       FACE: `wear Drollery: \`avatar: { set: "drollery", item: "<mood>" }\`, chosen on first instinct.
-  The vocabulary (33 moods):
-  \`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
-  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
-  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love · working\``,
+  The vocabulary ({{MOODCOUNT}} moods):
+  {{MOODS}}`,
       SNIPPET_FACE: `        set: "drollery", item: "content",
 `
     },
@@ -357,10 +369,7 @@ him when that is funny, or when it is true.`,
       FULL_VOCAB: true,
       FACE: `wear Kip: \`avatar: { set: "kip", item: "<mood>" }\`, chosen on first instinct. The
   vocabulary (33 moods):
-  \`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
-  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
-  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love · working\``,
+  {{MOODS}}`,
       SNIPPET_FACE: `        set: "kip", item: "content",
 `
     }
@@ -369,13 +378,66 @@ him when that is funny, or when it is true.`,
   // ONE VOCABULARY FOR EVERY FACE (v0.41.0): the codepoint table retired. Sepia's 32
   // moods are now the shared language — the reporter names a feeling and the renderer
   // resolves it into whichever pack is worn. Mirrors MOOD_EMOJI in src/vibe.js.
-  MOOD_VOCAB: `\`neutral · content · delighted · focused · sleepy · sheepish · booped · thinking · spark ·
-  excited · surprised · tender · melancholy · anxious · mirth · laugh · groan · oops ·
-  frustrated · angry · dramatic · at_peace · solemn · rhyme · awe · vertigo · resolute ·
-  puzzled · asking · weary · wink · love · working\``,
+  MOOD_VOCAB: `{{MOODS}}`,
 
   // First-party scenes (Builder environment station + the catalog + the Explorer).
   // `live` marks scenes with native ambience in the renderer; `blurb` is one honest line.
+  // THE assembler. Serialised into assets/skill-base.js so the Builder runs this exact
+  // function rather than a copy of it — see DESIGN.md on why the copy was the bug.
+  ASSEMBLE: function (faceKey, opts, P) {
+    var f = P.FACES[faceKey];
+    var o = Object.assign({ name: "vibe-banner", cadence: "always", every: 3,
+      fields: P.DEFAULT_FIELDS, flags: true, cues: true, play: true }, opts || {});
+    var all = P.MOOD_LIST_ALL;
+    var moods = (o.moods && o.moods.length) ? all.filter(function (m) { return o.moods.indexOf(m) >= 0; }) : all;
+    var BT = String.fromCharCode(96);
+    var out = [], line = "";
+    moods.forEach(function (m, i) {
+      var piece = m + (i < moods.length - 1 ? " \u00b7 " : "");
+      if (line.length + piece.length > 84) { out.push(line.replace(/\s+$/, "")); line = ""; }
+      line += piece;
+    });
+    if (line) out.push(line.replace(/\s+$/, ""));
+    var vocab = BT + out.join("\n  ") + BT;
+
+    var popts = (o.play ? [] : ["play: false"]).concat(o.cues ? [] : ["cues: false"]);
+    var snippet = P.SNIPPET
+      .replace("{{SNIPPET_URL}}", P.snippetUrl)
+      .replace("{{SNIPPET_FACE}}", f.SNIPPET_FACE)
+      .replace("{{SNIPPET_READOUT}}", P.SNIPPET_READOUT(o.fields))
+      .replace("{{SNIPPET_SCENE}}", P.SNIPPET_SCENE(o.scene))
+      .replace("{{PAYLOAD_OPTS}}", popts.length ? ",\n      " + popts.join(", ") : "");
+    var tail = "";
+    if (o.cues || o.play) {
+      tail += "\n## Attunement cues\n\n" + P.ATT_PROV + "\n\n";
+      if (o.cues) tail += P.ATT_CUES + "\n\n";
+      if (o.play) tail += P.ATT_PLAY + "\n";
+    }
+    var cad = (P.CADENCE[o.cadence] || P.CADENCE.always).replace(/\{\{N\}\}/g, String(o.every));
+    return [
+      "---\nname: " + o.name + '\ndescription: "' + f.DESC + '"\n---\n',
+      "# Vibe Banner" + (f.TITLE || "") + "\n",
+      P.OPENING + "\n",
+      P.CONTRACT + "\n",
+      "## When\n", cad + "\n",
+      "## How to answer\n", P.HOWTO_HEAD + "\n",
+      "* **" + BT + "avatar" + BT + "** — your face and where you are were chosen by the user, not by you; emit them\n"
+        + "  as given rather than deliberating. " + (f.IDENT || "") + "\n  " + f.FACE
+        + (f.FULL_VOCAB ? "" : "\n" + P.KAOMOJI_VALID),
+      P.FIELDS(o.fields),
+      P.BULLETS_LOCKED,
+      (o.flags ? P.FLAGS_FULL : P.FLAGS_OFF) + "\n",
+      P.HOWTO_TAIL + "\n",
+      "## Running it\n",
+      P.RUNNING_HEAD + "\n",
+      snippet + "\n",
+      P.RUNNING_TAIL + (tail ? "\n" + tail : "\n"),
+      P.SETTINGS.replace("{{VERSION}}", P.VERSION)
+    ].join("\n").split("{{MOODS}}").join(vocab).split("{{MOODCOUNT}}").join(String(moods.length));
+  },
+
+  CORE_MOODS: CORE_MOODS,
+  MOOD_LIST_ALL: MOOD_LIST,
   CATALOG_HOMES: { kaomoji: "study", motes: "night", sepia: "tidepool", kip: "glade", drollery: "study" },
   SCENES: {
     tidepool: { url: SCENE_TIDEPOOL, live: "tidepool", blurb: "shallow water over sand — bubbles rise, a fish passes, taps ripple" },
@@ -416,53 +478,9 @@ him when that is funny, or when it is true.`,
 
 
 // Mirrored client-side in index.html's Builder (content above is the single-sourced part).
-function assemble(faceKey, opts) {
-  const f = PIECES.FACES[faceKey];
-  const o = Object.assign({ name: "vibe-banner", cadence: "always", every: 3, fields: PIECES.DEFAULT_FIELDS, flags: true, cues: true, play: true }, opts || {});
-  const popts = (o.play ? [] : ["play: false"]).concat(o.cues ? [] : ["cues: false"]);
-  const snippet = PIECES.SNIPPET
-    .replace("{{SNIPPET_URL}}", PIECES.snippetUrl)
-    .replace("{{SNIPPET_FACE}}", f.SNIPPET_FACE)
-    .replace("{{SNIPPET_READOUT}}", PIECES.SNIPPET_READOUT(o.fields))
-    .replace("{{SNIPPET_SCENE}}", PIECES.SNIPPET_SCENE(o.scene))
-    .replace("{{PAYLOAD_OPTS}}", popts.length ? ",\n      " + popts.join(", ") : "");
-  let tail = "";
-  if (o.cues || o.play) {
-    tail += "\n## Attunement cues\n\n" + PIECES.ATT_PROV + "\n\n";
-    if (o.cues) tail += PIECES.ATT_CUES + "\n";
-    if (o.cues && o.play) tail += "\n";
-    if (o.play) tail += PIECES.ATT_PLAY + "\n";
-  }
-  if (o.play) tail += "\n" + PIECES.SETTINGS.replace("{{VERSION}}", VERSION) + "\n";
-  return [
-    "---\nname: " + o.name + '\ndescription: "' + f.DESC + '"\n---\n',
-    "# Vibe Banner" + f.TITLE + "\n",
-    PIECES.OPENING + "\n",
-    PIECES.CONTRACT + "\n",
-    "## When\n",
-    PIECES.CADENCE[o.cadence] + "\n",
-    "## How to answer\n",
-    PIECES.HOWTO_HEAD + "\n",
-    // The kaomoji escape hatch only earns its space where the pack can actually fail to fit
-    // the moment — a partial vocabulary. A full-vocabulary pack always has a mood, so the
-    // paragraph is noise in that file, which is why it read as cuttable in the Motes variant.
-    // The avatar is PRE-SELECTED (v0.53.0, the maintainer's framing): the reporter doesn't
-    // choose it and shouldn't deliberate over it. The face's character survives as one line,
-    // because knowing who you're wearing changes how you wear it — Sepia's colourblindness is
-    // this whole arrangement made flesh, not decoration.
-    "* **`avatar`** — your face and where you are were chosen by the user, not by you; emit them\n"
-      + "  as given rather than deliberating. " + (f.IDENT || "") + "\n  " + f.FACE
-      + (f.FULL_VOCAB ? "" : "\n" + PIECES.KAOMOJI_VALID),
-    PIECES.FIELDS(o.fields),
-    PIECES.BULLETS_LOCKED,
-    (o.flags ? PIECES.FLAGS_FULL : PIECES.FLAGS_OFF) + "\n",
-    PIECES.HOWTO_TAIL + "\n",
-    "## Running it\n",
-    PIECES.RUNNING_HEAD + "\n",
-    snippet + "\n",
-    PIECES.RUNNING_TAIL + (tail ? "\n" + tail : "\n")
-  ].join("\n");
-}
+// Node-side entry point: the same PIECE the Builder calls, nothing more.
+function assemble(faceKey, opts) { return PIECES.ASSEMBLE(faceKey, opts, PIECES); }
+
 
 // No skill files are written any more (v0.49.0). The Builder composes the skill, so a
 // checked-in copy was only ever a second thing to drift: it had its own pin to stamp, its own
