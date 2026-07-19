@@ -173,7 +173,7 @@
   // centre point — a spotlight with nothing standing in it. The mask is what the light is FOR,
   // and theatre is the one register where a literal symbol is honest rather than a shortcut.
   var MOTE_PROP = { dramatic: "🎭" };
-  function echoes(set, item) { return (set === "sepia" || set === "kip") && ECHO.moods[item] === 1; }
+  function echoes(set, item) { return (set === "sepia" || set === "kip" || set === "drollery") && ECHO.moods[item] === 1; }
 
   // ── MOTES ─────────────────────────────────────────────────────────────────────────
   // The first avatar with NO SHEET. Sepia and Kip are spritesheets — art, pinned by hash,
@@ -449,6 +449,9 @@
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
   var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  // Drollery: a marginalia grotesque. Analytic art (not pixels) that BOILS — three frames
+  // cycled a few times a second, each the same drawing re-inked with a sub-pixel wobble.
+  var DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@0000000000000000000000000000000000000000/assets/drollery-sheet.png";
   var SEPIA_MOODS = MOODS.slice(0, 32);                        // the sheet's 32 cells; later moods fall back
 
   // NAMED ENVIRONMENTS (v0.48.0). The renderer owns these URLs so a caller can write
@@ -481,6 +484,15 @@
   var FACE_SETS = {
     "motes": function (item) {                                 // no url: this face is code
       return { proc: "motes", item: MOTE_MOODS[item] ? item : "content" };
+    },
+    "drollery": function (item) {
+      var di = MOODS.indexOf(String(item));
+      if (di < 0) di = Math.max(0, Math.min(32, parseInt(item, 10) || 0));
+      return {
+        url: DROLLERY_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 15, index: di,
+        echo: echoes("drollery", item),
+        anim: { frames: 3, frameRows: 5, stride: 40, boil: 7 }   // boil: cycle the re-inkings, ~7fps
+      };
     },
     "kip": function (item) {
       // Direct hit FIRST: Kip has art for all 33, so he must never inherit Sepia's
@@ -1789,6 +1801,20 @@
         if (kaoEl && fm && fm.kind === "sprite" && fm.anim) {
           var fRows = fm.anim.frameRows || fm.rows / fm.anim.frames;
           var fr = 0;                                                                // base at rest — fins and chromatophores carry all continuous motion now
+          if (fm.anim.boil) {
+            // THE BOIL. Not a pose changing — the same drawing being RE-INKED. Cycle the
+            // frames on a steady clock; each is the identical creature with every control
+            // point wobbled a fraction of a pixel, which is how hand-drawn animation has
+            // always made a still line feel alive.
+            var bstep = Math.floor(t * fm.anim.boil) % fm.anim.frames;
+            var bkey = fm.index * 8 + bstep + 1;
+            if (bkey !== spriteFrame) {
+              spriteFrame = bkey;
+              var bcol = fm.index % fm.cols, brow2 = Math.floor(fm.index / fm.cols) + bstep * fRows;
+              kaoEl.style.backgroundPosition = (bcol * 100 / (fm.cols - 1)) + "% " + (brow2 * 100 / (fm.rows - 1)) + "%";
+            }
+            drewStepped = true;
+          }
           if (fm.anim.stepped) {
             // THE STEPPED CLOCK. Quantise time to whole steps and index a fixed pattern —
             // no easing, no phase, no continuous term anywhere. Two frames alternating at a

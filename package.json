@@ -14,7 +14,8 @@
     "skills": "node scripts/gen-skills.js",
     "skill": "node scripts/compose-skill.js",
     "skill:install": "node scripts/compose-skill.js sepia tidepool --install",
-    "kip": "node scripts/gen-kip.js"
+    "kip": "node scripts/gen-kip.js",
+    "drollery": "node scripts/gen-drollery.js"
   },
   "devDependencies": {
     "esbuild": "^0.23.1"
