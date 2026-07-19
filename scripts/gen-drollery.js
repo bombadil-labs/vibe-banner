@@ -118,6 +118,7 @@ const EYES = {
   wide:   { rx: 5.4, ry: 6.2, pupil: 2.0, py: 0 },
   narrow: { rx: 4.6, ry: 2.4, pupil: 1.9, py: 0 },
   shut:   { lid: true },
+  squint: { lid: true, up: 1 },   // squeezed shut, not resting shut
   droop:  { rx: 4.4, ry: 3.6, pupil: 2.0, py: 1.2, lidTop: true },
   up:     { rx: 4.6, ry: 5.0, pupil: 2.1, py: -1.6 },
   side:   { rx: 4.6, ry: 5.0, pupil: 2.1, px: 1.8 },
@@ -143,6 +144,19 @@ const MOUTHS = {
   snarl:  { kind: "snarl", w: 13.5, h: 7.5 }
 };
 
+const BROWS = {
+  none:   null,
+  flat:   { pts: [[3.2, -9.4], [8.0, -9.8], [13.5, -9.6]], w: 2.7 },
+  soft:   { pts: [[3.2, -9.2], [8.2, -10.4], [13.5, -9.9]], w: 2.6 },
+  arch:   { pts: [[3.0, -10.4], [8.4, -13.6], [14.0, -11.4]], w: 2.7 },
+  high:   { pts: [[3.0, -12.6], [8.6, -16.2], [14.2, -13.4]], w: 2.6 },
+  furrow: { pts: [[3.0, -4.8], [8.4, -7.6], [14.0, -10.2]], w: 4.2 },
+  worry:  { pts: [[3.0, -12.4], [8.4, -9.6], [14.0, -8.0]], w: 2.8 },
+  wiggle: { pts: [[3.0, -9.0], [6.4, -11.6], [10.2, -8.6], [14.0, -11.0]], w: 2.4 }
+};
+// cocked is asymmetric by construction: a different brow on each side
+const COCKED = { L: "high", R: "furrow" };
+
 // THE BOIL IS THE EXPRESSION (v3). Every other face here animates per mood; this one only
 // had one animation — the re-inking — applied at a flat rate to all 33. But a boiling line
 // is not a fixed effect, it is a hand: an anxious hand shakes and a settled hand doesn't. So
@@ -153,39 +167,39 @@ const MOUTHS = {
 //   boil: multiplier on the jitter — 0.3 nearly still, 2.4 shaking
 //   wing: fold | spread | raise | droop      hand: grip | one | up | cover
 const M = {
-  neutral:    ["open", "line", 0, 0.0, 0, 0, 0, 1.0, "fold", "grip", 0],
-  content:    ["narrow", "smile", 0.1, 0.2, 0, 1, 0, 0.7, "fold", "grip", 0],
-  delighted:  ["wide", "grin", 0.3, 0.7, -0.06, 1, 1, 1.3, "spread", "up", 0],
-  focused:    ["narrow", "flat", -0.3, -0.2, 0, 0, 0, 0.45, "fold", "one", "quill"],
-  sleepy:     ["shut", "small", 0.2, -0.4, 0.09, 0, 0, 0.35, "droop", "grip", 0],
-  sheepish:   ["side", "small", 0.25, -0.2, 0.08, 1, 0, 0.9, "droop", "cover", 0],
-  booped:     ["wide", "open", 0.4, 0.5, -0.04, 1, 0, 1.8, "spread", "up", 0],
-  thinking:   ["up", "line", -0.15, 0.3, -0.07, 0, 0, 0.8, "fold", "one", "quill"],
-  spark:      ["wide", "smile", 0.35, 0.8, -0.05, 0, 1, 1.4, "raise", "up", "flame"],
-  excited:    ["wide", "grin", 0.3, 0.9, 0, 1, 1, 2.0, "spread", "up", 0],
-  surprised:  ["wide", "open", 0.45, 0.4, 0, 0, 0, 2.2, "spread", "up", 0],
-  tender:     ["narrow", "smile", 0.15, 0.25, 0.05, 1, 0, 0.6, "fold", "one", 0],
-  melancholy: ["droop", "frown", 0.3, -0.5, 0.10, 0, 0, 0.5, "droop", "grip", "drop"],
-  anxious:    ["wide", "wave", 0.4, -0.3, 0.04, 0, 0, 2.4, "fold", "cover", "drop"],
-  mirth:      ["narrow", "grin", 0.2, 0.5, -0.04, 1, 0, 1.2, "fold", "one", 0],
-  laugh:      ["shut", "wide", 0.3, 0.8, -0.07, 1, 1, 1.9, "spread", "up", 0],
-  groan:      ["shut", "wave", 0.35, -0.5, 0.11, 0, 0, 0.8, "droop", "cover", "drop"],
-  oops:       ["wide", "open", 0.4, 0.3, 0.06, 1, 0, 2.1, "spread", "up", 0],
-  frustrated: ["wrath", "flat", -0.5, -0.3, 0, 0, 0, 1.9, "fold", "grip", 0],
-  angry:      ["wrath", "snarl", -0.7, -0.4, 0, 0, 0, 2.3, "raise", "grip", 0],
-  dramatic:   ["side", "open", -0.2, 0.9, -0.08, 0, 1, 1.1, "spread", "one", "scroll"],
-  at_peace:   ["shut", "smile", 0.1, 0.3, 0, 0, 1, 0.3, "fold", "grip", 0],
-  solemn:     ["narrow", "flat", -0.1, -0.1, 0, 0, 0, 0.4, "fold", "grip", 0],
-  rhyme:      ["side", "smile", 0.1, 0.6, -0.05, 0, 1, 0.9, "fold", "one", "note"],
-  awe:        ["blown", "open", 0.35, 0.7, -0.06, 0, 1, 0.8, "spread", "up", "star"],
-  vertigo:    ["spiral", "wave", 0.2, -0.6, 0.12, 0, 0, 2.2, "droop", "grip", 0],
-  resolute:   ["narrow", "flat", -0.35, 0.4, 0, 0, 0, 0.6, "raise", "grip", 0],
-  puzzled:    ["side", "wave", -0.25, 0.1, 0.07, 0, 0, 1.0, "fold", "one", 0],
-  asking:     ["up", "small", -0.2, 0.35, -0.06, 0, 0, 0.9, "fold", "one", "scroll"],
-  weary:      ["droop", "flat", 0.3, -0.55, 0.09, 0, 0, 0.45, "droop", "grip", 0],
-  wink:       ["wink", "grin", 0.2, 0.55, -0.05, 1, 0, 1.0, "fold", "one", 0],
-  love:       ["heart", "smile", 0.2, 0.6, -0.04, 1, 1, 1.1, "raise", "up", "heart"],
-  working:    ["narrow", "line", -0.25, 0.15, 0, 0, 0, 0.85, "fold", "one", "quill"]
+  neutral:    ["open", "line", "flat", 0.0, 0, 0, 0, 1.0, "fold", "grip", 0],
+  content:    ["narrow", "smile", "soft", 0.2, 0, 1, 0, 0.7, "fold", "grip", 0],
+  delighted:  ["wide", "grin", "arch", 0.7, -0.06, 1, 1, 1.3, "spread", "up", 0],
+  focused:    ["narrow", "flat", "furrow", -0.2, 0, 0, 0, 0.45, "fold", "one", "quill"],
+  sleepy:     ["shut", "small", "soft", -0.4, 0.09, 0, 0, 0.35, "droop", "grip", 0],
+  sheepish:   ["side", "small", "cocked", -0.2, 0.08, 1, 0, 0.9, "droop", "cover", 0],
+  booped:     ["wide", "open", "high", 0.5, -0.04, 1, 0, 1.8, "spread", "up", 0],
+  thinking:   ["up", "line", "cocked", 0.3, -0.07, 0, 0, 0.8, "fold", "one", "quill"],
+  spark:      ["wide", "smile", "arch", 0.8, -0.05, 0, 1, 1.4, "raise", "up", "flame"],
+  excited:    ["wide", "grin", "arch", 0.9, 0, 1, 1, 2.0, "spread", "up", 0],
+  surprised:  ["wide", "open", "high", 0.4, 0, 0, 0, 2.2, "spread", "up", 0],
+  tender:     ["narrow", "smile", "worry", 0.25, 0.05, 1, 0, 0.6, "fold", "one", 0],
+  melancholy: ["droop", "frown", "worry", -0.5, 0.10, 0, 0, 0.5, "droop", "grip", "drop"],
+  anxious:    ["wide", "wave", "worry", -0.3, 0.04, 0, 0, 2.4, "fold", "cover", "drop"],
+  mirth:      ["narrow", "grin", "wiggle", 0.5, -0.04, 1, 0, 1.2, "fold", "one", 0],
+  laugh:      ["squint", "wide", "arch", 0.8, -0.07, 1, 1, 1.9, "spread", "up", 0],
+  groan:      ["squint", "wave", "worry", -0.5, 0.11, 0, 0, 0.8, "droop", "cover", "drop"],
+  oops:       ["wide", "open", "high", 0.3, 0.06, 1, 0, 2.1, "spread", "up", 0],
+  frustrated: ["wrath", "flat", "furrow", -0.3, 0, 0, 0, 1.9, "fold", "grip", 0],
+  angry:      ["wrath", "snarl", "furrow", -0.4, 0, 0, 0, 2.3, "raise", "grip", 0],
+  dramatic:   ["side", "open", "cocked", 0.9, -0.08, 0, 1, 1.1, "spread", "one", "scroll"],
+  at_peace:   ["shut", "smile", "soft", 0.3, 0, 0, 1, 0.3, "fold", "grip", 0],
+  solemn:     ["narrow", "flat", "flat", -0.1, 0, 0, 0, 0.4, "fold", "grip", 0],
+  rhyme:      ["side", "smile", "cocked", 0.6, -0.05, 0, 1, 0.9, "fold", "one", "note"],
+  awe:        ["blown", "open", "high", 0.7, -0.06, 0, 1, 0.8, "spread", "up", "star"],
+  vertigo:    ["spiral", "wave", "wiggle", -0.6, 0.12, 0, 0, 2.2, "droop", "grip", 0],
+  resolute:   ["narrow", "flat", "furrow", 0.4, 0, 0, 0, 0.6, "raise", "grip", 0],
+  puzzled:    ["side", "wave", "cocked", 0.1, 0.07, 0, 0, 1.0, "fold", "one", 0],
+  asking:     ["up", "small", "cocked", 0.35, -0.06, 0, 0, 0.9, "fold", "one", "scroll"],
+  weary:      ["droop", "flat", "worry", -0.55, 0.09, 0, 0, 0.45, "droop", "grip", 0],
+  wink:       ["wink", "grin", "cocked", 0.55, -0.05, 1, 0, 1.0, "fold", "one", 0],
+  love:       ["heart", "smile", "arch", 0.6, -0.04, 1, 1, 1.1, "raise", "up", "heart"],
+  working:    ["narrow", "line", "furrow", 0.15, 0, 0, 0, 0.85, "fold", "one", "quill"]
 };
 
 function build(mood, frame) {
@@ -294,8 +308,11 @@ function build(mood, frame) {
     const c = P(hx + sd * 8, ey);
     const winking = E.winkL && sd === -1;
     if (E.shut || E.lid || winking) {
-      const a = P(hx + sd * 8 - 5.6, ey), b = P(hx + sd * 8 + 5.6, ey);
-      S.push(capsule(a[0], a[1], b[0], b[1], 2.6, C.ink));
+      const cu = E.up ? -1 : 1;                            // ∪ resting, ∩ squeezed shut
+      const q = [P(hx + sd * 8 - 6.0, ey - 0.8 * cu), P(hx + sd * 8, ey + 2.2 * cu), P(hx + sd * 8 + 6.0, ey - 0.8 * cu)];
+      for (let i = 1; i < q.length; i++) S.push(capsule(q[i - 1][0], q[i - 1][1], q[i][0], q[i][1], 2.7, C.ink));
+      const lash = P(hx + sd * 13.4, ey - 2.6 * cu);       // one lash flick, so it reads as a LID
+      S.push(capsule(q[2][0], q[2][1], lash[0], lash[1], 2.0, C.ink));
       return;
     }
     if (E.heart) {
@@ -336,14 +353,18 @@ function build(mood, frame) {
     }
   });
 
-  if (brow !== 0 || EYES[eyeK].brow) {
-    [-1, 1].forEach((sd) => {
-      const heavy = EYES[eyeK].wedge ? 1 : 0;                // wrath: lower, thicker, touching the lid
-      const inner = P(hx + sd * 3.2, ey - (heavy ? 5.4 : 9.2) + brow * 3.8 * sd * -1);
-      const outer = P(hx + sd * 13.5, ey - (heavy ? 9.0 : 10.6) - brow * 2.6 * sd * -1);
-      S.push(capsule(inner[0], inner[1], outer[0], outer[1], heavy ? 4.2 : 2.9, C.ink));
-    });
-  }
+  [-1, 1].forEach((sd) => {
+    let key = brow;
+    if (key === "cocked") key = sd < 0 ? COCKED.L : COCKED.R;
+    if (EYES[eyeK].wedge) key = "furrow";                  // wrath overrides: the brow IS the anger
+    const B = BROWS[key];
+    if (!B) return;
+    const heavy = EYES[eyeK].wedge ? 1.45 : 1;
+    const pts = B.pts.map((q) => P(hx + sd * q[0], ey + q[1] * (heavy > 1 ? 0.72 : 1)));
+    for (let i = 1; i < pts.length; i++) {
+      S.push(capsule(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], B.w * heavy, C.ink));
+    }
+  });
 
   // ── THE UNDERBITE. A jutting lower jaw with two fangs pointing up — impudent, unmistakably
   // gargoyle, and the single feature neither Sepia nor Kip has anywhere in their vocabulary.
