@@ -484,6 +484,8 @@
     night: { file: "scene-night.png" },
     glade: { file: "scene-glade.png" }
   };
+  var SOLID_DEFAULT = "#c8c6c0";                               // neutral warm grey — the empty-window replacement
+  function hexOr(v, dflt) { v = String(v || ""); return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : dflt; }
   function sceneNamed(name) {
     var s = SCENES[String(name)];
     if (!s) return null;
@@ -728,7 +730,8 @@
     var scene = null;
     if (p.scene) {
       var rawScene = p.scene;
-      if (typeof rawScene === "string") {
+      if (rawScene === "solid") rawScene = { fill: SOLID_DEFAULT };   // the default grey backdrop
+      else if (typeof rawScene === "string") {
         var named = sceneNamed(rawScene);
         // a bare word is an ENVIRONMENT NAME; only something url-shaped is taken as a url, so a
         // typo'd name empties the window instead of requesting an image called "tidepool"
@@ -739,11 +742,17 @@
         rawScene = nm ? { url: nm.url, live: rawScene.live !== undefined ? rawScene.live : nm.live,
                           opacity: rawScene.opacity == null ? nm.opacity : rawScene.opacity } : null;
       }
+      // a solid fill is a scene too: `scene: { fill: "#c8c6c0" }` fills the window instead of an
+      // image — a clean neutral backdrop, the replacement for the old empty "none".
+      if (rawScene && typeof rawScene === "object" && rawScene.fill != null && rawScene.url == null) {
+        rawScene = { fill: hexOr(rawScene.fill, SOLID_DEFAULT) };
+      }
       scene = rawScene;
       if (scene && typeof scene === "object") {
         var scu = scene.url ? String(scene.url) : null;
         scene = {
           url: scu,
+          fill: scene.fill ? hexOr(scene.fill, SOLID_DEFAULT) : null,
           op: Math.max(0.15, Math.min(0.95, scene.opacity || 0.5)),
           live: (scu && (scene.live === "tidepool" || scene.live === "study")) ? scene.live : null
         };
@@ -954,6 +963,8 @@
       var cid = "vscn" + (++SCENE_IDS);
       sceneSVG = '<defs><clipPath id="' + cid + '"><rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10"/></clipPath></defs>' +
         '<g clip-path="url(#' + cid + ')" opacity="' + g(scene.op) + '"><image href="' + esc(scene.url) + '" x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" preserveAspectRatio="xMidYMid slice"/></g>' + frameRect;
+    } else if (scene && scene.fill) {
+      sceneSVG = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="' + scene.fill + '"/>' + frameRect;
     } else {
       sceneSVG = '<rect x="' + portrait.x + '" y="' + g(portrait.y) + '" width="' + portrait.s + '" height="' + portrait.s + '" rx="10" fill="#8a7a86" fill-opacity="0.07"/>' + frameRect;
     }

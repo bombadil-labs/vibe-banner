@@ -166,6 +166,7 @@ chosen by the user — emit them as given. **\`details\`** is everything else yo
   SNIPPET_SCENE: function (scene) {
     if (!scene) return "";
     if (typeof scene === "string") return '        scene: "' + scene + '"\n';
+    if (scene.fill) return '        scene: { fill: "' + scene.fill + '" }\n';
     return '        scene: { url: "' + scene.url + '", opacity: ' + (scene.opacity || 0.5) + " }\n";
   },
   SNIPPET_READOUT: function (fields) {

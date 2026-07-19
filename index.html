@@ -282,6 +282,7 @@ function mountTab(tab) {
 // name-resolution path on every mount instead of only in the tests.
 function sceneArg(name, opt) {
   opt = opt || {};
+  if (name === "solid") return { fill: opt.fill || "#c8c6c0" };   // the neutral backdrop, customisable
   var known = window.SKILL_PIECES && window.SKILL_PIECES.SCENES && window.SKILL_PIECES.SCENES[name];
   if (known) return opt.opacity == null ? name : { name: name, opacity: opt.opacity };
   if (opt.url) return { url: opt.url, opacity: opt.opacity };
@@ -502,8 +503,10 @@ var g = document.getElementById("gallery-cells");
 // moods natively now, so neither needed a translation table any more.)
 var FACE_CHOICE = "kaomoji";
 try { FACE_CHOICE = localStorage.getItem("vibeFace") || "kaomoji"; } catch (e) {}
-var SCENE_CHOICE = "none";
-try { SCENE_CHOICE = localStorage.getItem("vibeGalleryScene") || "none"; } catch (e) {}
+var SCENE_CHOICE = "solid";
+try { SCENE_CHOICE = localStorage.getItem("vibeGalleryScene") || "solid"; } catch (e) {}
+var GALLERY_FILL = "#c8c6c0";
+try { GALLERY_FILL = localStorage.getItem("vibeGalleryFill") || "#c8c6c0"; } catch (e) {}
 // The gallery dresses every cell in the chosen face AND the chosen habitat — the same
 // two axes the Explorer plays with, applied across forty real exchanges at once. Scenes
 // come from SKILL_PIECES so the menu can never drift from what actually ships.
@@ -535,10 +538,8 @@ function withFace(p) {
   else if (use === "kip") q.face = { set: "kip", item: mood };
   else if (use === "drollery") q.face = { set: "drollery", item: mood };   // Kip speaks all 33 now; no mapping
   else delete q.face;                                           // kaomoji: drop any baked-in face, or it survives the picker
-  if (SCENE_CHOICE !== "none") {
-    var sa = sceneArg(SCENE_CHOICE, { opacity: 0.55 });
-    if (sa) q.scene = sa;
-  }
+  var sa = sceneArg(SCENE_CHOICE, { opacity: 0.55, fill: GALLERY_FILL });
+  if (sa) q.scene = sa;
   return q;
 }
 function buildChat(promptText) {
@@ -648,10 +649,10 @@ renderBio(document.getElementById("face-bio"), FACE_CHOICE, true);
   var picker = document.getElementById("scene-picker");
   if (!picker) return;
   var SP = (window.SKILL_PIECES && window.SKILL_PIECES.SCENES) || {};
-  var opts = [["none", "none"]].concat(Object.keys(SP).map(function (k) {
+  var opts = [["solid", "solid colour"]].concat(Object.keys(SP).map(function (k) {
     return [k, k + (SP[k].live ? " ✦" : "")];                  // ✦ marks a habitat with native ambience
   }));
-  if (!SP[SCENE_CHOICE]) SCENE_CHOICE = "none";                // a stored scene that no longer ships
+  if (SCENE_CHOICE !== "solid" && !SP[SCENE_CHOICE]) SCENE_CHOICE = "solid";   // none retired; solid is the neutral default
   opts.forEach(function (o) {
     var b = document.createElement("button");
     b.className = "tab-btn"; b.dataset.scene = o[0]; b.textContent = o[1];
@@ -662,10 +663,22 @@ renderBio(document.getElementById("face-bio"), FACE_CHOICE, true);
       try { localStorage.setItem("vibeGalleryScene", SCENE_CHOICE); } catch (e) {}
       picker.querySelectorAll("button").forEach(function (x) { x.classList.remove("active"); });
       b.classList.add("active");
+      swatch.style.display = SCENE_CHOICE === "solid" ? "inline-block" : "none";
       buildGallery();
     });
     picker.appendChild(b);
   });
+  var swatch = document.createElement("input");                 // the solid-colour picker, shown only for "solid"
+  swatch.type = "color"; swatch.value = GALLERY_FILL;
+  swatch.style.cssText = "width:28px;height:24px;padding:0;border:1px solid var(--edge);border-radius:6px;vertical-align:middle;cursor:pointer;margin-left:4px;" +
+    (SCENE_CHOICE === "solid" ? "" : "display:none");
+  swatch.title = "the window's solid colour";
+  swatch.addEventListener("input", function () {
+    GALLERY_FILL = swatch.value;
+    try { localStorage.setItem("vibeGalleryFill", GALLERY_FILL); } catch (e) {}
+    buildGallery();
+  });
+  picker.appendChild(swatch);
 })();
 buildGallery();
 
@@ -714,7 +727,7 @@ route();
     // The Builder opens in a HOME, not in the void. Defaulting to "none" is how the checked-in
     // skills shipped sceneless for months: an empty window looks like a considered choice
     // rather than an unmade one. Switching face follows that face's home unless you've picked.
-    face: "sepia", cadence: "always", every: 3, scene: "tidepool", sceneUrl: "", sceneOp: 0.5, moods: null,
+    face: "sepia", cadence: "always", every: 3, scene: "tidepool", sceneUrl: "", sceneOp: 0.5, sceneFill: "#c8c6c0", moods: null,
     scenePicked: false,
     fields: clone(P.DEFAULT_FIELDS),
     customLines: "content = https://cdn.jsdelivr.net/gh/you/faces@commit/content.png\ndelighted = https://cdn.jsdelivr.net/gh/you/faces@commit/delighted.png"
@@ -745,7 +758,7 @@ route();
       var hit = ce.filter(function (e) { return e[0] === mood.m; })[0] || ce[0];
       if (hit) pay.face = hit[1]; else pay.face = mood.k || "( ˘ ᵕ ˘ )";
     } else pay.face = { set: S.face, item: mood.m };
-    var sa = sceneArg(S.scene, { opacity: S.sceneOp, url: sceneUrl() });
+    var sa = sceneArg(S.scene, { opacity: S.sceneOp, url: sceneUrl(), fill: S.sceneFill });
     if (sa) pay.scene = sa;
     try { window.vibe(inner, pay); } catch (e) { }
     return cell;
@@ -949,7 +962,7 @@ route();
       var hit = ce.filter(function (e) { return e[0] === previewMood; })[0] || ce[0];
       if (hit) pay.face = hit[1];
     } else pay.face = { set: S.face, item: previewMood };
-    var sa2 = sceneArg(S.scene, { opacity: S.sceneOp, url: sceneUrl() });
+    var sa2 = sceneArg(S.scene, { opacity: S.sceneOp, url: sceneUrl(), fill: S.sceneFill });
     if (sa2) pay.scene = sa2;
     try { window.vibe(liveMount, pay); } catch (e) { liveMount.textContent = "(preview failed: " + e.message + ")"; }
   }
@@ -974,9 +987,9 @@ route();
 
   // — Environment
   var cE = card("environment — scene");
-  cE.appendChild(callout("Where are we hanging out? My window is always there on the banner's left, face centred inside — the environment decides what's visible through it (empty means just the frame). Four first-party habitats ship: the tidepool and the study are alive, the night and the glade are still. Try combinations in the Explorer tab; your own photo works too, hosted like a face-pack.", { m: "at_peace", e: "1f60c", k: "( ˘ ᵕ ˘ )" }));
+  cE.appendChild(callout("Where are we hanging out? My window is always there on the banner's left, face centred inside — the environment decides what's visible through it. Solid colour is a clean neutral backdrop; four first-party habitats ship too. Try combinations in the Explorer tab; your own photo works, hosted like a face-pack.", { m: "at_peace", e: "1f60c", k: "( ˘ ᵕ ˘ )" }));
   var scSel = document.createElement("select"); scSel.style.cssText = SEL + "margin:0 0 8px;";
-  var scOpts = [["none", "none (any page background)"]];
+  var scOpts = [["solid", "solid colour"]];
   Object.keys(P.SCENES).forEach(function (k) {
     scOpts.push([k, "the " + k + (P.SCENES[k].live ? " (first-party, alive)" : " (first-party)")]);
   });
@@ -990,6 +1003,13 @@ route();
   scUrlIn.placeholder = "https://cdn.jsdelivr.net/gh/you/scenes@commit/mine.png";
   scUrlIn.style.cssText = SEL + "width:100%;margin:0 0 8px;display:none;";
   cE.appendChild(scUrlIn);
+  var scFillRow = document.createElement("div");             // solid-colour picker, shown only for "solid"
+  scFillRow.style.cssText = "display:none;align-items:center;gap:10px;font-size:13px;color:var(--sub);margin:0 0 8px;";
+  scFillRow.innerHTML = 'window colour <input type="color" value="#c8c6c0" style="width:34px;height:26px;padding:0;border:1px solid var(--edge);border-radius:6px;cursor:pointer;"> <span>#c8c6c0</span>';
+  cE.appendChild(scFillRow);
+  scFillRow.querySelector("input").addEventListener("input", function (e) {
+    S.sceneFill = e.target.value; scFillRow.querySelector("span").textContent = e.target.value; refreshScene();
+  });
   var scOpRow = document.createElement("div");
   scOpRow.style.cssText = "display:none;align-items:center;gap:10px;font-size:13px;color:var(--sub);margin:0 0 8px;";
   scOpRow.innerHTML = 'opacity <input type="range" min="0.15" max="0.9" step="0.05" value="0.5" style="flex:1;max-width:220px;"> <span>0.5</span>';
@@ -997,9 +1017,10 @@ route();
   var scPrev = document.createElement("div");                  // always visible: the composite window — chosen face inside, environment behind
   cE.appendChild(scPrev);
   function refreshScene() {
-    var on = S.scene !== "none";
+    var isImage = S.scene === "custom" || !!P.SCENES[S.scene];
     scUrlIn.style.display = S.scene === "custom" ? "block" : "none";
-    scOpRow.style.display = on ? "flex" : "none";
+    scOpRow.style.display = isImage ? "flex" : "none";
+    scFillRow.style.display = S.scene === "solid" ? "flex" : "none";
     scPrev.innerHTML = "";
     scPrev.appendChild(compositeChip(110));
     refreshLive(); renderNarrators();
@@ -1148,6 +1169,7 @@ route();
     }, P);
   }
   function sceneArgForSkill() {
+    if (S.scene === "solid") return { fill: S.sceneFill };
     if (P.SCENES[S.scene]) return S.scene;
     if (S.scene === "custom" && (S.sceneUrl || "").trim()) return { url: (S.sceneUrl || "").trim(), opacity: S.sceneOp };
     return null;
@@ -1187,7 +1209,7 @@ route();
   var ctl = document.getElementById("x-controls"), mnt = document.getElementById("x-mount"), cap = document.getElementById("x-caption");
   if (!P || !ctl) return;
   var SEL = "font-size:13.5px;padding:7px 9px;border:1px solid var(--edge);border-radius:8px;background:var(--paper);color:var(--ink);";
-  var X = { set: "sepia", item: "content", scene: "tidepool", sceneUrl: "", op: 0.55 };
+  var X = { set: "sepia", item: "content", scene: "tidepool", sceneUrl: "", op: 0.55, fill: "#c8c6c0" };
 
   function mkSel(label, opts, val, onch) {
     var w = document.createElement("label");
@@ -1209,14 +1231,22 @@ route();
   kaoIn.value = "( ˶ˆ ꒳ ˆ˵ )"; kaoIn.style.cssText = SEL + "width:130px;display:none;";
   kaoIn.addEventListener("input", render); ctl.appendChild(kaoIn);
 
-  var scOpts = [["none", "empty window"]];
+  var scOpts = [["solid", "solid colour"]];
   Object.keys(P.SCENES).forEach(function (k) { scOpts.push([k, "the " + k]); });
   scOpts.push(["custom", "custom URL"]);
-  mkSel("environment", scOpts, X.scene, function (v) { X.scene = v; urlIn.style.display = v === "custom" ? "block" : "none"; render(); });
+  mkSel("environment", scOpts, X.scene, function (v) {
+    X.scene = v; urlIn.style.display = v === "custom" ? "block" : "none";
+    fillIn.style.display = v === "solid" ? "inline-block" : "none"; render();
+  });
 
   var urlIn = document.createElement("input");
   urlIn.placeholder = "https://…/scene.png"; urlIn.style.cssText = SEL + "width:220px;display:none;";
   urlIn.addEventListener("input", function () { X.sceneUrl = urlIn.value; render(); }); ctl.appendChild(urlIn);
+  var fillIn = document.createElement("input");
+  fillIn.type = "color"; fillIn.value = X.fill || "#c8c6c0";
+  fillIn.style.cssText = "width:32px;height:30px;padding:0;border:1px solid var(--edge);border-radius:6px;cursor:pointer;display:none;";
+  fillIn.title = "the window's solid colour";
+  fillIn.addEventListener("input", function () { X.fill = fillIn.value; render(); }); ctl.appendChild(fillIn);
 
   var opWrap = document.createElement("label");
   opWrap.style.cssText = "display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);";
@@ -1404,13 +1434,13 @@ route();
     var avatar = X.set === "kaomoji" ? { face: kaoIn.value || "( ˘ ᵕ ˘ )" } : { set: X.set, item: X.item };
     // the Explorer ALWAYS shows the square block — populated when an environment is
     // chosen, empty (frame only) when not, so composition is visible either way
-    avatar.scene = sceneArg(X.scene, { opacity: X.op, url: su }) || {};
+    avatar.scene = sceneArg(X.scene, { opacity: X.op, url: su, fill: X.fill }) || {};
     var payload = { avatar: avatar };
     if (pal.length) payload.palette = pal.slice();
     payload.details = details;
     mnt.innerHTML = "";
     try { vibe(mnt, payload); } catch (e) { mnt.textContent = "err: " + e.message; }
-    cap.textContent = sc && sc.blurb ? "the " + X.scene + " — " + sc.blurb : (su ? "custom scene" : "the empty window — pick an environment to fill it");
+    cap.textContent = sc && sc.blurb ? "the " + X.scene + " — " + sc.blurb : (su ? "custom scene" : X.scene === "solid" ? "solid colour — a clean neutral backdrop" : "the empty window");
     renderBio(document.getElementById("x-bio"), X.set, false);
     var shown = JSON.parse(JSON.stringify(payload));
     // the scene lives under avatar, not at the top level — this guard had been looking in the
