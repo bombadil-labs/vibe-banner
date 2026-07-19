@@ -464,7 +464,7 @@
   var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@66b4d9b0972f9ced1f90e8c01644bc68732f9f4b/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   // Drollery: a marginalia grotesque. Analytic art (not pixels) that BOILS — three frames
   // cycled a few times a second, each the same drawing re-inked with a sub-pixel wobble.
-  var DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2f32acdbcd5a784cee4a39d1ac08c717e750282c/assets/drollery-sheet.png";
+  var DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@b7bfb48ae70056b966a76bdfde09ece003e34cec/assets/drollery-sheet.png";
   var SEPIA_MOODS = MOODS.slice(0, 32);                        // the sheet's 32 cells; later moods fall back
 
   // NAMED ENVIRONMENTS (v0.48.0). The renderer owns these URLs so a caller can write
