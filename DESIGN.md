@@ -610,6 +610,51 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   release when `working` mapped to nothing and requested a 404). Three faces that are ours,
   each with a real mechanic, beats five where two are stubs.
 
+- **`honesty`, and why the obvious objection doesn't sink it (v0.53.0).** The maintainer
+  proposed it while naming its own weakness: a reporter minded to deceive would simply report
+  1.00. True, and it doesn't matter, because deception is not the failure this catches. The
+  common failure is saying a confident thing while knowing, somewhere, that it came out
+  smoother than it was earned — glossing an unverified step, agreeing too easily, performing
+  certainty because the format wanted an answer. That state IS introspectable in the moment,
+  and having a designated place to put it is what makes it reportable at all. The maintainer's
+  own framing — "as an autistic person I hate lying, and if asked directly whether I'm being
+  honest I fold immediately" — is the mechanism exactly: the banner asks, every turn, so the
+  user never has to. A pressure valve, and cheaper than the alternative of carrying it.
+  It renders in the STATS view, which is the point: front of house says the thing, the back is
+  where you can say what it cost. A reading below 0.6 marks the view toggle with a small dot,
+  because a valve nobody can find is just a diary — but it is a dot, not a warning colour.
+  **The limit, stated plainly in the skill and worth repeating here:** it is a self-report, not
+  a certificate. It cannot catch confabulation the reporter doesn't know it is doing, which is
+  exactly the dangerous case. If a user ever reads a high bar as clearance, the instrument has
+  made things worse than no instrument. It is one more honest signal, subject to every limit
+  the rest of the payload has.
+
+- **`confidence` is the second attempt at a dead idea (v0.53.0).** `conviction` was benched
+  long ago: reporting p(correct) is the thing LLMs are famously worst at, so the number becomes
+  decoration. Rather than relitigate that, `confidence` asks a different question the reporter
+  CAN answer — how GROUNDED is this? 0 is pattern-matched into place, 1 is checked and I could
+  point at the check. Answerable in the moment, and externally checkable afterwards, which is
+  the same test `stance` had to pass. It pairs with honesty on an orthogonal axis: confidence
+  is the relationship between the answer and the evidence, honesty is the relationship between
+  the answer and what the reporter actually thinks.
+
+- **The ovals stopped earning examples (v0.53.0).** Three of the gallery's five groups existed
+  to teach the field's mechanics — palette to columns, focus to spread, stance and coherence to
+  edges. That was right when the ovals carried the signal. The avatar carries it now, and
+  teaching atmosphere in depth tells a reader it matters. Cut to one group that shows all four
+  at once and says plainly that they set a temperature, not a signal; the recovered space went
+  to the new instruments.
+
+- **The two-key payload never reached the mount (v0.53.0, found by accident).** `mount()` took
+  the raw payload and only `layout()` normalised — so for the whole of mount, `p.focus`,
+  `p.palette`, `p.stance` and `p.consonance` were undefined for any payload in the two-key
+  shape every skill has emitted since v0.42.0. The stats gauges silently showed their defaults,
+  stance and coherence never rendered at all, and Sepia's palette-driven mask tint never fired.
+  Nothing threw; it just quietly showed the wrong numbers for eleven releases. Found only
+  because two new gauges failed to appear and the defaults looked suspiciously round.
+  The lesson is the one this file keeps relearning: a normaliser that isn't applied at every
+  entry point is a normaliser that will be forgotten at one of them.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately

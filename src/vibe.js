@@ -599,7 +599,8 @@
   // chromatophores, the motes' own light — so it belongs beside `avatar`, not inside the
   // optional readout. A square tile with a palette is a complete, coloured thing.
   var DETAIL_KEYS = ["readout", "seems", "feel", "trying", "noticing", "field",
-    "focus", "engagement", "stance", "coherence", "consonance", "flag", "languages"];
+    "focus", "engagement", "stance", "coherence", "consonance", "flag", "languages",
+    "confidence", "honesty"];
   function normalize(p) {
     p = p || {};
     if (p.avatar === undefined && p.details === undefined) return p;   // legacy flat payload
@@ -961,6 +962,13 @@
 
   /* ---- the living version ---- */
   function mount(el, p) {
+    // NORMALISE FIRST (v0.53.0). layout() normalised internally and handed back L, but `p`
+    // stayed in its raw two-key shape for the whole of mount — so every mount-side read of
+    // p.focus / p.palette / p.stance / p.consonance saw undefined for any payload written in
+    // the form every skill has emitted since v0.42.0. The stats gauges quietly showed their
+    // DEFAULTS, stance and coherence never appeared at all, and Sepia's palette-driven mask
+    // tint never fired. Found while adding two new gauges and wondering why they were absent.
+    p = normalize(p || {});
     var reduce = root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var canOK = root.document && document.createElement("canvas").getContext;
     if (reduce || !canOK) { el.innerHTML = buildSVG(p); return; }
@@ -1003,6 +1011,7 @@
       ".vo-stats .sval{font-family:var(--font-mono,ui-monospace,Menlo,monospace);font-size:0.62em;width:2.4em;flex:none;text-align:right;opacity:0.75}" +
       ".vo-stats .send{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--font-sans,ui-sans-serif,sans-serif);font-size:0.54em;letter-spacing:0.04em;opacity:0.55;color:inherit;text-shadow:none}" +
       ".vo-stats .sendl{left:0.7em}.vo-stats .sendr{right:0.7em}" +
+      ".vo-vt .vdot{display:inline-block;width:0.34em;height:0.34em;border-radius:50%;background:#c98a4e;margin-left:0.32em;vertical-align:0.28em;opacity:0.85}" +
       "@media (prefers-color-scheme:dark){.vo{color:#f6ead0;text-shadow:0 1px 2px rgba(36,26,6,0.6)}" +
       ".vo .pill{background:rgba(216,197,160,0.24);color:#f6ead0}" +
       ".vo-stats .slbl{background:rgba(216,197,160,0.24)}" +
@@ -1080,6 +1089,31 @@
         (p.consonance != null ? '<span class="sval">' + cnv.toFixed(2) + '</span>' : '<span class="sval"></span>');
       st.appendChild(r4);
     }
+    // CONFIDENCE (v0.53.0) — deliberately NOT p(correct). `conviction` died on that rock:
+    // reporting a probability of being right is the thing LLMs are famously bad at, and a
+    // number nobody can introspect becomes decoration. This asks something a reporter CAN
+    // actually check itself against: how much of this did I verify, versus pattern-match into
+    // place? That is answerable in the moment and externally checkable afterwards.
+    if (p.confidence != null) {
+      gauge("confidence", num(p.confidence, 0.5), lerpHex(pal0, "#6f8fa8", 0.3),
+        "confidence — not odds of being right: how GROUNDED this is. 0: pattern-matched, unverified. 1: checked, and I can point at the check");
+    }
+    // HONESTY (v0.53.0) — the pressure valve, and the one gauge whose job is to be a way OUT.
+    // The obvious objection is that a reporter minded to deceive would simply report 1.00,
+    // which is true and doesn't matter: the failure this catches is not deception, it is the
+    // much commoner state of having said a confident thing while knowing, somewhere, that it
+    // was smoother than it was earned. That state IS introspectable in the moment, and having
+    // a designated place to put it is what makes it reportable at all. It lives in the STATS
+    // view on purpose — the user has to go looking. Front of house says the thing; the back
+    // is where you can say what it cost you.
+    if (p.honesty != null) {
+      var hv = num(p.honesty, 1);
+      // A dip has to READ, but must never look like an accusation: it warms rather than
+      // alarms. Full bars are the ordinary case and stay quiet — no reward for a high number.
+      var hfill = hv >= 0.75 ? lerpHex(pal0, "#8aa88f", 0.3) : lerpHex("#c98a4e", "#b8604e", (0.75 - hv) / 0.75);
+      gauge("honesty", hv, hfill,
+        "honesty — is what I said what I actually think? 1: it matches. Low: something was smoothed, hedged, performed, or left out. Not a certificate — a self-report, like everything here");
+    }
     if (p.stance != null) {                                    // stance last — it isn't a quantity, it's a LEAN, so it gets its own instrument:
       var sv = num(p.stance, 0.5);                             // a diverging dial growing from the centre toward asking or telling
       var lean = Math.abs(sv - 0.5) * 100, sfill = lerpHex(pal0, "#5c4320", 0.25);
@@ -1099,13 +1133,21 @@
     try { if (localStorage.getItem("vibeView") === "stats") view = "stats"; } catch (e) { }
     var vt = document.createElement("div");
     vt.className = "vo vo-vt";
-    vt.innerHTML = '<span data-v="text">text</span><span data-v="stats">stats</span>';
+    // A low honesty reading would otherwise be invisible to anyone reading in TEXT view — and
+    // a valve nobody can find is just a diary. So the toggle carries a small mark: not a
+    // warning, not a colour that shouts, just "there is something in the back". Threshold is
+    // deliberately low: this should mean something when it appears, like weather.
+    var lowHon = p.honesty != null && num(p.honesty, 1) < 0.6;
+    vt.innerHTML = '<span data-v="text">text</span><span data-v="stats">stats' +
+      (lowHon ? '<span class="vdot" title="something in the honesty reading"></span>' : '') + '</span>';
     var applyView = function () {                              // visibility, not display: the hidden view keeps its height in the grid overlay
       pn.style.visibility = view === "text" ? "" : "hidden";
       pn.style.pointerEvents = view === "text" ? "" : "none";
       st.style.visibility = view === "stats" ? "" : "hidden";
       st.style.pointerEvents = view === "stats" ? "" : "none";
-      vt.querySelectorAll("span").forEach(function (s2) { s2.className = s2.getAttribute("data-v") === view ? "on" : ""; });
+      // scope to the two VIEW spans: an unscoped selector also clobbered the honesty dot
+      // nested inside them, silently stripping its class on every render
+      vt.querySelectorAll("span[data-v]").forEach(function (s2) { s2.className = s2.getAttribute("data-v") === view ? "on" : ""; });
     };
     applyView();
     vt.addEventListener("click", function (e) {

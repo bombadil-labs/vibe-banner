@@ -284,60 +284,27 @@ function sceneArg(name, opt) {
 
 
 var GROUPS = [
-  ["The field — palette becomes three columns", [
-    ["Neutral (no palette → grey triad)",
+  ["The field, briefly — it's atmosphere now", [
+    ["palette · focus · engagement · coherence, all at once",
       "how many tablespoons in a quarter cup?",
-      {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly"},
-      "Four — a quarter cup is four tablespoons, or twelve teaspoons if you've lost the big spoon."],
-    ["One colour → light · colour · dark",
-      "we finally painted the kitchen that yellow we talked about. it's perfect.",
-      {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"warm and easy", feel:"settled · content", trying:"stay in one clear register", palette:["#d99a5e"]},
-      "The one you almost talked yourself out of three times! Morning light is going to love that room."],
-    ["Two colours → c0 · blend · c1",
-      "help me write a toast for my sister's wedding — funny, but it has to land sincere",
-      {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"two things at once", feel:"engaged · layered", trying:"hold both threads", palette:["#7d8fb8","#c396a4"]},
-      "The trick is to let the jokes carry the love in disguise. Tell me the story you always tell about her."],
-    ["Three colours → one per column",
-      "big weekend: hosting thanksgiving, kid's first soccer game, AND I'm running the 10k",
-      {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"a lot going on", feel:"lit · three-way", trying:"let three moods sit side by side", palette:["#e0994e","#c98fb0","#6fa39c"]},
-      "All three fit if we brine the turkey Thursday night. Let's build the timeline backwards from kickoff."],
-    ["Four+ colours → centre cycles the rest",
-      "ramble mode: I have like six half-formed ideas about where my novel could go",
-      {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"more moods than columns", feel:"many-hued", trying:"watch the centre drift through the extras", palette:["#7d8fb8","#6fa39c","#e0994e","#c98fb0"]},
-      "Ramble away — I'll hold the threads and we'll see which ones want to braid together."]
+      {kaomoji:"( ˘ ᵕ ˘ )", seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly", palette:[], focus:0.4, engagement:0.45},
+      "No palette reads grey; focus spreads the columns; engagement deflates them. The ovals moved to the back when the avatar started carrying the mood — they set a temperature, not a signal, so this is the only example they get."],
+    ["the same values, wearing a face",
+      "how many tablespoons in a quarter cup?",
+      {face:{set:"sepia",item:"neutral"}, seems:"nothing much either way", feel:"even · quiet", trying:"just answer plainly", palette:["#7d8fb8"], focus:0.4, engagement:0.45},
+      "Identical numbers. The face is doing the work the field used to be asked to do."]
   ]],
-  ["focus — the vertical spread of the columns", [
-    ["focused → a tight, level line",
-      "one job: find the memory leak. don't touch anything else.",
-      {kaomoji:"( ・_・)", seems:"locked on one thing", feel:"clear · single", trying:"hold the line", palette:["#7d8fb8","#8f9ac0","#6f86b0"], focus:0.95},
-      "On it. Starting with heap snapshots sixty seconds apart — nothing else gets touched."],
-    ["mid focus → a moderate spread",
-      "plan the road trip — mostly the route, but flag any can't-miss food stops",
-      {kaomoji:"( ˶ˆ ꒳ ˆ˵ )", seems:"a couple of threads", feel:"steady · layered", trying:"hold two or three things", palette:["#7d8fb8","#c98fb0","#6fa39c"], focus:0.5},
-      "Route first: the coastal option costs you 90 minutes and pays you back at least two lunches. Speaking of which—"],
-    ["scattered → a wide vertical range",
-      "brain dump: quit my job? learn pottery? is my cat bored?? should I move to Lisbon???",
-      {kaomoji:"( ˶˃ ᵕ ˂˶ )", seems:"everywhere at once", feel:"broad · diffuse", trying:"let it all spread out", palette:["#e0994e","#c98fb0","#6fa39c"], focus:0.1},
-      "Taking those in ascending order of consequence: the cat is fine, pottery yes, and the other two are secretly the same question."]
+  ["The instruments — open STATS on any banner", [
+    ["confidence: grounded vs pattern-matched",
+      "does the renderer handle a 33rd mood safely?",
+      {face:{set:"sepia",item:"focused"}, seems:"asking something checkable", feel:"careful", trying:"answer only as far as I actually checked", palette:["#6f8fa8"], focus:0.9, engagement:0.85, confidence:0.95, honesty:1},
+      "confidence is NOT odds of being right — that's the thing models are worst at reporting. It's how grounded the answer is: 1 means checked, and I could point at the check."],
+    ["honesty: the dip is the signal",
+      "so it definitely works on every browser?",
+      {face:{set:"sepia",item:"sheepish"}, seems:"wants a yes and deserves the real answer", feel:"caught · squirming slightly", noticing:"I tested one browser and said 'browsers'", trying:"walk it back before they rely on it", palette:["#c98a4e","#8f96a8"], focus:0.7, engagement:0.8, confidence:0.35, honesty:0.4},
+      "The honest reading is usually high, so a dip carries information. It lives in the stats view — front of house says the thing, the back is where you can say what it cost. A low reading also marks the stats toggle, so it's findable without shouting."]
   ]],
-  ["Stance and coherence — the relational grammar", [
-    ["stance 0 → asking: open falloff, questions held open",
-      "should we get a dog? like… really actually get a dog?",
-      {kaomoji:"( ・ ᵕ ・ )", seems:"already knows what they want; wants company in the deciding", feel:"open · exploratory", trying:"ask the questions that make the answer obvious", stance:0.1, palette:["#8f9ac0","#d9b07a"]},
-      "Before I weigh in — who's home at 2pm on a Tuesday? And whose shoes are the sacrificial pair?"],
-    ["stance 1 → telling: the ovals gain a definite edge",
-      "no hedging. is this lease clause as bad as it looks?",
-      {kaomoji:"( ・_・)", seems:"needs a straight answer, not a menu of considerations", feel:"clear · direct", trying:"say the thing plainly and stand on it", stance:0.95, palette:["#7d8fb8"]},
-      "Yes. Clause 14 lets them raise rent mid-term with 30 days' notice. Don't sign it as written."],
-    ["consonance 1 → several feelings, harmonizing",
-      "whole family's coming for the holidays. chaos, but the good kind.",
-      {kaomoji:"( ˶ˆ ᗜ ˆ˵ )", seems:"braced and happy about it", feel:"full · warm · busy", trying:"help plan the good chaos", consonance:0.95, palette:["#e0994e","#c98fb0","#6fa39c"]},
-      "The good kind of chaos still deserves a spreadsheet. Who's on airport runs and who owns the turkey?"],
-    ["consonance 0 → several feelings, grinding",
-      "I got the promotion. it's in the city he can't move to.",
-      {kaomoji:"( ˘ ‸ ˘ )", seems:"holding two true things that won't fit in one hand", feel:"proud · torn · heavy", trying:"not pretend one feeling cancels the other", consonance:0.1, palette:["#e0b060","#8f96a8"]},
-      "Both of those are real, and neither one is the tiebreaker by itself. Let's lay them side by side without rushing."]
-  ]],
+
   ["Engagement, note, wrap, faces", [
     ["Bored (engagement 0.1 → shrinks)",
       "same as the last three: convert this fourth config file to YAML too",
