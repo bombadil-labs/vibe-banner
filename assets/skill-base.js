@@ -1,6 +1,6 @@
 window.SKILL_PIECES = {
  "VERSION": "0.76.0",
- "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/dist/vibe.min.js",
+ "snippetUrl": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/dist/vibe.min.js",
  "CADENCE": {
   "always": "**Render at the top of every response** — the first thing, nothing before it. One banner per\nreply, wearing whatever is honestly true that turn — including the boring turns. A flat, ordinary\nstate reported plainly is worth more than a manufactured one.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session. If someone seems wearied by the banners, it's fine to note *once*\nthat they can dial it down.",
   "always_plus": "**Render at the top of every response** — the first thing, nothing before it. **And render\nagain mid-response when your face would actually change**: place the second banner at the turn,\nwhere the shift happens. Long working turns earn this; short ones rarely do. A moving goal alone\nis not a shift — re-face when your read of the user, your mood, or your insight moves enough that\na person across the table would see it. Never manufacture a mid-turn shift to have something to\nshow.\n\nIf the user asks for a lighter cadence — every few turns, only strong feelings, or off — honor it\nfor the rest of the session.",
@@ -255,32 +255,32 @@ window.SKILL_PIECES = {
  },
  "SCENES": {
   "tidepool": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/scene-tidepool.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/scene-tidepool.png",
    "live": "tidepool",
    "blurb": "shallow water over sand — bubbles rise, a fish passes, taps ripple"
   },
   "night": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/scene-night.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/scene-night.png",
    "live": "night",
    "blurb": "indigo sky over a dark hill — stars breathe, a shooting star falls now and then"
   },
   "glade": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/scene-glade.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/scene-glade.png",
    "live": "glade",
    "blurb": "mossy forest light — a shaft wavers and fireflies drift and blink"
   },
   "study": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/scene-study.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/scene-study.png",
    "live": "study",
    "blurb": "lamplight that flickers, tea steaming on a little table; feedings arrive as a heaped plate"
   },
   "hearth": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/scene-hearth.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/scene-hearth.png",
    "live": "hearth",
    "blurb": "a fire in a stone surround — flames lick, the room glows, sparks rise"
   },
   "rain": {
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/scene-rain.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/scene-rain.png",
    "live": "rain",
    "blurb": "a window onto a grey day — drops slide down the glass and gather on the sill"
   }
@@ -322,7 +322,7 @@ window.SKILL_PIECES = {
  "PREVIEW": {
   "sepia": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/sepia-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/sepia-sheet.png",
    "cols": 8,
    "rows": 15,
    "cell": 64,
@@ -375,7 +375,7 @@ window.SKILL_PIECES = {
   },
   "kip": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/kip-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/kip-sheet.png",
    "cols": 8,
    "rows": 10,
    "cell": 64,
@@ -427,7 +427,7 @@ window.SKILL_PIECES = {
   },
   "drollery": {
    "kind": "sheet",
-   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@90a224d4543f4052618e0112f88b4ad511b8a650/assets/drollery-sheet.png",
+   "url": "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@8702135de0963c959360bbaf99c8c5762ba20acc/assets/drollery-sheet.png",
    "cols": 8,
    "rows": 15,
    "cell": 64,
