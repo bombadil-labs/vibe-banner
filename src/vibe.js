@@ -260,6 +260,10 @@
   ];
   var MARK_BOLT = [{ p: "poly", glyph: "bolt", scale: 1.05, align: 0.90, flow: 0.45 }];
   var LOOSE = [{ p: "ring", r: 0.74, ry: 0.64, align: 0.14, flow: 0.30, spin: 0.22 }];
+  // Groan's beats, declared here because both the phases table below and moteGlow read them —
+  // the sag and the dimming have to run off one clock or the joke lands twice.
+  var GROAN_T = { up: 2.1, beat: 0.8, sink: 4.9 };
+  var GROAN_UP = [{ p: "ring", y: -0.18, r: 0.66, ry: 0.54, align: 0.55, flow: 0.80, spin: 0.50 }];
   var MOTE_MOODS = {
     neutral:    { paths: [{ p: "ring", r: 0.62, ry: 0.52, align: 0.5, flow: 0.04, spin: 0.10 }] },
     content:    { paths: [{ p: "ring", r: 0.55, ry: 0.46, share: 0.65, align: 0.62, flow: 0.06, spin: 0.12 },
@@ -284,9 +288,20 @@
     mirth:      { paths: [{ p: "arc", y: -0.30, r: 0.62, ry: 0.56, a0: 0.42, a1: 2.72, share: 0.72, align: 0.80, flow: 0.28 },
                           { p: "ring", x: -0.42, y: -0.34, r: 0.10, share: 0.14, align: 0.90, flow: 0.4 },
                           { p: "ring", x: 0.42, y: -0.34, r: 0.10, share: 0.14, align: 0.90, flow: -0.4 }] },
-    laugh:      { paths: [{ p: "arc", y: -0.26, r: 0.78, ry: 0.64, a0: 0.36, a1: 2.78, share: 0.7, align: 0.62, flow: 0.55 },
-                          { p: "ring", r: 0.50, ry: 0.44, share: 0.3, align: 0.25, flow: 0.40, spin: 0.50 }] },
-    groan:      { paths: [{ p: "line", x1: -0.60, y1: 0.42, x2: 0.60, y2: 0.50, align: 0.5, cluster: 0.15, flow: 0.02 }] },
+    // LAUGH IS NOT A SHAPE. A drawn smile is a picture OF laughing; the thing itself is a
+    // room going off at once. So the swarm just dances — loose, fast, no formation to read —
+    // and the laughter lives in the light: moteGlow puts every mote on ONE shared phase and
+    // pulses them together in ha-HA-ha bursts. Unison is the whole joke.
+    laugh:      { paths: [{ p: "ring", r: 0.74, ry: 0.64, share: 0.62, align: 0.14, flow: 0.62, spin: 0.34 },
+                          { p: "ring", r: 0.40, ry: 0.36, share: 0.38, align: 0.12, flow: -0.52, spin: -0.42 }] },
+    // GROAN IS A DEFLATION, and deflation is timing. Up and busy, then everything CATCHES —
+    // a held beat, frozen mid-orbit — and then the long sag into a low slow line while the
+    // light dims and the colour drains (moteGlow runs the same clock). The snap is a 0.1s
+    // crossfade; the sag is a 2s one. That asymmetry is the joke.
+    groan:      { phases: [
+                    { t: GROAN_T.up + GROAN_T.beat, cross: 0.9, paths: GROAN_UP },   // busy — and moteWarp stops the clock for the last `beat` of it
+                    { t: GROAN_T.sink, cross: 2.0, paths: [{ p: "line", x1: -0.62, y1: 0.46, x2: 0.62, y2: 0.53, align: 0.50, cluster: 0.15, flow: 0.02 }] }
+                  ] },
     oops:       { paths: [{ p: "ring", r: 0.80, ry: 0.70, align: 0.15, flow: 0.60, spin: 0.70 }],
                   flash: { every: 6, hold: 1.7, ramp: 0.7, paths: MARK_BOLT } },
     frustrated: { paths: [{ p: "poly", glyph: "wave", scale: 0.85, align: 0.72, flow: 1.10 }] },
@@ -309,16 +324,30 @@
     // PUZZLED is several small questions at once, each on its own clock — they gather, hold,
     // loosen and re-gather independently (per-path `pulse`), so the swarm never resolves into
     // one clean thought. ASKING is the opposite: a single question, held.
-    puzzled:    { paths: [{ p: "poly", glyph: "question", x: -0.46, y: -0.26, scale: 0.54, share: 0.26, align: 0.93, flow: 0.20,
-                            pulse: { every: 3.1, hold: 1.7, phase: 0 } },
-                          { p: "poly", glyph: "question", x: 0.44, y: -0.40, scale: 0.44, share: 0.22, align: 0.93, flow: -0.16,
-                            pulse: { every: 4.3, hold: 2.0, phase: 1.7 } },
-                          { p: "poly", glyph: "question", x: 0.26, y: 0.40, scale: 0.62, share: 0.28, align: 0.93, flow: 0.13,
-                            pulse: { every: 5.2, hold: 2.4, phase: 3.1 } },
-                          { p: "poly", glyph: "question", x: -0.34, y: 0.46, scale: 0.40, share: 0.16, align: 0.93, flow: -0.22,
-                            pulse: { every: 3.7, hold: 1.4, phase: 2.4 } }] },
+    // Each mark is RACED, not strolled (high flow), and holds far more of its cycle than it
+    // dissolves — the earlier numbers left them smeared and half-formed most of the time, so
+    // the mark itself was rarely on screen. Snappier ramps, so they arrive and go rather than
+    // fading through a blur.
+    puzzled:    { paths: [{ p: "poly", glyph: "question", x: -0.46, y: -0.26, scale: 0.54, share: 0.26, align: 0.94, flow: 0.95,
+                            pulse: { every: 2.6, hold: 2.0, ramp: 0.35, phase: 0 } },
+                          { p: "poly", glyph: "question", x: 0.44, y: -0.40, scale: 0.44, share: 0.22, align: 0.94, flow: -1.15,
+                            pulse: { every: 3.1, hold: 2.4, ramp: 0.35, phase: 1.1 } },
+                          { p: "poly", glyph: "question", x: 0.26, y: 0.40, scale: 0.62, share: 0.28, align: 0.94, flow: 0.80,
+                            pulse: { every: 3.6, hold: 2.8, ramp: 0.40, phase: 2.0 } },
+                          { p: "poly", glyph: "question", x: -0.34, y: 0.46, scale: 0.40, share: 0.16, align: 0.94, flow: -1.30,
+                            pulse: { every: 2.9, hold: 2.2, ramp: 0.35, phase: 1.6 } }] },
     asking:     { paths: MARK_QUESTION },
-    weary:      { paths: [{ p: "line", x1: -0.62, y1: 0.24, x2: 0.62, y2: 0.44, align: 0.40, flow: 0.04 }] },
+    // WEARY: the body slumps and stays slumped, and three Z's leave it. Each is a handful of
+    // motes racing the letterform (high flow — the tracing is quick even though the rise is
+    // slow), drifting upward on its own clock and pulsing in and out as it goes, so they
+    // stagger the way real ones do. Smaller and fainter the higher they get.
+    weary:      { paths: [{ p: "line", x1: -0.62, y1: 0.30, x2: 0.62, y2: 0.48, share: 0.55, align: 0.42, flow: 0.03 },
+                          { p: "poly", glyph: "zed", x: 0.26, y: 0.16, scale: 0.21, share: 0.15, align: 0.96, flow: 1.9,
+                            drift: { y: -0.95, every: 3.4, hold: 3.0, phase: 0 }, pulse: { every: 3.4, hold: 3.0, ramp: 0.75, phase: 0 } },
+                          { p: "poly", glyph: "zed", x: 0.40, y: 0.10, scale: 0.16, share: 0.14, align: 0.96, flow: 2.3,
+                            drift: { y: -0.90, every: 3.4, hold: 3.0, phase: 1.15 }, pulse: { every: 3.4, hold: 3.0, ramp: 0.75, phase: 1.15 } },
+                          { p: "poly", glyph: "zed", x: 0.33, y: 0.21, scale: 0.12, share: 0.12, align: 0.96, flow: 2.7,
+                            drift: { y: -0.85, every: 3.4, hold: 3.0, phase: 2.3 }, pulse: { every: 3.4, hold: 3.0, ramp: 0.75, phase: 2.3 } }] },
     wink:       { paths: [{ p: "ring", r: 0.55, ry: 0.48, align: 0.60, flow: 0.08, spin: 0.12 }],
                   flash: { every: 5.5, hold: 1.9, paths: FACE_PATHS } },
     love:       { paths: [{ p: "ring", x: -0.26, y: -0.12, r: 0.30, ry: 0.30, share: 0.5, align: 0.85, flow: 0.14 },
@@ -360,6 +389,23 @@
       if (M.scatter && into > 1 - xf) return { a: cur, b: M.scatter, k: ease((into - (1 - xf)) / xf) };  // letting go
       return still(cur);
     }
+    // PHASES (v0.84.0): like seq, but every step names its OWN duration. seq holds each shape
+    // for the same beat, which is fine for a loader and useless for a joke — comic timing is
+    // a quick setup, a held beat, then a long slow fall. Each step also sets its own crossfade,
+    // so a snap (tiny cross) and a sag (long cross) can sit next to each other.
+    if (M.phases && M.phases.length) {
+      var tot = 0, pi3;
+      for (pi3 = 0; pi3 < M.phases.length; pi3++) tot += M.phases[pi3].t;
+      var pu2 = ((t % tot) + tot) % tot, acc2 = 0, pIdx = 0;
+      for (pi3 = 0; pi3 < M.phases.length; pi3++) {
+        if (pu2 < acc2 + M.phases[pi3].t) { pIdx = pi3; break; }
+        acc2 += M.phases[pi3].t;
+      }
+      var curP = M.phases[pIdx], prevP = M.phases[(pIdx - 1 + M.phases.length) % M.phases.length];
+      var intoP = pu2 - acc2, xfP = curP.cross == null ? 0.5 : curP.cross;
+      if (xfP > 0 && intoP < xfP) return { a: prevP.paths, b: curP.paths, k: ease(intoP / xfP) };
+      return still(curP.paths);
+    }
     if (M.flash) {
       var ph = t % M.flash.every, hd = M.flash.hold;
       var rp = M.flash.ramp == null ? Math.min(0.55, hd * 0.42) : M.flash.ramp;
@@ -379,7 +425,8 @@
     chevron:  [[-0.42, 0.14], [-0.21, -0.16], [0.00, -0.44], [0.21, -0.16], [0.42, 0.14]],
     bolt:     [[0.22, -0.72], [-0.26, -0.04], [0.04, -0.04], [-0.20, 0.72],
                [0.28, 0.00], [-0.02, 0.00], [0.22, -0.72]],
-    wave:     [[-0.78, 0.10], [-0.46, -0.22], [-0.14, 0.10], [0.18, 0.42], [0.50, 0.10], [0.78, -0.18]]
+    wave:     [[-0.78, 0.10], [-0.46, -0.22], [-0.14, 0.10], [0.18, 0.42], [0.50, 0.10], [0.78, -0.18]],
+    zed:      [[-0.46, -0.46], [0.46, -0.46], [-0.46, 0.46], [0.46, 0.46]]
   };
   function polyPoints(pp) { return pp.pts || GLYPHS[pp.glyph] || GLYPHS.question; }
   function motePointAt(pp, u, t, cx, cy, R) {
@@ -476,6 +523,20 @@
     if (pathClosed(pp)) { u = u % 1; if (u < 0) u += 1; }
     else { u = Math.abs(u) % 2; if (u > 1) u = 2 - u; }         // open: ping-pong, never teleport
     var pt = motePointAt(pp, u, t, cx, cy, R);
+    // DRIFT (v0.84.0): the whole shape travels over its cycle and snaps back. Paired with a
+    // pulse on the same clock, a shape fades in low, rises, and fades out high — which is how
+    // a Z leaves a sleeping head.
+    if (pp.drift) {
+      var dr = pp.drift, dper = dr.every || 4;
+      var dph = ((((t + (dr.phase || 0)) % dper) + dper) % dper) / dper;
+      // rise over `hold`, then slide back during the rest — which is exactly the window the
+      // paired pulse has faded the shape out in. Wrapping 1→0 outright would teleport the
+      // whole shape the length of its travel in one frame; the spring would drag every mote
+      // across the window after it. Nothing here may ever jump, even while invisible.
+      var dhold = (dr.hold == null ? dper * 0.85 : dr.hold) / dper;
+      var du2 = dph <= dhold ? (dhold > 0 ? dph / dhold : 1) : 1 - (dph - dhold) / (1 - dhold);
+      pt = [pt[0] + (dr.x || 0) * du2 * R, pt[1] + (dr.y || 0) * du2 * R];
+    }
     var al = pp.align == null ? 0.6 : pp.align;
     // PULSE (v0.83.0): a path may breathe on its OWN clock. align is the grip — it sets both
     // the spring that pulls a mote to its station and how far it wanders off — so easing align
@@ -492,6 +553,51 @@
       al *= 0.14 + 0.86 * grip;                                // never fully zero: they stay a loose cloud, not a scatter
     }
     return { x: pt[0], y: pt[1], align: al };
+  }
+
+  // BRIGHTNESS IS A CHANNEL TOO (v0.84.0). Every mote twinkled on its own phase, which is
+  // right for a swarm and wrong for a laugh: laughter is a room doing the same thing at the
+  // same instant, and no arrangement of dots in space says it. `sync` collapses the twinkle
+  // onto one shared phase, `gain` scales it, `fade` drains the colour toward grey. Position
+  // says what the swarm is doing; this says how alive it is.
+  // A FREEZE IS A STOPPED CLOCK, not a zeroed speed (v0.84.0). Setting flow/spin to 0 for a
+  // beat looks obvious and is wrong: flow accumulates as base + t*flow, so a zero-flow copy of
+  // the same ring sits at a DIFFERENT point on it, and the swarm lurches there instead of
+  // holding still. Warping time flat holds every mote exactly where it was, and stays
+  // continuous doing it. Phase selection still runs on real time; only the paths see this.
+  function moteWarp(mood, t) {
+    if (mood !== "groan") return t;
+    var tot = GROAN_T.up + GROAN_T.beat + GROAN_T.sink;
+    var cyc = Math.floor(t / tot), u = t - cyc * tot;
+    var eff = u < GROAN_T.up ? u
+      : u < GROAN_T.up + GROAN_T.beat ? GROAN_T.up          // caught, mid-orbit, for the length of the beat
+      : GROAN_T.up + (u - GROAN_T.up - GROAN_T.beat);
+    return cyc * (GROAN_T.up + GROAN_T.sink) + eff;         // keeps increasing across cycles
+  }
+  function moteGlow(mood, t) {
+    if (mood === "laugh") {
+      var b2 = (t * 3.2) % 1;                                   // ha-HA-ha — quick repeated bursts, everyone together
+      var burst = Math.pow(Math.max(0, Math.sin(b2 * 3.14159)), 0.55);
+      var swell = 0.82 + 0.18 * Math.sin(t * 0.7);              // and the whole fit swells and eases off
+      return { gain: (0.40 + 1.05 * burst) * swell, sync: 1, fade: 0 };
+    }
+    if (mood === "groan") {
+      var tot2 = GROAN_T.up + GROAN_T.beat + GROAN_T.sink;
+      var gu = ((t % tot2) + tot2) % tot2;
+      if (gu < GROAN_T.up) return { gain: 1.06, sync: 0.35, fade: 0 };                    // up, busy, jolly
+      if (gu < GROAN_T.up + GROAN_T.beat) return { gain: 1.14, sync: 0.9, fade: 0 };      // the beat: caught mid-air, a touch too bright
+      var gs = ease((gu - GROAN_T.up - GROAN_T.beat) / GROAN_T.sink);                     // …and the air goes out of it
+      return { gain: 1.06 - 0.70 * gs, sync: 0.2, fade: 0.85 * gs };
+    }
+    return { gain: 1, sync: 0, fade: 0 };
+  }
+  function mixHex(a, b, k) {                                    // blend two #rrggbb; anything else passes through untouched
+    if (!/^#[0-9a-fA-F]{6}$/.test(a) || !/^#[0-9a-fA-F]{6}$/.test(b)) return a;
+    var pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+    var mr = Math.round(((pa >> 16) & 255) * (1 - k) + ((pb >> 16) & 255) * k);
+    var mg = Math.round(((pa >> 8) & 255) * (1 - k) + ((pb >> 8) & 255) * k);
+    var mb = Math.round((pa & 255) * (1 - k) + (pb & 255) * k);
+    return "#" + ((1 << 24) + (mr << 16) + (mg << 8) + mb).toString(16).slice(1);
   }
 
   // THE TWO MASKS (v0.83.0). `dramatic` wore the 🎭 glyph, which welds comedy and tragedy into
@@ -927,7 +1033,7 @@
       var hue = fieldFromPalette(p.palette);
       var dots = [];
       for (var mi = 0; mi < MOTE_N; mi++) {
-        var tg = moteTarget(mi, MOTE_N, MT0, FP, pcx, pcy, pr, seed);
+        var tg = moteTarget(mi, MOTE_N, moteWarp(faceProc.item, MT0), FP, pcx, pcy, pr, seed);
         var mc = hue[mi % hue.length].fill;
         dots.push('<circle cx="' + g(tg.x) + '" cy="' + g(tg.y) + '" r="' + g(2.4 + (mi % 3) * 0.5) +
           '" fill="' + mc + '" opacity="0.85"/>');
@@ -2092,9 +2198,10 @@
             mx.globalCompositeOperation = "destination-out";
             mx.fillRect(0, 0, pw, ph2);
             mx.globalCompositeOperation = "lighter";
+            var mGlow = moteGlow(mMood, t), mtW = moteWarp(mMood, t);   // warped clock: a freeze is time stopping, not motion zeroed                     // brightness/unison/fade for this mood
             for (var mi2 = 0; mi2 < MOTE_N; mi2++) {
               var ms = moteState[mi2];
-              var mt = moteTarget(mi2, MOTE_N, t, MFP, mcx, mcy, mR, L.seed);
+              var mt = moteTarget(mi2, MOTE_N, mtW, MFP, mcx, mcy, mR, L.seed);
               if (boopAge < 0.8) {                             // the poke throws them outward, then they re-gather
                 var bev2 = Math.exp(-boopAge * 3.2);
                 mt.x += (ms.x - mcx) * bev2 * 1.5;
@@ -2107,12 +2214,15 @@
               ms.x += ms.vx + Math.sin(t * 1.6 + ms.ph) * WOB;
               ms.y += ms.vy + Math.cos(t * 1.4 + ms.ph * 1.3) * WOB;
               var mcol = mPal[mi2 % mPal.length];
-              var tw2 = 0.6 + 0.4 * Math.sin(t * 2.4 + ms.ph);
+              if (mGlow.fade > 0) mcol = mixHex(mcol, "#8d8a92", mGlow.fade);   // the colour drains as it deflates
+              // sync 1 collapses every mote onto ONE twinkle phase — the swarm pulses as a body
+              var tw2 = 0.6 + 0.4 * Math.sin(t * 2.4 + ms.ph * (1 - mGlow.sync));
+              tw2 = Math.max(0, tw2 * mGlow.gain);
               var mrad = Math.max(1.2, mR * 0.052) * tw2;
               mx.fillStyle = mcol;
-              mx.globalAlpha = 0.15 * tw2;
+              mx.globalAlpha = Math.min(1, 0.15 * tw2);          // gain can drive the twinkle past 1 — alpha must not follow it out of range
               mx.beginPath(); mx.arc(ms.x, ms.y, mrad * 2.6, 0, 6.2832); mx.fill();
-              mx.globalAlpha = 0.85 * tw2;
+              mx.globalAlpha = Math.min(1, 0.85 * tw2);
               mx.beginPath(); mx.arc(ms.x, ms.y, mrad * 0.6, 0, 6.2832); mx.fill();
             }
             mx.globalAlpha = 1; mx.globalCompositeOperation = "source-over";
@@ -2667,7 +2777,7 @@
   root.vibe.buildSVG = buildSVG;
   if (typeof module !== "undefined" && module.exports) module.exports = {   // CJS only: costs the browser bundle nothing
     buildSVG: buildSVG,
-    __motes: { pointAt: motePointAt, target: moteTarget, pathsFor: motePathsFor, closed: pathClosed, moods: MOTE_MOODS, N: MOTE_N },
+    __motes: { pointAt: motePointAt, target: moteTarget, pathsFor: motePathsFor, closed: pathClosed, moods: MOTE_MOODS, N: MOTE_N, glow: moteGlow, warp: moteWarp },
     __kip: { beat: KIP_BEAT, pattern: KIP_PATTERN, moods: KIP_MOODS,
              frameAt: function (mood, t, fps) {                  // the stepped clock, exactly as the loop runs it
                var i = KIP_MOODS.indexOf(mood);

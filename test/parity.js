@@ -252,8 +252,10 @@ console.log("\nflight paths (v0.46.0): open curves ping-pong, mouths smile, glyp
 const M = require("../src/vibe.js").__motes;
 const MOTE_STILL = 0.9;   // mirrors MOTE_STILL_T: sample where a flash is at full reach
 function frameAt(mood, t) {
-  const paths = M.pathsFor(mood, t), out = [];
-  for (let i = 0; i < M.N; i++) out.push(M.target(i, M.N, t, paths, 0, 0, 100, 7));
+  // phase selection runs on real time; the PATHS see the warped clock (a mood may stop it —
+  // groan's held beat — and the renderer does exactly this, so the test must too)
+  const paths = M.pathsFor(mood, t), tw = M.warp(mood, t), out = [];
+  for (let i = 0; i < M.N; i++) out.push(M.target(i, M.N, tw, paths, 0, 0, 100, 7));
   return out;
 }
 let worstJump = 0;
@@ -263,7 +265,11 @@ let worstJump = 0;
     for (let i = 0; i < M.N; i++) worstJump = Math.max(worstJump, Math.hypot(a[i].x - b[i].x, a[i].y - b[i].y));
   }
 });
-ok(worstJump < 12, "open paths never teleport: worst step " + worstJump.toFixed(2) + "px of R=100 (a wrap would be ~140)");
+// The guarantee here is "no WRAP", which is a ~140px lurch across the whole shape. The old
+// 12px ceiling was really just a snapshot of how slow these moods happened to be; groan now
+// orbits fast on purpose and weary races its Zs, and this samples at 30fps, so a real 60fps
+// step is half what it measures. Keep the bar far below a wrap and well above honest speed.
+ok(worstJump < 25, "open paths never teleport: worst step " + worstJump.toFixed(2) + "px of R=100 (a wrap would be ~140)");
 ok(M.closed({ p: "ring" }) && M.closed({ p: "infinity" }) && !M.closed({ p: "line" }) && !M.closed({ p: "poly" }),
    "closedness: ring/infinity wrap, line/poly ping-pong");
 ["mirth", "delighted", "laugh", "excited"].forEach((m) => {
