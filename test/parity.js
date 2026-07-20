@@ -514,7 +514,14 @@ ok(!moteGaps.length, "motes has a formation for all 33" + (moteGaps.length ? " �
 ok(Object.keys(M.moods).length === 33, "and no formations beyond the sheet");
 // booped is a reaction, not a mood (v0.71.0): art present, but never offered.
 const OFFERED = require("../scripts/gen-skills.js").PIECES.MOOD_LIST_ALL;
-ok(OFFERED.length === 32 && OFFERED.indexOf("booped") < 0, "booped is not in the offered vocabulary (32 moods)");
+ok(OFFERED.length === 31 && OFFERED.indexOf("booped") < 0 && OFFERED.indexOf("sleepy") < 0,
+   "booped and sleepy are retired from the offered vocabulary (31 moods)");
+// Retired means "not offered", NOT "deleted". Both keep their cell in every sheet so the grid
+// never reindexes and no pinned art has to be redrawn — the whole reason retiring is cheap.
+["booped", "sleepy"].forEach((m) => {
+  ok(CANON.indexOf(m) >= 0 && /-sheet/.test(buildSVG(Object.assign({}, base, { face: { set: "sepia", item: m } }))),
+     m + " keeps its cell and still renders if asked for directly");
+});
 ok(CANON.indexOf("booped") >= 0 && /-sheet/.test(buildSVG(Object.assign({}, base, { face: { set: "sepia", item: "booped" } }))),
    "but its cell art is intact — it is the boop interrupt now");
 

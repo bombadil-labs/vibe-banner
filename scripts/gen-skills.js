@@ -27,9 +27,14 @@ const MOOD_LIST = ["neutral","content","delighted","focused","sleepy","sheepish"
   "groan","oops","frustrated","angry","dramatic","at_peace","solemn","rhyme",
   "awe","vertigo","resolute","puzzled","asking","weary","wink","love",
   "working"];   // SHEET ORDER — mirrors MOODS in src/vibe.js; used for preview cell-indexing
-// booped is not offered (v0.71.0): it is the reaction shown when a face is tapped, not a mood
-// you pick. It keeps its cell in every sheet; it just never appears in a vocabulary.
-const MOOD_OFFERED = MOOD_LIST.filter(m => m !== "booped");
+// RETIRED FROM THE VOCABULARY, not from the sheets. Both keep their cell in every pack, so
+// no index shifts and no pinned art has to be redrawn — they simply stop being offered.
+//   booped (v0.71.0) — the reaction shown when a face is tapped, not a mood you pick.
+//   sleepy (v0.87.0) — it and `weary` were the same report twice. Weary survived: being worn
+//     down by a long stretch of work is a real state to report; drowsiness is not one Claude
+//     has, and it was the more borrowed of the two.
+const MOOD_RETIRED = ["booped", "sleepy"];
+const MOOD_OFFERED = MOOD_LIST.filter(m => MOOD_RETIRED.indexOf(m) < 0);
 
 // Wrap a mood list to the skill's line width. Kept out of PIECES so it can be called while
 // PIECES is still being built (a lesson learned the hard way: PIECES cannot reference itself).

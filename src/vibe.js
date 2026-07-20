@@ -352,17 +352,10 @@
                           { p: "poly", glyph: "question", x: -0.34, y: 0.46, scale: 0.40, share: 0.16, align: 0.94, flow: -1.30,
                             pulse: { every: 2.9, hold: 2.2, ramp: 0.35, phase: 1.6 } }] },
     asking:     { paths: MARK_QUESTION },
-    // WEARY: the body slumps and stays slumped, and three Z's leave it. Each is a handful of
-    // motes racing the letterform (high flow — the tracing is quick even though the rise is
-    // slow), drifting upward on its own clock and pulsing in and out as it goes, so they
-    // stagger the way real ones do. Smaller and fainter the higher they get.
-    weary:      { paths: [{ p: "line", x1: -0.62, y1: 0.30, x2: 0.62, y2: 0.48, share: 0.55, align: 0.42, flow: 0.03 },
-                          { p: "poly", glyph: "zed", x: 0.26, y: 0.16, scale: 0.21, share: 0.15, align: 0.96, flow: 1.9,
-                            drift: { y: -0.95, every: 3.4, hold: 3.0, phase: 0 }, pulse: { every: 3.4, hold: 3.0, ramp: 0.75, phase: 0 } },
-                          { p: "poly", glyph: "zed", x: 0.40, y: 0.10, scale: 0.16, share: 0.14, align: 0.96, flow: 2.3,
-                            drift: { y: -0.90, every: 3.4, hold: 3.0, phase: 1.15 }, pulse: { every: 3.4, hold: 3.0, ramp: 0.75, phase: 1.15 } },
-                          { p: "poly", glyph: "zed", x: 0.33, y: 0.21, scale: 0.12, share: 0.12, align: 0.96, flow: 2.7,
-                            drift: { y: -0.85, every: 3.4, hold: 3.0, phase: 2.3 }, pulse: { every: 3.4, hold: 3.0, ramp: 0.75, phase: 2.3 } }] },
+    // WEARY is a SAG, where sleepy is a flat line: a wide shallow arc drooping under its own
+    // weight, low and barely moving. (The rising Zs are gone — they were sleep's iconography
+    // hung on the wrong mood, and they read as clutter besides.)
+    weary:      { paths: [{ p: "arc", y: 0.02, r: 0.70, ry: 0.34, a0: 0.30, a1: 2.84, align: 0.62, flow: 0.02 }] },
     wink:       { paths: FACE_PATHS,
                   flash: { every: 4.2, hold: 0.62, ramp: 0.13, paths: WINK_PATHS } },
     love:       { paths: [{ p: "ring", x: -0.26, y: -0.12, r: 0.30, ry: 0.30, share: 0.5, align: 0.85, flow: 0.14 },
@@ -440,8 +433,7 @@
     chevron:  [[-0.42, 0.14], [-0.21, -0.16], [0.00, -0.44], [0.21, -0.16], [0.42, 0.14]],
     bolt:     [[0.22, -0.72], [-0.26, -0.04], [0.04, -0.04], [-0.20, 0.72],
                [0.28, 0.00], [-0.02, 0.00], [0.22, -0.72]],
-    wave:     [[-0.78, 0.10], [-0.46, -0.22], [-0.14, 0.10], [0.18, 0.42], [0.50, 0.10], [0.78, -0.18]],
-    zed:      [[-0.46, -0.46], [0.46, -0.46], [-0.46, 0.46], [0.46, 0.46]]
+    wave:     [[-0.78, 0.10], [-0.46, -0.22], [-0.14, 0.10], [0.18, 0.42], [0.50, 0.10], [0.78, -0.18]]
   };
   function polyPoints(pp) { return pp.pts || GLYPHS[pp.glyph] || GLYPHS.question; }
   function motePointAt(pp, u, t, cx, cy, R) {
@@ -538,20 +530,6 @@
     if (pathClosed(pp)) { u = u % 1; if (u < 0) u += 1; }
     else { u = Math.abs(u) % 2; if (u > 1) u = 2 - u; }         // open: ping-pong, never teleport
     var pt = motePointAt(pp, u, t, cx, cy, R);
-    // DRIFT (v0.84.0): the whole shape travels over its cycle and snaps back. Paired with a
-    // pulse on the same clock, a shape fades in low, rises, and fades out high — which is how
-    // a Z leaves a sleeping head.
-    if (pp.drift) {
-      var dr = pp.drift, dper = dr.every || 4;
-      var dph = ((((t + (dr.phase || 0)) % dper) + dper) % dper) / dper;
-      // rise over `hold`, then slide back during the rest — which is exactly the window the
-      // paired pulse has faded the shape out in. Wrapping 1→0 outright would teleport the
-      // whole shape the length of its travel in one frame; the spring would drag every mote
-      // across the window after it. Nothing here may ever jump, even while invisible.
-      var dhold = (dr.hold == null ? dper * 0.85 : dr.hold) / dper;
-      var du2 = dph <= dhold ? (dhold > 0 ? dph / dhold : 1) : 1 - (dph - dhold) / (1 - dhold);
-      pt = [pt[0] + (dr.x || 0) * du2 * R, pt[1] + (dr.y || 0) * du2 * R];
-    }
     var al = pp.align == null ? 0.6 : pp.align;
     // PULSE (v0.83.0): a path may breathe on its OWN clock. align is the grip — it sets both
     // the spring that pulls a mote to its station and how far it wanders off — so easing align
