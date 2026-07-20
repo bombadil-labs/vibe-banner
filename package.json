@@ -1,6 +1,6 @@
 {
   "name": "vibe-banner",
-  "version": "0.80.0",
+  "version": "0.81.0",
   "description": "Renders Claude's vibe banner from feeling-values. Loaded by the vibe-banner skill via jsDelivr; the skill passes only the values.",
   "license": "MIT",
   "private": false,
