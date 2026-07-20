@@ -208,36 +208,43 @@ function canvas(LW, LH, SCALE) {
   save("scene-study.png");
 }
 
-/* ---- hearth: a fire in a stone surround, embers below, flames drawn live ---- */
+/* ---- hearth: a fire filling the window, drawn to READ at 0.55 opacity over a dark banner.
+   (v1 was near-black masonry around a small fire — at scene opacity the surround vanished
+   into the banner and the fire washed to mud. This one is warm mid-tones everywhere and a
+   big bright fire that survives the wash.) ---- */
 {
   const { LW, LH, lput, save } = canvas(40, 40, 4);
   const r = rng(20260721);
-  // stone surround: warm dark masonry, faintly lit from the fire's centre
+  // warm firelit interior — a MID brown that reads even at half opacity, brightening toward the fire
   for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) {
-    const d = Math.sqrt((x - 20) * (x - 20) + (y - 26) * (y - 26));
-    const base = d < 16 ? "#3a2a24" : d < 24 ? "#2e2019" : "#241813";
-    lput(x, y, ((x * 7 + y * 5) % 17 === 0) ? "#191010" : base);   // mortar flecks
+    const d = Math.sqrt((x - 20) * (x - 20) + (y - 30) * (y - 30));
+    const c = d < 10 ? "#7a4a2e" : d < 18 ? "#654028" : d < 26 ? "#553524" : "#472c1f";
+    lput(x, y, ((x * 7 + y * 5) % 19 === 0) ? "#3e281c" : c);   // faint brick seams
   }
-  // a plain mantel beam across the top
-  for (let x = 3; x < 37; x++) { lput(x, 5, "#4a3524"); lput(x, 6, "#3a2818"); }
-  lput(3, 5, "#5a4230"); lput(36, 5, "#5a4230");
-  // the firebox opening: a dark arch, lower-middle
-  for (let y = 12; y < 34; y++) for (let x = 10; x < 30; x++) {
-    const arch = y < 15 ? (x - 20) * (x - 20) <= (14 - y) * 22 : true;
-    if (arch) lput(x, y, "#140c0a");
+  // mantel beam across the top, catching the glow
+  for (let x = 2; x < 38; x++) { lput(x, 4, "#8a6038"); lput(x, 5, "#6e4a2c"); lput(x, 6, "#563a24"); }
+  // the firebox: a warm glowing recess, NOT near-black (dark pixels vanish into the
+  // banner at scene opacity), lit from the fire so the opening still reads as a hearth
+  for (let y = 13; y < 36; y++) for (let x = 7; x < 33; x++) {
+    const d = Math.sqrt((x - 20) * (x - 20) + (y - 31) * (y - 31));
+    lput(x, y, d < 8 ? "#7a3010" : d < 14 ? "#5a2810" : "#43200f");
   }
-  // logs at the base: two angled brown bars
-  for (let i = 0; i < 8; i++) { lput(12 + i, 31 - Math.floor(i / 3), "#5a3a22"); lput(12 + i, 32 - Math.floor(i / 3), "#43290f"); }
-  for (let i = 0; i < 8; i++) { lput(21 + i, 32 - Math.floor((7 - i) / 3), "#5a3a22"); lput(21 + i, 33 - Math.floor((7 - i) / 3), "#43290f"); }
-  // the ember bed: a bright band under the logs
-  for (let x = 12; x < 28; x++) { lput(x, 33, r() < 0.5 ? "#e8641e" : "#c8420e"); lput(x, 32, r() < 0.3 ? "#f0902e" : "#6a2408"); }
-  // a low resting flame painted into the art (the live layer adds the flicker on top)
-  const FL = ["#7a2408", "#c8420e", "#e8781e", "#f4b23a"];
-  for (let y = 20; y < 32; y++) {
-    const half = Math.max(0, 9 - Math.floor((32 - y) * 0.2) - Math.floor(Math.abs(Math.sin(y)) * 2));
+  // logs across the base
+  for (let x = 8; x < 32; x++) { lput(x, 34, "#6a4020"); lput(x, 35, "#4a2c14"); }
+  for (let i = 0; i < 12; i++) { lput(10 + i, 33 - (i % 2), "#5a3418"); }
+  // ember bed: a hot glowing band spanning the base
+  for (let x = 9; x < 31; x++) { lput(x, 33, r() < 0.5 ? "#ff8a2e" : "#f06418"); lput(x, 32, r() < 0.4 ? "#ffb24a" : "#e05812"); }
+  // a BIG, WIDE fire: a broad bright mass filling the lower firebox, tapering upward.
+  // wide base so it reads as a fire (not a candle) once downscaled to banner size.
+  const FL = ["#e05812", "#f47420", "#ff9a34", "#ffc45a", "#ffe89a"];
+  for (let y = 13; y < 33; y++) {
+    const down = (y - 12);                                  // 1 at top of fire, 20 at base
+    const half = Math.max(1, Math.round(down * 0.62) - Math.floor(Math.abs(Math.sin(y * 0.8 + 1)) * 1.5));
     for (let x = 20 - half; x <= 20 + half; x++) {
-      const tier = Math.min(FL.length - 1, Math.floor((y - 20) / 3) + (Math.abs(x - 20) > half - 2 ? 0 : 1));
-      if (r() < 0.82) lput(x, y, FL[Math.max(0, tier)]);
+      const edge = Math.abs(x - 20) / (half + 0.5);         // 0 core -> 1 edge
+      const heat = (1 - edge) * 2.2 + down * 0.12;          // hotter at core and base
+      const tier = Math.min(FL.length - 1, Math.max(0, Math.round(heat)));
+      if (r() < 0.94 - edge * 0.25) lput(x, y, FL[tier]);
     }
   }
   save("scene-hearth.png");
