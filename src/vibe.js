@@ -1644,7 +1644,7 @@
     // by reproduction: mount completes, rAF(frame) queued, zero invocations ever. So the
     // loop no longer trusts rAF alone: an interval watches for starvation and drives the
     // frame directly (a crawl, but ALIVE) until rAF starts serving again.
-    var t0 = null, lastRun = 0, lastNow = 0, rafPending = false, wd = null, torn = false;
+    var t0 = null, lastRun = 0, lastNow = 0, rafPending = false, rafGen = 0, wd = null, torn = false;
     var nowMs = function () { return root.performance && performance.now ? performance.now() : Date.now(); };
     function teardown() {                                      // one place to release everything this loop holds
       if (torn) return; torn = true;
@@ -1652,9 +1652,19 @@
       var ix = WAKERS.indexOf(kick); if (ix >= 0) WAKERS.splice(ix, 1);   // exactly the live loops, never an accumulating list
     }
     function schedule() {
-      if (rafPending || torn || !activeNow()) return;         // inactive loops don't spin — they wait to be kicked
+      if (torn || !activeNow()) return;                       // inactive loops don't spin — they wait to be kicked
+      // a pending rAF normally clears itself next frame. But a hidden tab (overnight lock, a
+      // background tab) STOPS being served rAFs, so the callback queued when the loop last ran
+      // never fires and never clears this flag. On return the wake path would see rafPending
+      // and bail forever — the frozen-gallery bug (v0.80.0). If the last real frame is recent,
+      // a genuine rAF is in flight, so don't double-queue; if it's stale, re-arm past it.
+      if (rafPending && nowMs() - lastRun < 400) return;
       rafPending = true;
-      requestAnimationFrame(function (n) { rafPending = false; frame(n); });
+      var myGen = ++rafGen;                                   // a stale rAF that fires later carries an old gen and is ignored,
+      requestAnimationFrame(function (n) {                    // so the resurrected callback can never start a SECOND loop (doubling the frame rate)
+        if (myGen !== rafGen) return;
+        rafPending = false; frame(n);
+      });
     }
     function frame(now) {
       lastRun = nowMs();
@@ -2583,7 +2593,7 @@
         visible = r5.bottom > 0 && r5.top < (root.innerHeight || 9999) && r5.width > 0 && r5.left < (root.innerWidth || 9999) && r5.right > 0;
       }
       if (!visible) return;                                   // off-screen → meant to be idle; the IO/visibility wakers resume it
-      if (nowMs() - lastRun > 900) frame(nowMs());            // genuinely starved while it should be running → drive it
+      if (nowMs() - lastRun > 900) { rafPending = false; frame(nowMs()); }   // starved (or a dropped rAF after sleep) → clear any stale pending flag and drive it, so frame()'s schedule() re-arms the real loop
       else kick();                                            // otherwise make sure a frame is queued
     }, 1200);
   }
