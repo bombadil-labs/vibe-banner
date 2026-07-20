@@ -90,6 +90,25 @@
   }
   var SCENE_IDS = 0;                                           // unique clipPath ids across multiple banners on one page
 
+  // SHARED VISIBILITY (v0.76.0). One page can hold dozens of banners (the gallery has forty).
+  // Each animates only when it is BOTH on-screen and in a foreground tab; the rest hold still
+  // at zero cost. This registry is the single document-level visibilitychange listener that
+  // wakes them all when the tab returns — before this, a backgrounded tab left every loop's
+  // starvation watchdog driving full canvas redraws through setInterval, which the browser
+  // does NOT throttle, so an idle page pinned the CPU. Loops add their wake fn on mount and
+  // splice it out on detach, so nothing leaks.
+  var WAKERS = [], VIS_WIRED = false;
+  function pageHidden(root) { return !!(root.document && root.document.hidden); }
+  function ensureVisWiring(root) {
+    if (VIS_WIRED || !root.document || !root.document.addEventListener) return;
+    VIS_WIRED = true;
+    root.document.addEventListener("visibilitychange", function () {
+      if (root.document.hidden) return;
+      var snap = WAKERS.slice();                              // snapshot: a wake may teardown-and-splice mid-iteration
+      for (var i = 0; i < snap.length; i++) try { snap[i](); } catch (e) { }
+    });
+  }
+
   // THE READOUT IS A LIST (v0.41.0, the maintainer's call): the four fields were a good
   // default, never a law. A payload may carry `readout: [{label, value}, …]` (≤5, any
   // labels the skill defines); the legacy seems/feel/noticing/trying map onto the
@@ -1587,7 +1606,17 @@
     fit();
     var ro = root.ResizeObserver ? new ResizeObserver(fit) : null; if (ro) ro.observe(wrap);
     var visible = true;
-    var io = root.IntersectionObserver ? new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, { threshold: 0 }) : null; if (io) io.observe(wrap);
+    ensureVisWiring(root);
+    // active = on-screen AND foreground. When it flips false the loop STOPS scheduling rather
+    // than spinning empty frames; the IntersectionObserver and the shared visibilitychange
+    // listener wake it. kick() is what both call.
+    function activeNow() { return visible && !pageHidden(root); }
+    function kick() { if (activeNow()) schedule(); }
+    var io = root.IntersectionObserver ? new IntersectionObserver(function (e) {
+      var wasVisible = visible; visible = e[0].isIntersecting;
+      if (visible && !wasVisible) kick();                     // scrolled back into view → resume
+    }, { threshold: 0 }) : null; if (io) io.observe(wrap);
+    WAKERS.push(kick);                                         // the shared listener wakes us on tab return; teardown splices us out
 
     function ellipse(cx, cy, rx, ry, fill, op, sf) {
       sf = sf || 0;                                            // softness: 0 = today's falloff, 1 = a diffuse wash (consonance's lever)
@@ -1612,17 +1641,22 @@
     // by reproduction: mount completes, rAF(frame) queued, zero invocations ever. So the
     // loop no longer trusts rAF alone: an interval watches for starvation and drives the
     // frame directly (a crawl, but ALIVE) until rAF starts serving again.
-    var t0 = null, lastRun = 0, rafPending = false, wd = null;
+    var t0 = null, lastRun = 0, lastNow = 0, rafPending = false, wd = null, torn = false;
     var nowMs = function () { return root.performance && performance.now ? performance.now() : Date.now(); };
+    function teardown() {                                      // one place to release everything this loop holds
+      if (torn) return; torn = true;
+      if (ro) ro.disconnect(); if (io) io.disconnect(); if (wd) { clearInterval(wd); wd = null; }
+      var ix = WAKERS.indexOf(kick); if (ix >= 0) WAKERS.splice(ix, 1);   // exactly the live loops, never an accumulating list
+    }
     function schedule() {
-      if (rafPending) return;
+      if (rafPending || torn || !activeNow()) return;         // inactive loops don't spin — they wait to be kicked
       rafPending = true;
       requestAnimationFrame(function (n) { rafPending = false; frame(n); });
     }
     function frame(now) {
       lastRun = nowMs();
       if (!cv.isConnected) {                                   // detached → stop, and remount into the host's clone if one exists
-        if (ro) ro.disconnect(); if (io) io.disconnect(); if (wd) clearInterval(wd);
+        teardown();
         var ghost = root.document && document.querySelector('[data-vibe-remount="' + mountId + '"]');
         if (ghost && ghost.parentNode && remounts < 3) {
           var np = {}; for (var pk in p) if (Object.prototype.hasOwnProperty.call(p, pk)) np[pk] = p[pk];
@@ -1631,8 +1665,11 @@
         }
         return;
       }
-      if (t0 == null) t0 = now; var t = (now - t0) / 1000;
-      if (!visible) { schedule(); return; }
+      if (!activeNow()) return;                               // off-screen or backgrounded → stop; kick() resumes us
+      if (t0 == null) t0 = now;
+      if (lastNow && now - lastNow > 250) t0 += now - lastNow;   // absorb any pause (tab away, scrolled off) so t doesn't leap on return
+      lastNow = now;
+      var t = (now - t0) / 1000;
       // SELF-HEALING SIZE (v0.41.1): mounting inside a hidden container (a lazy tab, an
       // accordion, a closed <details>) measures 0 and fit() bails, and the ResizeObserver
       // does not reliably fire on the unhide — so the banner stayed at the canvas default
@@ -2523,15 +2560,22 @@
       schedule();
     }
     schedule();
-    wd = setInterval(function () {                             // starvation watch: if rAF hasn't served in ~a second, drive the frame ourselves
-      if (!cv.isConnected) { clearInterval(wd); wd = null; return; }
-      var nw = nowMs();
-      if (nw - lastRun > 900) {
-        var r5 = wrap.getBoundingClientRect();                 // IO can misreport in odd hosts — trust geometry when we're the ones driving
-        visible = r5.bottom > 0 && r5.top < (root.innerHeight || 9999) && r5.width > 0;
-        frame(nw);
+    // STARVATION WATCH — only for the occluded-but-foreground iframe that never gets an rAF.
+    // It must NOT fire while the tab is backgrounded: setInterval keeps running when hidden
+    // and browsers do not throttle it, so before v0.76.0 this drove full canvas redraws for
+    // every banner on an idle page — the AFK CPU pin. Gated on activeNow() now: hidden or
+    // off-screen, it does nothing but the cheap detach check.
+    wd = setInterval(function () {
+      if (!cv.isConnected) { teardown(); return; }            // cheap connectivity check runs even while paused, so a
+      if (pageHidden(root)) return;                           // banner removed off-screen still gets cleaned up here.
+      if (!io) {                                              // no IntersectionObserver: fall back to geometry (which forces layout)
+        var r5 = wrap.getBoundingClientRect();
+        visible = r5.bottom > 0 && r5.top < (root.innerHeight || 9999) && r5.width > 0 && r5.left < (root.innerWidth || 9999) && r5.right > 0;
       }
-    }, 500);
+      if (!visible) return;                                   // off-screen → meant to be idle; the IO/visibility wakers resume it
+      if (nowMs() - lastRun > 900) frame(nowMs());            // genuinely starved while it should be running → drive it
+      else kick();                                            // otherwise make sure a frame is queued
+    }, 1200);
   }
 
   root.vibe = function (el, payload) {

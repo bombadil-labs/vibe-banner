@@ -757,6 +757,31 @@ Every mapping in the grammar passes all three. Proposals that don't, get reshape
   local `npm run build` is invisible there. Verifying live behaviour needs a harness pointed at
   `./dist` — twice now I have briefly believed a fix had failed when I was reading old bytes.
 
+- **The AFK CPU pin, and the visibility contract (v0.76.0).** The maintainer came back from
+  being away to find every banner crawling and the machine bogged down; switching views and
+  back cleared it. The cause was the starvation watchdog. Each banner runs a setInterval that
+  drives a frame directly when rAF has not served in ~a second — the fix for occluded-iframe
+  hosts that never deliver an rAF at all. But a BACKGROUNDED TAB also stops delivering rAF,
+  and that is not starvation, it is the browser doing the right thing. The watchdog could not
+  tell the difference, so on an idle backgrounded tab every banner's interval drove a full
+  canvas redraw — and setInterval, unlike rAF, is not throttled when hidden. Forty gallery
+  banners each redrawing off-screen is the pin.
+  The contract now: a banner animates only when it is BOTH on-screen (IntersectionObserver)
+  and in a foreground tab (document.hidden). Off those, the loop STOPS scheduling rather than
+  spinning empty frames — the previous code re-armed rAF every frame even while off-screen,
+  just skipping the draw. A single shared visibilitychange listener wakes every loop on tab
+  return; the IntersectionObserver wakes a loop on scroll-in. The watchdog is gated on the
+  same active test, so hidden or off-screen it does nothing but a cheap detach check, and it
+  no longer calls getBoundingClientRect when an IntersectionObserver is present (that forced a
+  layout per banner per tick — its own idle cost on a big page).
+  Measured: a hidden tab does ZERO canvas draws (was forty banners at ~2fps); with two banners
+  on-screen and six below the fold, only the two draw; ten banners cleared while paused tear
+  down to zero leaked intervals via the connectivity check that runs regardless of visibility.
+  A pause-absorb on the frame clock keeps animations from leaping forward on return.
+  The general shape, again: a fallback added for a rare failure (starved rAF) misfired in a
+  common state (a backgrounded tab) because it could not distinguish the two. The fix was to
+  name the states — active vs paused — and gate the fallback on them.
+
 - **More first-party avatars are cheap now (bench).** The component system (recipes:
   eyes preset × mouth × extras × hue; renderer-side fins/arms/spots/ink) means a new
   creature is mostly a new PROFILE and component tables. A future project, deliberately
