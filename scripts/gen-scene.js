@@ -208,41 +208,40 @@ function canvas(LW, LH, SCALE) {
   save("scene-study.png");
 }
 
-/* ---- hearth: a fire filling the window, drawn to READ at 0.55 opacity over a dark banner.
-   (v1 was near-black masonry around a small fire — at scene opacity the surround vanished
-   into the banner and the fire washed to mud. This one is warm mid-tones everywhere and a
-   big bright fire that survives the wash.) ---- */
+/* ---- hearth: a fire in the LOWER third, warm room above. The scene sits behind the
+   avatar, who is centred in the window — so the fire has to stay low or it cooks the face.
+   Warm mid-tones throughout (dark pixels vanish at scene opacity); the creature sits in the
+   glow of the room, the fire below her. ---- */
 {
   const { LW, LH, lput, save } = canvas(40, 40, 4);
   const r = rng(20260721);
-  // warm firelit interior — a MID brown that reads even at half opacity, brightening toward the fire
+  // warm firelit interior — a MID brown that reads even at half opacity, brightest low where the fire is
   for (let y = 0; y < LH; y++) for (let x = 0; x < LW; x++) {
-    const d = Math.sqrt((x - 20) * (x - 20) + (y - 30) * (y - 30));
-    const c = d < 10 ? "#7a4a2e" : d < 18 ? "#654028" : d < 26 ? "#553524" : "#472c1f";
-    lput(x, y, ((x * 7 + y * 5) % 19 === 0) ? "#3e281c" : c);   // faint brick seams
+    const d = Math.sqrt((x - 20) * (x - 20) + (y - 35) * (y - 35));
+    const c = d < 10 ? "#6e4228" : d < 20 ? "#5c3a24" : d < 30 ? "#4e3120" : "#43291d";
+    lput(x, y, ((x * 7 + y * 5) % 19 === 0) ? "#3a2519" : c);   // faint brick seams
   }
-  // mantel beam across the top, catching the glow
-  for (let x = 2; x < 38; x++) { lput(x, 4, "#8a6038"); lput(x, 5, "#6e4a2c"); lput(x, 6, "#563a24"); }
-  // the firebox: a warm glowing recess, NOT near-black (dark pixels vanish into the
-  // banner at scene opacity), lit from the fire so the opening still reads as a hearth
-  for (let y = 13; y < 36; y++) for (let x = 7; x < 33; x++) {
-    const d = Math.sqrt((x - 20) * (x - 20) + (y - 31) * (y - 31));
-    lput(x, y, d < 8 ? "#7a3010" : d < 14 ? "#5a2810" : "#43200f");
+  // mantel beam across the top, catching the glow — the shelf the creature sits below
+  for (let x = 2; x < 38; x++) { lput(x, 5, "#8a6038"); lput(x, 6, "#6e4a2c"); lput(x, 7, "#563a24"); }
+  // the firebox: a warm glowing recess low in the frame
+  for (let y = 22; y < 37; y++) for (let x = 8; x < 32; x++) {
+    const d = Math.sqrt((x - 20) * (x - 20) + (y - 35) * (y - 35));
+    lput(x, y, d < 9 ? "#7a3010" : d < 15 ? "#5a2810" : "#43200f");
   }
   // logs across the base
-  for (let x = 8; x < 32; x++) { lput(x, 34, "#6a4020"); lput(x, 35, "#4a2c14"); }
-  for (let i = 0; i < 12; i++) { lput(10 + i, 33 - (i % 2), "#5a3418"); }
+  for (let x = 8; x < 32; x++) { lput(x, 35, "#6a4020"); lput(x, 36, "#4a2c14"); }
+  for (let i = 0; i < 12; i++) { lput(10 + i, 34 - (i % 2), "#5a3418"); }
   // ember bed: a hot glowing band spanning the base
-  for (let x = 9; x < 31; x++) { lput(x, 33, r() < 0.5 ? "#ff8a2e" : "#f06418"); lput(x, 32, r() < 0.4 ? "#ffb24a" : "#e05812"); }
-  // a BIG, WIDE fire: a broad bright mass filling the lower firebox, tapering upward.
-  // wide base so it reads as a fire (not a candle) once downscaled to banner size.
+  for (let x = 9; x < 31; x++) { lput(x, 34, r() < 0.5 ? "#ff8a2e" : "#f06418"); lput(x, 33, r() < 0.4 ? "#ffb24a" : "#e05812"); }
+  // a low, wide fire: broad at the base, licking up only into the lower third so the
+  // face above stays clear. wide enough to read as a fire once downscaled to banner size.
   const FL = ["#e05812", "#f47420", "#ff9a34", "#ffc45a", "#ffe89a"];
-  for (let y = 13; y < 33; y++) {
-    const down = (y - 12);                                  // 1 at top of fire, 20 at base
-    const half = Math.max(1, Math.round(down * 0.62) - Math.floor(Math.abs(Math.sin(y * 0.8 + 1)) * 1.5));
+  for (let y = 25; y < 34; y++) {
+    const down = (y - 24);                                  // 1 at top of fire, 9 at base
+    const half = Math.max(1, Math.round(down * 1.35) - Math.floor(Math.abs(Math.sin(y * 0.8 + 1)) * 1.5));
     for (let x = 20 - half; x <= 20 + half; x++) {
       const edge = Math.abs(x - 20) / (half + 0.5);         // 0 core -> 1 edge
-      const heat = (1 - edge) * 2.2 + down * 0.12;          // hotter at core and base
+      const heat = (1 - edge) * 2.2 + down * 0.22;          // hotter at core and base
       const tier = Math.min(FL.length - 1, Math.max(0, Math.round(heat)));
       if (r() < 0.94 - edge * 0.25) lput(x, y, FL[tier]);
     }
@@ -250,7 +249,7 @@ function canvas(LW, LH, SCALE) {
   save("scene-hearth.png");
 }
 
-/* ---- rain: a window onto a grey day, drops sliding down the glass (drawn live) ---- */
+/* ---- rain: a window onto a grey day, rain falling beyond the glass (drawn live) ---- */
 {
   const { LW, LH, lput, save } = canvas(40, 40, 4);
   const r = rng(20260722);
