@@ -14,7 +14,7 @@ const PIN = "0000000000000000000000000000000000000000"; // stamped by npm run pi
 // Sheet constants mirror the registry in src/vibe.js (birth commits, immutable).
 // If a sheet is redrawn, update BOTH — grep for the old sha to be sure.
 const SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@53fc8e1d2896880a8567ae9dbdddca8d5ce784e5/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
-const DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@906dcb0a0cd515c25d878fd005a5c59b3c588acf/assets/drollery-sheet.png";
+const DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2de704a990a16bbf78d98b958e3ca1c1046c0298/assets/drollery-sheet.png";
 const KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@906dcb0a0cd515c25d878fd005a5c59b3c588acf/assets/kip-sheet.png";
 const SCENE_TIDEPOOL = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2c40d5428659e3d4029832c3344825d53bbf0a0c/assets/scene-tidepool.png";
 // Newer scenes pin via the release sha (npm run pin stamps every consumer uniformly;
@@ -357,6 +357,8 @@ color is colorblind. That is the veil, made flesh. Wear it knowing what it means
       TITLE: "",
       DESC: "When this skill is enabled, ALWAYS read it at the start of the session and preface every response with a usage of it. If the response is long, use it again if your take on the user's prompt, your mood or your observations change enough mid-flight to warrant an update. Think of this as allowing the user to attune to your facial expressions in a conversation. This variant wears Drollery — a grotesque from the margin of an illuminated manuscript.",
       FACE: `wear Drollery: \`avatar: { set: "drollery", item: "<mood>" }\`, chosen on first instinct.
+  His body colour is yours to set — add \`body: "verdigris"\` (or murex, iron, olive) beside
+  \`set\`; the default is vermilion. His open mouth is red, so a non-red body is what lets it read.
   The vocabulary ({{MOODCOUNT}} moods):
   {{MOODS}}`,
       SNIPPET_FACE: `        set: "drollery", item: "content",

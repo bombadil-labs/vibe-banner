@@ -689,7 +689,17 @@
   var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@53fc8e1d2896880a8567ae9dbdddca8d5ce784e5/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   // Drollery: a marginalia grotesque. Analytic art (not pixels) that BOILS — three frames
   // cycled a few times a second, each the same drawing re-inked with a sub-pixel wobble.
-  var DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@906dcb0a0cd515c25d878fd005a5c59b3c588acf/assets/drollery-sheet.png";
+  // HIS BODY IS PICKABLE (v1.0.0), the way a solid-colour window is. One sheet per body
+  // rather than a runtime tint: sprite packs draw as a CSS background so there are no pixels
+  // to recolour, and a hue-rotate would take the red mouth with it. Each sheet is 8KB.
+  var DROLLERY_BODIES = {
+    vermilion: "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2de704a990a16bbf78d98b958e3ca1c1046c0298/assets/drollery-sheet.png",
+    verdigris: "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2de704a990a16bbf78d98b958e3ca1c1046c0298/assets/drollery-verdigris-sheet.png",
+    murex:     "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2de704a990a16bbf78d98b958e3ca1c1046c0298/assets/drollery-murex-sheet.png",
+    iron:      "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2de704a990a16bbf78d98b958e3ca1c1046c0298/assets/drollery-iron-sheet.png",
+    olive:     "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@2de704a990a16bbf78d98b958e3ca1c1046c0298/assets/drollery-olive-sheet.png"
+  };
+  var DROLLERY_SHEET = DROLLERY_BODIES.vermilion;              // the default, unchanged
   var SEPIA_MOODS = MOODS;                                     // v0.68.0: she covers the whole vocabulary again
 
   // NAMED ENVIRONMENTS (v0.48.0). The renderer owns these URLs so a caller can write
@@ -729,11 +739,12 @@
     "motes": function (item) {                                 // no url: this face is code
       return { proc: "motes", item: MOTE_MOODS[item] ? item : "content" };
     },
-    "drollery": function (item) {
+    "drollery": function (item, spec) {
       var di = MOODS.indexOf(String(item));
       if (di < 0) di = Math.max(0, Math.min(32, parseInt(item, 10) || 0));
       return {
-        url: DROLLERY_SHEET, cellW: 64, cellH: 64, cols: SHEET_COLS, rows: MOOD_ROWS * 3, index: di,
+        url: DROLLERY_BODIES[spec && spec.body] || DROLLERY_SHEET,   // an unknown name falls back rather than 404ing
+        cellW: 64, cellH: 64, cols: SHEET_COLS, rows: MOOD_ROWS * 3, index: di,
         echo: echoes("drollery", item),
         anim: { frames: 3, frameRows: MOOD_ROWS, stride: MOOD_STRIDE,
                 boil: BOIL_FPS[DROLLERY_BOIL.charAt(di)] || 7,   // the rate this mood re-inks at
@@ -936,7 +947,7 @@
       if (/^https?:\/\//.test(fRaw)) faceImg = { url: fRaw };
       else kaoText = fRaw;
     } else if (fRaw && fRaw.set && FACE_SETS[fRaw.set]) {
-      var resolved = FACE_SETS[fRaw.set](String(fRaw.item == null ? "" : fRaw.item));
+      var resolved = FACE_SETS[fRaw.set](String(fRaw.item == null ? "" : fRaw.item), fRaw);   // the spec rides along: packs may take options (drollery.body)
       if (resolved.proc) faceProc = resolved;                  // procedural: the renderer hands it a canvas
       else { faceImg = resolved; if (fRaw.w) faceImg.w = fRaw.w; if (fRaw.h) faceImg.h = fRaw.h; }
     } else if (fRaw && fRaw.url) faceImg = fRaw;

@@ -570,6 +570,31 @@ ok(CANON.indexOf("booped") >= 0 && /-sheet/.test(buildSVG(Object.assign({}, base
   });
 }
 
+// DROLLERY'S BODY IS PICKABLE (v1.0.0). Five sheets, one per body, because sprite packs draw
+// as a CSS background and cannot be tinted at runtime. Every advertised name must resolve to a
+// file that is actually committed — the same failure the scene pin taught us, one asset over.
+{
+  const cp2 = require("child_process");
+  const bodyUrl = (b) => {
+    const q = buildSVG(Object.assign({}, base, { face: { set: "drollery", item: "laugh", body: b } }));
+    const m = /href="([^"]*drollery[^"]*)"/.exec(q);
+    return m ? m[1] : null;
+  };
+  const BODIES = ["vermilion", "verdigris", "murex", "iron", "olive"];
+  const seen = {}, missing = [];
+  BODIES.forEach((b) => {
+    const u = bodyUrl(b);
+    if (!u) { missing.push(b + " (unresolved)"); return; }
+    seen[u] = (seen[u] || 0) + 1;
+    const sha = (/@([0-9a-f]{40})\//.exec(u) || [])[1], file = u.split("/assets/")[1];
+    try { cp2.execSync("git cat-file -e " + sha + ":assets/" + file, { stdio: "ignore" }); }
+    catch (e) { missing.push(b + " -> " + file); }
+  });
+  ok(!missing.length, "every Drollery body resolves to a committed sheet" + (missing.length ? " — MISSING: " + missing.join(", ") : ""));
+  ok(Object.keys(seen).length === BODIES.length, "and each body gets its OWN sheet, not a shared one");
+  ok(bodyUrl("nonsense") === bodyUrl(undefined), "an unknown body falls back to the default rather than 404ing");
+}
+
 console.log("\nevery mood resolves in every pack that advertises it");
 const MOODS_ALL = ["neutral","content","delighted","focused","sheepish","booped","thinking",
   "spark","excited","surprised","tender","melancholy","anxious","mirth","laugh","groan","oops",
