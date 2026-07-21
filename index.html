@@ -1455,72 +1455,92 @@ route();
   // and hard-code the rest, which meant the half of the grammar that is actually *hard to
   // picture* — how coherence blurs the field, what stance does to an edge, what four
   // palette colours look like — could only be understood by reading prose about it. Now
-  // every payload value has a control, and the emitted payload is shown verbatim.
+  // every payload value has a control.
+  //
+  // GROUPED, NOT ONE FLAT GRID. These all lived in a single auto-fit grid of 210px cells,
+  // which is narrower than the controls it held: label + slider + readout + checkbox
+  // overflowed the cell and ran into the neighbouring one, so the page read "off ☐ send"
+  // butted straight against the next control's name. Each row now gets width enough for
+  // its own parts, and the optionals lead with the checkbox — the control that decides
+  // whether the value is in the payload at all belongs before the value, not after it.
   var panel = document.createElement("div");
-  panel.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px 18px;width:100%;margin:10px 0 0;padding:12px 0 0;border-top:1px solid var(--edge);";
+  panel.style.cssText = "width:100%;margin:10px 0 0;padding:12px 0 0;border-top:1px solid var(--edge);display:flex;flex-direction:column;gap:15px;";
   ctl.appendChild(panel);
+
+  var ROW = "display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--sub);min-height:26px;";
+  var NM = "flex:0 0 76px;";
+  var RNG = "flex:1;min-width:90px;";
+  var OUT = "flex:0 0 32px;text-align:right;font-family:var(--font-mono);font-size:11.5px;";
+
+  // A titled block. `single` gives a plain column (palette, readout — things that want the
+  // full width); otherwise a grid whose columns are wide enough to actually hold a row.
+  function group(title, hint, single) {
+    var g = document.createElement("div");
+    g.style.cssText = "display:flex;flex-direction:column;gap:7px;";
+    var h = document.createElement("div");
+    h.style.cssText = "font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--sub);opacity:.7;";
+    h.textContent = title;
+    if (hint) h.title = hint;
+    g.appendChild(h);
+    var body = document.createElement("div");
+    body.style.cssText = single ? "display:flex;flex-direction:column;gap:6px;"
+      : "display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:4px 24px;";
+    g.appendChild(body);
+    panel.appendChild(g);
+    return body;
+  }
+
+  // Built in display order — group() appends as it is called.
+  var gField = group("the field — always sent");
+  var gOpt = group("optional — unchecked is omitted from the payload, not set to zero");
+  var gRoom = group("the room");
+  var gPal = group("palette — feelings as colours, most intense first",
+    "0 → neutral grey triad; 1 → light/pure/dark; 2 → one per side plus their blend; 3 → one per oval; 4+ → the centre cycles the extras", true);
+  var gRead = group("readout — up to five lines, any labels", "", true);
   function slider(label, key, def, hint) {
     var w = document.createElement("label");
-    w.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
+    w.style.cssText = ROW;
     w.title = hint || "";
-    var nm = document.createElement("span"); nm.style.cssText = "flex:0 0 82px;"; nm.textContent = label;
+    var nm = document.createElement("span"); nm.style.cssText = NM; nm.textContent = label;
     var r = document.createElement("input");
-    r.type = "range"; r.min = 0; r.max = 1; r.step = 0.05; r.value = def; r.style.cssText = "flex:1;min-width:70px;";
-    var out = document.createElement("span"); out.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; out.textContent = def;
+    r.type = "range"; r.min = 0; r.max = 1; r.step = 0.05; r.value = def; r.style.cssText = RNG;
+    var out = document.createElement("span"); out.style.cssText = OUT; out.textContent = def;
     r.addEventListener("input", function () { X[key] = +r.value; out.textContent = r.value; render(); });
-    w.appendChild(nm); w.appendChild(r); w.appendChild(out); panel.appendChild(w);
+    w.appendChild(nm); w.appendChild(r); w.appendChild(out); gField.appendChild(w);
     return r;
-  }
-  function toggle(label, key, hint) {                          // presence IS signal: an unchecked optional is omitted from the payload, not zeroed
-    var w = document.createElement("label");
-    w.style.cssText = "display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);";
-    w.title = hint || "";
-    var c = document.createElement("input"); c.type = "checkbox";
-    c.addEventListener("change", function () { X[key] = c.checked; render(); });
-    w.appendChild(c); w.appendChild(document.createTextNode(label));
-    return { wrap: w, box: c };
   }
   slider("focus", "focus", 0.7, "0 scattered across many things → 1 locked tight on one");
   slider("engagement", "engagement", 0.85, "0 checked out → 1 fully lit. Only ever deflates the field");
-  var stanceOn = toggle("send", "stanceOn", "optional: omit and the ovals keep their open falloff");
-  var stanceRow = document.createElement("label");
-  stanceRow.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
-  stanceRow.title = "0 asking (holding questions open) → 1 telling (standing on it)";
-  stanceRow.innerHTML = '<span style="flex:0 0 82px;">stance</span>';
-  var stanceR = document.createElement("input");
-  stanceR.type = "range"; stanceR.min = 0; stanceR.max = 1; stanceR.step = 0.05; stanceR.value = 0.5; stanceR.style.cssText = "flex:1;min-width:70px;";
-  var stanceOut = document.createElement("span"); stanceOut.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; stanceOut.textContent = "off";
-  stanceR.addEventListener("input", function () { X.stance = +stanceR.value; X.stanceOn = true; stanceOn.box.checked = true; stanceOut.textContent = stanceR.value; render(); });
-  stanceOn.box.addEventListener("change", function () { stanceOut.textContent = stanceOn.box.checked ? stanceR.value : "off"; });
-  stanceRow.appendChild(stanceR); stanceRow.appendChild(stanceOut); stanceRow.appendChild(stanceOn.wrap);
-  panel.appendChild(stanceRow);
-  var cohRow = document.createElement("label");
-  cohRow.style.cssText = stanceRow.style.cssText;
-  cohRow.title = "focus's emotional dual: 0 the feelings grind (diffuse washes) → 1 they harmonize (compact, solid)";
-  cohRow.innerHTML = '<span style="flex:0 0 82px;">coherence</span>';
-  var cohR = document.createElement("input");
-  cohR.type = "range"; cohR.min = 0; cohR.max = 1; cohR.step = 0.05; cohR.value = 1; cohR.style.cssText = "flex:1;min-width:70px;";
-  var cohOut = document.createElement("span"); cohOut.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; cohOut.textContent = "off";
-  var cohOn = toggle("send", "cohOn", "optional: omit and absence reads as harmony");
-  cohR.addEventListener("input", function () { X.coherence = +cohR.value; X.cohOn = true; cohOn.box.checked = true; cohOut.textContent = cohR.value; render(); });
-  cohOn.box.addEventListener("change", function () { cohOut.textContent = cohOn.box.checked ? cohR.value : "off"; });
-  cohRow.appendChild(cohR); cohRow.appendChild(cohOut); cohRow.appendChild(cohOn.wrap);
-  panel.appendChild(cohRow);
 
-  function optionalSlider(label, key, def, hint) {                 // stance/coherence's pattern: presence IS signal, so omitted ≠ zero
+  // ONE shape for all four optionals. stance and coherence used to be hand-rolled copies of
+  // this function sitting right above it, which is how they drifted apart in the first place.
+  // Presence IS signal: an unchecked row is omitted from the payload, not sent as zero, so
+  // the slider reads dimmed and "off" until the checkbox says it counts.
+  function optionalSlider(label, key, def, hint) {
     var row = document.createElement("label");
-    row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
+    row.style.cssText = ROW;
     row.title = hint || "";
-    row.innerHTML = '<span style="flex:0 0 82px;">' + label + '</span>';
+    var box = document.createElement("input");
+    box.type = "checkbox"; box.style.cssText = "flex:0 0 auto;margin:0;cursor:pointer;";
+    box.setAttribute("aria-label", "send " + label);
+    var nm = document.createElement("span"); nm.style.cssText = NM; nm.textContent = label;
     var r = document.createElement("input");
-    r.type = "range"; r.min = 0; r.max = 1; r.step = 0.05; r.value = def; r.style.cssText = "flex:1;min-width:70px;";
-    var out = document.createElement("span"); out.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; out.textContent = "off";
-    var on = toggle("send", key + "On", "optional: omit and the value simply isn't reported");
-    r.addEventListener("input", function () { X[key] = +r.value; X[key + "On"] = true; on.box.checked = true; out.textContent = r.value; render(); });
-    on.box.addEventListener("change", function () { out.textContent = on.box.checked ? r.value : "off"; render(); });
-    row.appendChild(r); row.appendChild(out); row.appendChild(on.wrap);
-    panel.appendChild(row);
+    r.type = "range"; r.min = 0; r.max = 1; r.step = 0.05; r.value = def;
+    r.style.cssText = RNG + "opacity:.35;";
+    var out = document.createElement("span"); out.style.cssText = OUT; out.textContent = "off";
+    function sync() {
+      X[key + "On"] = box.checked;
+      r.style.opacity = box.checked ? "1" : ".35";
+      out.textContent = box.checked ? r.value : "off";
+      render();
+    }
+    box.addEventListener("change", sync);
+    r.addEventListener("input", function () { X[key] = +r.value; box.checked = true; sync(); });
+    row.appendChild(box); row.appendChild(nm); row.appendChild(r); row.appendChild(out);
+    gOpt.appendChild(row);
   }
+  optionalSlider("stance", "stance", 0.5, "0 asking (holding questions open) → 1 telling (standing on it)");
+  optionalSlider("coherence", "coherence", 1, "focus's emotional dual: 0 the feelings grind (diffuse washes) → 1 they harmonize (compact, solid)");
   optionalSlider("confidence", "confidence", 0.8, "not the odds of being right — how GROUNDED this is. 0 pattern-matched, unverified → 1 checked, and could point at the check");
   optionalSlider("honesty", "honesty", 1, "is what was said what was actually thought? 1 matches; lower means something got smoothed, hedged, or left out");
 
@@ -1528,12 +1548,15 @@ route();
     "storm spotlight hush fog glow bloom converge".split(" ")
       .map(function (f) { return [f, f]; })), "", function (v) { X.flag = v; render(); });
   flagSel.parentNode.title = "what the ROOM is doing — light, air, pressure. One at most; the face stays the avatar's";
-  panel.appendChild(flagSel.parentNode);
+  flagSel.parentNode.style.cssText = ROW;
+  // mkSel writes its label as a bare text node, which can't carry the NM column width the
+  // other rows align on — swap it for a span so "weather" lines up with "languages".
+  var wxNm = document.createElement("span"); wxNm.style.cssText = NM; wxNm.textContent = "weather";
+  flagSel.parentNode.replaceChild(wxNm, flagSel.parentNode.firstChild);
+  gRoom.appendChild(flagSel.parentNode);
 
-  var palRow = document.createElement("label");
-  palRow.style.cssText = "display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);grid-column:1/-1;flex-wrap:wrap;";
-  palRow.title = "feelings as colours, most intense first. 0 → neutral grey triad; 1 → light/pure/dark; 2 → one per side plus their blend; 3 → one per oval; 4+ → the centre cycles the extras";
-  palRow.appendChild(document.createTextNode("palette"));
+  var palRow = document.createElement("div");
+  palRow.style.cssText = "display:flex;align-items:center;gap:6px;flex-wrap:wrap;";
   var pal = ["#7fb8b0", "#d99a5e"];
   var palWrap = document.createElement("span");
   palWrap.style.cssText = "display:flex;gap:5px;align-items:center;flex-wrap:wrap;";
@@ -1566,18 +1589,14 @@ route();
     palWrap.appendChild(none);
   }
   renderPal();
-  panel.appendChild(palRow);
+  gPal.appendChild(palRow);
 
   var rowsWrap = document.createElement("div");
-  rowsWrap.style.cssText = "grid-column:1/-1;display:flex;flex-direction:column;gap:5px;";
+  rowsWrap.style.cssText = "display:flex;flex-direction:column;gap:5px;";
   var rows = [["user", "browsing the wardrobe and the real estate at once"], ["mood", "trying things on"],
     ["note", "the same face reads differently in different light"], ["goal", "find the combination that feels like home"]];
   function renderRows() {
-    rowsWrap.innerHTML = "";
-    var hd = document.createElement("div");
-    hd.style.cssText = "font-size:12.5px;color:var(--sub);";
-    hd.textContent = "readout — up to five lines, any labels";
-    rowsWrap.appendChild(hd);
+    rowsWrap.innerHTML = "";                       // the group header carries the caption now
     rows.forEach(function (r, i) {
       var line = document.createElement("div");
       line.style.cssText = "display:flex;gap:6px;align-items:center;";
@@ -1602,20 +1621,16 @@ route();
     }
   }
   renderRows();
-  panel.appendChild(rowsWrap);
+  gRead.appendChild(rowsWrap);
 
   var langIn = document.createElement("label");
-  langIn.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
+  langIn.style.cssText = ROW;
   langIn.title = "languages reasoned in beyond the conversational one; renders as a small [Reasoned in] trace";
-  langIn.innerHTML = '<span style="flex:0 0 82px;">languages</span>';
+  langIn.innerHTML = '<span style="' + NM + '">languages</span>';
   var langField = document.createElement("input");
-  langField.placeholder = "ja, de"; langField.style.cssText = SEL + "flex:1;min-width:70px;font-size:12px;";
+  langField.placeholder = "ja, de"; langField.style.cssText = SEL + "flex:1;min-width:90px;font-size:12px;";
   langField.addEventListener("input", render);
-  langIn.appendChild(langField); panel.appendChild(langIn);
-
-  var src = document.createElement("pre");
-  src.style.cssText = "grid-column:1/-1;font-size:10.5px;max-height:150px;overflow:auto;margin:4px 0 0;";
-  panel.appendChild(src);
+  langIn.appendChild(langField); gRoom.appendChild(langIn);
 
   function render() {
     var details = {};
@@ -1625,7 +1640,7 @@ route();
     // out means a palette alone still previews as the square tile rather than widening it
     if (X.fieldOn !== false) { details.focus = X.focus == null ? 0.7 : X.focus; details.engagement = X.engagement == null ? 0.85 : X.engagement; }
     if (X.stanceOn) details.stance = X.stance == null ? 0.5 : X.stance;
-    if (X.cohOn) details.coherence = X.coherence == null ? 1 : X.coherence;
+    if (X.coherenceOn) details.coherence = X.coherence == null ? 1 : X.coherence;
     if (X.confidenceOn) details.confidence = X.confidence == null ? 0.8 : X.confidence;
     if (X.honestyOn) details.honesty = X.honesty == null ? 1 : X.honesty;
     if (X.flag) details.weather = X.flag;
@@ -1645,12 +1660,6 @@ route();
     try { vibe(mnt, payload); } catch (e) { mnt.textContent = "err: " + e.message; }
     cap.textContent = sc && sc.blurb ? "the " + X.scene + " — " + sc.blurb : (su ? "custom scene" : X.scene === "solid" ? "solid colour — a clean neutral backdrop" : "the empty window");
     renderBio(document.getElementById("x-bio"), X.set, false);
-    var shown = JSON.parse(JSON.stringify(payload));
-    // the scene lives under avatar, not at the top level — this guard had been looking in the
-    // wrong place, which only stopped mattering now that first-party scenes are names
-    var shownScene = shown.avatar && shown.avatar.scene;
-    if (shownScene && shownScene.url) shownScene.url = shownScene.url.replace(/@[0-9a-f]{40}\//, "@…/");
-    src.textContent = "vibe(el, " + JSON.stringify(shown, null, 1) + ");";
   }
 
   refreshItems(); render();
