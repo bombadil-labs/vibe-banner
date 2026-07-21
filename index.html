@@ -609,6 +609,7 @@ function buildChat(promptText) {
   return { chat: chat, body: body };
 }
 var JUMPS = [];
+var MOODSET = (window.SKILL_PIECES && window.SKILL_PIECES.MOOD_LIST_ALL) || [];
 function buildGallery() {
   g.innerHTML = ""; MOUNT_QUEUE["gallery"] = []; JUMPS = [];
   GROUPS.forEach(function (grp) {
@@ -621,7 +622,7 @@ function buildGallery() {
     var lbl = typeof s[0] === "function" ? s[0](FACE_CHOICE) : s[0];
     var t = lbl.split(" — "); cap.innerHTML = "<b>" + t[0] + "</b>" + (t[1] ? " — " + t[1] : "");
     cell.id = "m-" + t[0].trim().replace(/\s+/g, "_");         // the jump row targets these
-    JUMPS.push(t[0].trim());
+    if (MOODSET.indexOf(t[0].trim()) >= 0) JUMPS.push(t[0].trim());   // moods only — the mechanism demos are not what you scan for
     var c = buildChat(s[1]);
     var banner = document.createElement("div"); banner.className = "banner";
     var r = document.createElement("p"); r.className = "resp";
