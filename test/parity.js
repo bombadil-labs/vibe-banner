@@ -553,6 +553,23 @@ ok(CANON.indexOf("booped") >= 0 && /-sheet/.test(buildSVG(Object.assign({}, base
   }
 }
 
+// THE DECLARED GRID MUST MATCH THE SHEET ON DISK (v0.90.0). The renderer sizes each sheet
+// from cols x rows; the generators size the file from the mood count. Those were two separate
+// sets of numbers, so cutting a mood reflowed the files while the renderer went on reading the
+// old geometry — every cell past the first row landed at the wrong offset, and nothing here
+// noticed, because a wrong offset still resolves to a real cell. Compare them directly.
+{
+  const fsx = require("fs");
+  [["sepia", "sepia-sheet.png"], ["kip", "kip-sheet.png"], ["drollery", "drollery-sheet.png"]].forEach((pair) => {
+    const q = buildSVG(Object.assign({}, base, { face: { set: pair[0], item: "content" } }));
+    const m = new RegExp('<image[^>]*' + pair[1].replace(".", "\\.") + '[^>]*width="(\\d+)" height="(\\d+)"').exec(q);
+    const b = fsx.readFileSync("assets/" + pair[1]);
+    const real = b.readUInt32BE(16) + "x" + b.readUInt32BE(20);
+    ok(m && (m[1] + "x" + m[2]) === real,
+       pair[0] + ": renderer draws the sheet as " + (m ? m[1] + "x" + m[2] : "?") + ", file is " + real);
+  });
+}
+
 console.log("\nevery mood resolves in every pack that advertises it");
 const MOODS_ALL = ["neutral","content","delighted","focused","sheepish","booped","thinking",
   "spark","excited","surprised","tender","melancholy","anxious","mirth","laugh","groan","oops",

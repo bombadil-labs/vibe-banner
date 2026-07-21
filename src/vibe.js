@@ -182,6 +182,14 @@
   // deleting a mood silently slid every prop, fin posture and beat after it onto the wrong
   // face — art that still rendered, just as the wrong creature. Nothing downstream changes;
   // the maps are still index-keyed by the time anything reads them.
+  // THE GRID IS DERIVED (v0.90.0). Each pack's sheet lays its moods out 8 to a row and
+  // repeats that block once per frame band. Those numbers were written as literals — rows 10,
+  // frameRows 5, stride 40 — sized for 33 moods, and when sleepy went the generators reflowed
+  // their sheets while the renderer went on reading the old geometry. Every cell after the
+  // first row landed at the wrong offset. Compute it from the vocabulary instead.
+  var SHEET_COLS = 8;
+  var MOOD_ROWS = Math.ceil(MOODS.length / SHEET_COLS);        // rows one frame band occupies
+  var MOOD_STRIDE = MOOD_ROWS * SHEET_COLS;                    // cells from one band to the next
   function byMood(map) {
     var out = {}, k, i;
     for (k in map) if (Object.prototype.hasOwnProperty.call(map, k)) {
@@ -662,7 +670,7 @@
 
   // KnownFace registry: face: { set, item } resolves here. Every entry is version-pinned
   // to an allowlisted CDN. "kip" is the repo's own mascot — items are mood names.
-  var KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c6145df6a8905b10d5f726ffe4bc2abdf4ff2d8f/assets/kip-sheet.png";
+  var KIP_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@906dcb0a0cd515c25d878fd005a5c59b3c588acf/assets/kip-sheet.png";
   var KIP_MOODS = MOODS;                                       // v0.52.0: Kip speaks the whole vocabulary
   // KIP IS STEPPED. Sepia eases; Kip cuts. His clock is quantised to a handful of frames a
   // second and every offset rounds to a whole art-pixel, so he ARRIVES at each pose instead
@@ -678,10 +686,10 @@
   var KIP_PATTERN = { r: [0, 0, 0, 0, 0, 0, 1], c: [0, 0, 0, 1], b: [0, 1] };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@81b504af6d6908ea233b926425952b3408a447a1/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@906dcb0a0cd515c25d878fd005a5c59b3c588acf/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   // Drollery: a marginalia grotesque. Analytic art (not pixels) that BOILS — three frames
   // cycled a few times a second, each the same drawing re-inked with a sub-pixel wobble.
-  var DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@c6145df6a8905b10d5f726ffe4bc2abdf4ff2d8f/assets/drollery-sheet.png";
+  var DROLLERY_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@906dcb0a0cd515c25d878fd005a5c59b3c588acf/assets/drollery-sheet.png";
   var SEPIA_MOODS = MOODS;                                     // v0.68.0: she covers the whole vocabulary again
 
   // NAMED ENVIRONMENTS (v0.48.0). The renderer owns these URLs so a caller can write
@@ -725,9 +733,9 @@
       var di = MOODS.indexOf(String(item));
       if (di < 0) di = Math.max(0, Math.min(32, parseInt(item, 10) || 0));
       return {
-        url: DROLLERY_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 15, index: di,
+        url: DROLLERY_SHEET, cellW: 64, cellH: 64, cols: SHEET_COLS, rows: MOOD_ROWS * 3, index: di,
         echo: echoes("drollery", item),
-        anim: { frames: 3, frameRows: 5, stride: 40,
+        anim: { frames: 3, frameRows: MOOD_ROWS, stride: MOOD_STRIDE,
                 boil: BOIL_FPS[DROLLERY_BOIL.charAt(di)] || 7,   // the rate this mood re-inks at
                 boop: BOOP_CELL, fed: FED_CELL }
       };
@@ -739,9 +747,9 @@
       if (i < 0) i = KIP_MOODS.indexOf(MOOD_FALLBACK[item] || item);
       if (i < 0) i = Math.max(0, Math.min(32, parseInt(item, 10) || 0));
       return {
-        url: KIP_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 10, index: i, echo: echoes("kip", item),
+        url: KIP_SHEET, cellW: 64, cellH: 64, cols: SHEET_COLS, rows: MOOD_ROWS * 2, index: i, echo: echoes("kip", item),
         anim: {
-          frames: 2, frameRows: 5, stride: 40,
+          frames: 2, frameRows: MOOD_ROWS, stride: MOOD_STRIDE,
           stepped: 6,                                          // frames per second — his whole clock
           beat: KIP_BEAT,
           props: byMood({ spark: "bulb", surprised: "excl", laugh: "laughs", groan: "sweat", oops: "sweat",
@@ -756,9 +764,9 @@
       var i = SEPIA_MOODS.indexOf(MOOD_FALLBACK[item] || item);
       if (i < 0) i = Math.max(0, Math.min(31, parseInt(item, 10) || 0));
       return {
-        url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: 8, rows: 15, index: i, echo: echoes("sepia", item),
+        url: SEPIA_SHEET, cellW: 64, cellH: 64, cols: SHEET_COLS, rows: MOOD_ROWS * 3, index: i, echo: echoes("sepia", item),
         anim: {
-          frames: 2, frameRows: 5, stride: 40, split: true,   // LAYERED sheet: rows 0-3 body (solid, the colour's canvas+mask), 4-7 features, 8-11 blink features
+          frames: 2, frameRows: MOOD_ROWS, stride: MOOD_STRIDE, split: true,   // LAYERED sheet: rows 0-3 body (solid, the colour's canvas+mask), 4-7 features, 8-11 blink features
           // per-mood fin posture (mirrors gen-sepia's FRILL_OF): r ripple, f flared, d drooped, t tucked, c calm
           fins: strByMood({ delighted: "f", booped: "f", spark: "f", excited: "f", surprised: "f", laugh: "f", dramatic: "f", love: "f",
                             focused: "t", sheepish: "t", anxious: "t", oops: "t", frustrated: "t", angry: "t", awe: "t", working: "t",
