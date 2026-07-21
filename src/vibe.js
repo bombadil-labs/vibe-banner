@@ -2051,7 +2051,10 @@
                 Math.round(((A >> 8) & 255) * dk + ((B >> 8) & 255) * nk) + "," +
                 Math.round((A & 255) * dk + (B & 255) * nk) + ")";
             };
-            var gndY = pt.y + 30 * up;
+            // GROUNDED (v1.1.1): grass gets 40% of the window, not 25% — an avatar centres at
+            // the window's vertical midline (faceCy in the layout code), so a shallow grass
+            // band left every body's lower half hanging in open sky. Raised to swallow it.
+            var gndY = pt.y + 24 * up;
             var skg = ctx.createLinearGradient(0, pt.y, 0, gndY);   // high-saturation sky, paling to the horizon
             skg.addColorStop(0, mixc("#56aee6", "#141d40"));
             skg.addColorStop(1, mixc("#c4e7fa", "#2b3a68"));
@@ -2060,7 +2063,7 @@
             if (nk > 0.03) {                                   // stars arrive with the dark
               for (var pki = 0; pki < 9; pki++) {
                 var pkr = mulberry32(L.seed + pki * 173 + 23);
-                var pkx = pt.x + (2 + pkr() * 36) * up, pky = pt.y + (2 + pkr() * 22) * up;
+                var pkx = pt.x + (2 + pkr() * 36) * up, pky = pt.y + (2 + pkr() * 17) * up;   // stays clear of the taller grass band
                 ctx.globalAlpha = nk * (0.25 + 0.55 * (0.5 + 0.5 * Math.sin(t * (0.9 + pkr() * 2.2) + pkr() * 6.28)));
                 ctx.fillStyle = "#eaf0ff";
                 ctx.beginPath(); ctx.arc(pkx, pky, (0.4 + pkr() * 0.5) * up, 0, 6.2832); ctx.fill();
