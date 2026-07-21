@@ -1507,6 +1507,23 @@ route();
   cohRow.appendChild(cohR); cohRow.appendChild(cohOut); cohRow.appendChild(cohOn.wrap);
   panel.appendChild(cohRow);
 
+  function optionalSlider(label, key, def, hint) {                 // stance/coherence's pattern: presence IS signal, so omitted ≠ zero
+    var row = document.createElement("label");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sub);";
+    row.title = hint || "";
+    row.innerHTML = '<span style="flex:0 0 82px;">' + label + '</span>';
+    var r = document.createElement("input");
+    r.type = "range"; r.min = 0; r.max = 1; r.step = 0.05; r.value = def; r.style.cssText = "flex:1;min-width:70px;";
+    var out = document.createElement("span"); out.style.cssText = "flex:0 0 30px;text-align:right;font-family:var(--font-mono);font-size:11.5px;"; out.textContent = "off";
+    var on = toggle("send", key + "On", "optional: omit and the value simply isn't reported");
+    r.addEventListener("input", function () { X[key] = +r.value; X[key + "On"] = true; on.box.checked = true; out.textContent = r.value; render(); });
+    on.box.addEventListener("change", function () { out.textContent = on.box.checked ? r.value : "off"; render(); });
+    row.appendChild(r); row.appendChild(out); row.appendChild(on.wrap);
+    panel.appendChild(row);
+  }
+  optionalSlider("confidence", "confidence", 0.8, "not the odds of being right — how GROUNDED this is. 0 pattern-matched, unverified → 1 checked, and could point at the check");
+  optionalSlider("honesty", "honesty", 1, "is what was said what was actually thought? 1 matches; lower means something got smoothed, hedged, or left out");
+
   var flagSel = mkSel("weather", [["", "none"]].concat(
     "storm spotlight hush fog glow bloom converge".split(" ")
       .map(function (f) { return [f, f]; })), "", function (v) { X.flag = v; render(); });
@@ -1609,6 +1626,8 @@ route();
     if (X.fieldOn !== false) { details.focus = X.focus == null ? 0.7 : X.focus; details.engagement = X.engagement == null ? 0.85 : X.engagement; }
     if (X.stanceOn) details.stance = X.stance == null ? 0.5 : X.stance;
     if (X.cohOn) details.coherence = X.coherence == null ? 1 : X.coherence;
+    if (X.confidenceOn) details.confidence = X.confidence == null ? 0.8 : X.confidence;
+    if (X.honestyOn) details.honesty = X.honesty == null ? 1 : X.honesty;
     if (X.flag) details.weather = X.flag;
     var langs = langField.value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
     if (langs.length) details.languages = langs;

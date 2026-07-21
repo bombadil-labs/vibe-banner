@@ -22,6 +22,12 @@ ok(/\[e\]/.test(rd5) && !/\[f\]/.test(rd5), "readout caps at five rows");
 ok(/\[user\]/.test(buildSVG(base)), "legacy seems/feel/trying still map to the default labels");
 let coh = (x) => buildSVG(Object.assign({}, base, x)).replace(/v(?:scn|wr)\d+/g, "vid");
 ok(coh({ coherence: 0.2 }) === coh({ consonance: 0.2 }), "coherence is consonance renamed; both accepted");
+// REGRESSION (v1.4.0): details.weather silently did nothing from v0.44.0 (the flags→weather
+// rename) through v1.3.0 — DETAIL_KEYS never learned the new name, so it was dropped before
+// reaching weatherOf(). Nail it down at the split-payload boundary so it can't drift back.
+let noWeather = buildSVG({ avatar: { set: "sepia", item: "delighted" }, details: { readout: [["user", "x"]] } }).replace(/vwr\d+/g, "vid");
+let withWeather = buildSVG({ avatar: { set: "sepia", item: "delighted" }, details: { readout: [["user", "x"]], weather: "bloom" } }).replace(/vwr\d+/g, "vid");
+ok(noWeather !== withWeather, "details.weather actually changes the render (regression: v0.44.0-v1.3.0 silently dropped it)");
 
 console.log("every face pack speaks the 32-mood vocabulary");
 ok(/kip-sheet\.png/.test(buildSVG(Object.assign({}, base, { face: { set: "kip", item: "working" } }))), "kip resolves a mood the old 8-cell sheet never had");

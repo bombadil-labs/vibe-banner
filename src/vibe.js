@@ -899,8 +899,13 @@
   // `palette` is deliberately NOT a detail. It colours the avatar itself — Sepia's
   // chromatophores, the motes' own light — so it belongs beside `avatar`, not inside the
   // optional readout. A square tile with a palette is a complete, coloured thing.
+  // BUG FIX (v1.4.0): "weather" has named this field in every doc and skill since the
+  // v0.44.0 flags→weather rename, but was never added here — details.weather has been
+  // silently dropped ever since (weatherOf() only ever saw it via the legacy top-level
+  // `weather` key, or the pre-rename `details.flag`). Every skill written to the
+  // documented shape has had a room that never dimmed.
   var DETAIL_KEYS = ["readout", "seems", "feel", "trying", "noticing", "field",
-    "focus", "engagement", "stance", "coherence", "consonance", "flag", "languages",
+    "focus", "engagement", "stance", "coherence", "consonance", "flag", "weather", "languages",
     "confidence", "honesty"];
   function normalize(p) {
     p = p || {};
