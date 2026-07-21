@@ -276,6 +276,9 @@ const QBROW = [];
 const WBROWS = [];
 [[10,8],[11,7],[12,7],[13,6],[14,5]].forEach(q => { WBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[21,8],[20,7],[19,7],[18,6],[17,5]].forEach(q => { WBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
+// THE TONGUE. The corner-of-the-mouth tongue is the universal sign of a creature
+// concentrating on a fiddly job, and it costs four pixels.
+const TONGUE = [[20,21,"F"],[21,21,"F"],[20,22,"F"],[21,22,"F"]];
 const VBROWS = [];
 [[10,5],[11,6],[12,6],[13,7],[14,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[21,5],[20,6],[19,6],[18,7],[17,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
@@ -317,7 +320,7 @@ const MOODS = [
   ["weary",      "dot/narrow",       "flat",  "#8b93a0"],
   ["wink",       "dot",              "smirk", "#e0a877"],
   ["love",       "heart",            "open",  "#e87a90", X.boop],
-  ["working",    "side/narrow",      "flat",  "#6f8fa8"]   // v0.68.0: her own cell, so she stops borrowing focused
+  ["working",    "dot/squint",       "flat",  "#6f8fa8", TONGUE]   // v0.68.0: her own cell, so she stops borrowing focused
 ];
 if (MOODS.length !== 32) throw new Error("expected 32 moods, got " + MOODS.length);   // 33 until sleepy was cut in v0.88.0
 BASE.forEach((r, i) => { if (r.length !== 32) throw new Error("BASE row " + i + " length " + r.length); });
