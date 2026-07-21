@@ -299,3 +299,13 @@ values and Claude never sees the output.
 The full decision record — the three design constraints, why each mapping is what it is,
 the explicitly-rejected features, and the bench of states that didn't make it in — lives
 in [DESIGN.md](DESIGN.md). Read it before extending the grammar.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Fork it, ship it, reskin it; just keep the notice.
+
+The three face generators (`scripts/gen-sepia.js`, `scripts/gen-kip.js`,
+`scripts/gen-drollery.js`) each dedicate their own art to the **public domain under CC0**,
+as stated in their file headers. That's deliberate and it doesn't conflict with the MIT
+grant: CC0 is strictly more permissive, so the faces themselves come with no conditions at
+all. Sepia, Kip, and the drollery are yours to take anywhere, with or without this library.

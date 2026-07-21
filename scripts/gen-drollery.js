@@ -4,8 +4,7 @@
  * A "drollery" is the real art-historical term for the small hybrid creatures medieval
  * scribes drew in the MARGINS of manuscripts: irreverent, commenting on a text they are not
  * part of, growing out of the vine-work at the edge of the page. Which is exactly what this
- * project is — a mood annotation in the margin of a conversation. The repo is still called
- * vibe-annotation-renderer.
+ * project is — a mood annotation in the margin of a conversation.
  *
  * TWO THINGS MAKE IT VISUALLY NOVEL, and both are structural rather than decorative:
  *
