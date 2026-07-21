@@ -1808,6 +1808,10 @@
           setTimeout(function () { say(live.plate > 2
             ? "*heaps yet more onto the plate — " + flav
             : "*sets down a steaming plate of claudemeal — " + flav); }, 900);
+        } else if (live && live.kind === "park") {              // in the park it's a WHOLE PICNIC — blanket, basket, and eventually ants
+          live.feeds.push({ t0: null });
+          feedFx = { t0: null, delay: 1.2 };                    // the thrill lands once the basket has popped in
+          setTimeout(function () { say("*rolls a blanket out across the grass and sets down a basket — " + flav); }, 1500);
         } else {
           feedFx = { t0: null, delay: 0.3 };
           say("*sets down a fresh tin of claudemeal — " + flav);
@@ -2141,6 +2145,79 @@
                 ctx.stroke();
               }
             }
+            // THE PICNIC (v1.2.0): a blanket unrolls from a fixed spot in the grass, a basket
+            // pops in on top of it, and after a rest the whole spread gets hauled off by ants.
+            // One state machine per feeding, driven entirely by each entry's own age — the
+            // same "push {t0:null}, filter by age" shape live.feeds already uses everywhere else.
+            var PN_UNROLL = 0.9, PN_POP0 = 0.9, PN_POP1 = 1.3, PN_CARRY0 = 5.0, PN_CARRY1 = 6.4, PN_LIFE = 6.6;
+            live.feeds = live.feeds.filter(function (fd, fdi) {
+              if (fd.t0 == null) fd.t0 = t;
+              var page = t - fd.t0;
+              if (page >= PN_LIFE) return false;
+              var pnShift = (fdi % 3) * 6 * up;                  // feeding again while one's still out lays a second spread, offset so they don't fully overlap
+              var bRX = pt.x + 34 * up - pnShift, bTY = pt.y + 30 * up, bW = 14 * up, bH = 7 * up;
+              var unrollK = ease(Math.min(1, page / PN_UNROLL));
+              var curW = bW * unrollK;
+              var carryK = page < PN_CARRY0 ? 0 : ease(Math.min(1, (page - PN_CARRY0) / (PN_CARRY1 - PN_CARRY0)));
+              ctx.save();
+              ctx.translate(carryK * (ps + 20 * up), 0);          // ants haul the whole spread off the right edge together
+              if (curW > 0.5) {                                  // the blanket: cream base, red stripes, growing leftward from its fixed right edge
+                ctx.fillStyle = "#f4ead2";
+                ctx.fillRect(bRX - curW, bTY, curW, bH);
+                ctx.fillStyle = "#c0483a";
+                for (var pnSi = 0; pnSi < 3; pnSi++) ctx.fillRect(bRX - curW, bTY + (0.6 + pnSi * 2.1) * up, curW, 0.9 * up);
+                ctx.strokeStyle = "#8a6a4a"; ctx.lineWidth = 1; ctx.strokeRect(bRX - curW, bTY, curW, bH);
+              }
+              if (unrollK > 0 && unrollK < 1) {                  // the roll, riding the unrolling edge, thinning as it unwinds
+                var rollX = bRX - curW, rollR = 0.65 * up * (1 - unrollK * 0.3);
+                ctx.fillStyle = "#e0d0a8"; ctx.strokeStyle = "#8a6a4a"; ctx.lineWidth = 0.8;
+                ctx.beginPath(); ctx.ellipse(rollX, bTY + bH / 2, rollR, bH / 2, 0, 0, 6.2832); ctx.fill(); ctx.stroke();
+              }
+              if (page >= PN_POP0) {                             // the basket: pops in with a little overshoot once the blanket's fully down
+                var popK = Math.min(1, (page - PN_POP0) / (PN_POP1 - PN_POP0));
+                var popS = popK <= 0 ? 0.001 : popK < 0.6 ? ease(popK / 0.6) * 1.18 : 1.18 - ease((popK - 0.6) / 0.4) * 0.18;
+                var bkx = bRX - bW / 2, bky = bTY + bH * 0.35;
+                ctx.save(); ctx.translate(bkx, bky); ctx.scale(popS, popS); ctx.translate(-bkx, -bky);
+                ctx.fillStyle = "#a87642";                       // the body — a trapezoid, wider at the rim
+                ctx.beginPath();
+                ctx.moveTo(bkx - 2.6 * up, bky + 3 * up); ctx.lineTo(bkx + 2.6 * up, bky + 3 * up);
+                ctx.lineTo(bkx + 1.9 * up, bky - 1.6 * up); ctx.lineTo(bkx - 1.9 * up, bky - 1.6 * up);
+                ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = "#6b4c28"; ctx.lineWidth = 0.9;
+                [1, 0.2].forEach(function (pnWf) {
+                  ctx.beginPath(); ctx.moveTo(bkx - (2.4 - pnWf * 0.3) * up, bky + (0.6 + pnWf) * up);
+                  ctx.lineTo(bkx + (2.4 - pnWf * 0.3) * up, bky + (0.6 + pnWf) * up); ctx.stroke();
+                });
+                ctx.beginPath(); ctx.arc(bkx, bky - 1.6 * up, 1.6 * up, Math.PI, 0); ctx.stroke();   // the handle
+                ctx.fillStyle = "#c0483a";                       // a corner of the blanket's own cloth, peeking out the top
+                ctx.beginPath(); ctx.moveTo(bkx - 0.8 * up, bky - 1.6 * up);
+                ctx.lineTo(bkx + 0.6 * up, bky - 1.6 * up); ctx.lineTo(bkx - 0.1 * up, bky - 2.8 * up); ctx.closePath(); ctx.fill();
+                if (popK < 1) {                                  // a brief sparkle while it materialises
+                  ctx.strokeStyle = rgba("#fff2c8", (1 - popK) * 0.85); ctx.lineWidth = 0.8;
+                  for (var pnRi = 0; pnRi < 4; pnRi++) {
+                    var pnRa = pnRi / 4 * 6.2832 + t * 3;
+                    ctx.beginPath(); ctx.moveTo(bkx + Math.cos(pnRa) * 2.2 * up, bky + Math.sin(pnRa) * 2.2 * up);
+                    ctx.lineTo(bkx + Math.cos(pnRa) * 3.4 * up, bky + Math.sin(pnRa) * 3.4 * up); ctx.stroke();
+                  }
+                }
+                ctx.restore();
+              }
+              if (page >= PN_CARRY0 - 0.3) {                     // the ants: arrive just ahead of the carry, and lead it off
+                var antK = Math.min(1, Math.max(0, (page - (PN_CARRY0 - 0.3)) / 0.3));
+                ctx.globalAlpha = antK; ctx.fillStyle = "#241a12"; ctx.strokeStyle = "#241a12"; ctx.lineWidth = 0.5;
+                for (var pnAi = 0; pnAi < 5; pnAi++) {
+                  var pnPh = pnAi * 1.3;
+                  var pnAx = bRX - bW * (0.15 + pnAi * 0.18) + Math.sin(t * 9 + pnPh) * 0.3 * up;
+                  var pnAy = bTY + bH + (0.5 + Math.abs(Math.sin(t * 9 + pnPh)) * 0.6) * up;
+                  ctx.beginPath(); ctx.ellipse(pnAx, pnAy, 0.5 * up, 0.3 * up, 0, 0, 6.2832); ctx.fill();
+                  ctx.beginPath(); ctx.moveTo(pnAx - 0.4 * up, pnAy + 0.3 * up); ctx.lineTo(pnAx - 0.7 * up, pnAy + 0.7 * up); ctx.stroke();
+                  ctx.beginPath(); ctx.moveTo(pnAx + 0.4 * up, pnAy + 0.3 * up); ctx.lineTo(pnAx + 0.7 * up, pnAy + 0.7 * up); ctx.stroke();
+                }
+                ctx.globalAlpha = 1;
+              }
+              ctx.restore();
+              return true;
+            });
             ctx.globalAlpha = 1; ctx.restore();
           } else {
           for (var ui = 0; ui < 7; ui++) {                     // bubbles: seeded columns, rising, wrapping
