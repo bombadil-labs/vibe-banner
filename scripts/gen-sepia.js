@@ -92,6 +92,7 @@ const up2 = list => list.flatMap(q => [
 // socket, lidded. Left box at x=8; the right eye mirrors at x=19.
 const PUPR = {
   w: [[0,1],[1,2],[2,1]], dot: [[1,1]], down: [[1,2]], uptiny: [[1,0]],
+  sideDown: [[0,2]],   // averted AND down — the beat after a mistake lands, not a startled stare
   closed: [[0,2],[1,2],[2,2]], happy: [[0,2],[1,1],[2,2]],
   wide: [[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]],
   cross: [[0,0],[2,0],[1,1],[0,2],[2,2]],
@@ -302,7 +303,7 @@ const MOODS = [
   ["mirth",      "happy/half",       "smile", "#e0b060"],
   ["laugh",      "arch",             "open",  "#ffd24a"],   // guffaw: the blink frame carries the wide-open mouth; the renderer cycles them
   ["groan",      "dot/low",          "frown", "#9a9488"],   // deadpan base; frame 1 squeezes the eyes to slits as the body contracts live
-  ["oops",       "wide",             "open",  "#d98a6a", X.sweat],
+  ["oops",       "sideDown/half",    "open",  "#d98a6a", X.sweat],   // wide/open read as chibi adoration, not "oh no" — averted and down instead
   ["frustrated", "glower",           "flatdrop", "#a05050", VBROWS],
   ["angry",      "fury",             "flat",  "#c04040"],   // fury lids carry it alone — no brows (the dark lids ARE the brows), seethe mouth in the fine pass
   ["dramatic",   "wide",             "smile", "#b0413e"],   // the Greek mask overlay is drawn in the frame pass below
@@ -317,7 +318,7 @@ const MOODS = [
   ["weary",      "dot/narrow",       "flat",  "#8b93a0"],
   ["wink",       "dot",              "flat" , "#e0a877"],
   ["love",       "heart",            "open",  "#e87a90", X.boop],
-  ["working",    "dot/squint",       "flat",  "#6f8fa8"]   // v0.68.0: her own cell, so she stops borrowing focused
+  ["working",    "down/squint",      "flat",  "#6f8fa8"]   // v0.68.0: her own cell, so she stops borrowing focused — down: she's looking at the laptop
 ];
 if (MOODS.length !== 32) throw new Error("expected 32 moods, got " + MOODS.length);   // 33 until sleepy was cut in v0.88.0
 BASE.forEach((r, i) => { if (r.length !== 32) throw new Error("BASE row " + i + " length " + r.length); });
@@ -378,7 +379,7 @@ MOODS.forEach((mood, i) => {
   // renderer OVER the wandering colour
   for (let frame = 0; frame < 2; frame++) {
     const cx = colX, cy = rowY + (1 + frame) * FRAME_ROWS * CELL;
-    let blink = frame === 1 && mood[0] !== "laugh" && mood[0] !== "groan";   // laugh's frame 1 is the guffaw beat; groan's is the SQUEEZE — neither is a blink
+    let blink = frame === 1 && mood[0] !== "laugh" && mood[0] !== "groan" && mood[0] !== "mirth";   // laugh's frame 1 is the guffaw beat; groan's is the SQUEEZE; mirth's is a smile that won't quite hold still — none of them are a blink
     if (mood[0] === "wink") blink = [false, frame === 1];                    // the wink IS the blink, and only on one side
     const eyeSpec = mood[1], pair = Array.isArray(eyeSpec) ? eyeSpec : [eyeSpec, eyeSpec];
     const feat = [];
@@ -391,7 +392,9 @@ MOODS.forEach((mood, i) => {
       // A FACE DOES THIS IN ORDER: deadpan, then the wink pulls the corner up WITH it. The
       // smirk arriving on the beat rather than sitting there all along is what makes the two
       // read as one gesture instead of an expression that happens to blink.
-      const mn = (mood[0] === "wink" && frame === 1) ? "smirk" : mood[2];
+      const mn = (mood[0] === "wink" && frame === 1) ? "smirk"
+        : (mood[0] === "mirth" && frame === 1) ? "wavy"   // the smile keeps almost slipping into a wobble, then settling back
+        : mood[2];
       feat.push(...MOUTH[mn].map(q => [q[0], q[1], "p"]));
     }
     feat.push(...(mood[4] || []));
