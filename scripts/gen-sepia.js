@@ -63,18 +63,18 @@ for (let y = 0; y < 32; y++) {
 // crenelate); the renderer's 32-char fins code-string derives from this table
 // (r=ripple f=flared d=drooped t=flat/tucked c=calm) — keep them in sync.
 const FRILL_OF = {
-  neutral:"ripple", content:"ripple", delighted:"flared", focused:"flat",
+  neutral:"ripple", content:"ripple", delighted:"flared", focused:"flat",   // working is set below, rippling
   sheepish:"flat", booped:"flared", thinking:"ripple", spark:"flared", excited:"flared",
   surprised:"flared", tender:"ripple", melancholy:"drooped", anxious:"flat", mirth:"ripple",
   laugh:"flared", groan:"drooped", oops:"flat", frustrated:"flat", angry:"flat",
   dramatic:"flared", at_peace:"calm", solemn:"drooped", rhyme:"ripple", awe:"flat",
   vertigo:"ripple", resolute:"calm", puzzled:"ripple", asking:"ripple", weary:"drooped",
-  wink:"ripple", love:"flared"
+  wink:"ripple", love:"flared", working:"ripple"
 };
 // SUB-PIXEL MOUTHS: certain moods trade the chunky block mouth for fine-ink lips drawn
 // in the definition register (like the lashes) — a pressed-thin line reads restraint the
 // 4px grid can't. Table keyed by mood name; add sparingly, the block mouth is the norm.
-const FINE_MOUTH = { groan: "pressed", resolute: "tight", angry: "seethe", puzzled: "crooked", focused: "thoughtful" };   // tight: the set jaw; seethe: fury held behind the lips; crooked: a thin line with one end dropped — working on it, not enjoying it
+const FINE_MOUTH = { groan: "pressed", resolute: "tight", angry: "seethe", puzzled: "crooked", focused: "thoughtful", working: "thin" };   // tight: the set jaw; seethe: fury held behind the lips; crooked: a thin line with one end dropped — working on it, not enjoying it
 // All feature tables are authored in the ancestral 16-grid and auto-doubled to the
 // 32-grid (pixel-identical rendering) — EXCEPT where the finer grid earns real curves:
 // hand-authored 32-grid overrides below (smile/frown/wavy arcs, curved lids, a true
@@ -276,9 +276,6 @@ const QBROW = [];
 const WBROWS = [];
 [[10,8],[11,7],[12,7],[13,6],[14,5]].forEach(q => { WBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[21,8],[20,7],[19,7],[18,6],[17,5]].forEach(q => { WBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
-// THE TONGUE. The corner-of-the-mouth tongue is the universal sign of a creature
-// concentrating on a fiddly job, and it costs four pixels.
-const TONGUE = [[20,21,"F"],[21,21,"F"],[20,22,"F"],[21,22,"F"]];
 const VBROWS = [];
 [[10,5],[11,6],[12,6],[13,7],[14,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[21,5],[20,6],[19,6],[18,7],[17,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
@@ -320,7 +317,7 @@ const MOODS = [
   ["weary",      "dot/narrow",       "flat",  "#8b93a0"],
   ["wink",       "dot",              "flat" , "#e0a877"],
   ["love",       "heart",            "open",  "#e87a90", X.boop],
-  ["working",    "dot/squint",       "flat",  "#6f8fa8", TONGUE]   // v0.68.0: her own cell, so she stops borrowing focused
+  ["working",    "dot/squint",       "flat",  "#6f8fa8"]   // v0.68.0: her own cell, so she stops borrowing focused
 ];
 if (MOODS.length !== 32) throw new Error("expected 32 moods, got " + MOODS.length);   // 33 until sleepy was cut in v0.88.0
 BASE.forEach((r, i) => { if (r.length !== 32) throw new Error("BASE row " + i + " length " + r.length); });
@@ -443,6 +440,10 @@ MOODS.forEach((mood, i) => {
       frect(27, 39, 4, 2, COLORS.p);
       frect(30, 40, 4, 2, COLORS.p);
       frect(33, 41, 3, 2, COLORS.p);
+    }
+    if (FINE_MOUTH[mood[0]] === "thin") {        // a fine line, held: absorbed rather than grim
+      frect(29, 40, 8, 1, COLORS.p);
+      frect(30, 41, 6, 1, "#c8b6c2");
     }
     if (FINE_MOUTH[mood[0]] === "thoughtful") {  // a short considered line, held slightly to one side
       frect(30, 40, 7, 2, COLORS.p);
