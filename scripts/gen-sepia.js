@@ -17,7 +17,8 @@ const COLORS = {
   o: "#4a3a44", b: "#e8dcd0", n: "#d8bcc8", W: "#f8f4ec", p: "#2a2230",
   s: "#ffd76a", F: "#e88aa0", d: "#9ec7e8", R: "#c04a48", G: "#cfc2d6", m: "#8f8698",
   A: "#a5761f",                                                // dark amber — RULE: no yellow pupils; anything in the eye must read against the whites
-  e: "#6f9a5f", E: "#476b3d"                                   // theatre-mask green, lit and shaded
+  e: "#6f9a5f", E: "#476b3d",                                  // theatre-mask green, lit and shaded
+  g: "#c9973a"                                                 // the masks' gold trim — same value the drawn pair wears
 };
 // The body must say "cuttlefish" without a caption: a mantle taller than it is wide,
 // fin frills running the full flanks, and a skirt of arms where a chin would be.
@@ -73,7 +74,7 @@ const FRILL_OF = {
 // SUB-PIXEL MOUTHS: certain moods trade the chunky block mouth for fine-ink lips drawn
 // in the definition register (like the lashes) — a pressed-thin line reads restraint the
 // 4px grid can't. Table keyed by mood name; add sparingly, the block mouth is the norm.
-const FINE_MOUTH = { groan: "pressed", resolute: "tight", angry: "seethe", puzzled: "crooked" };   // tight: the set jaw; seethe: fury held behind the lips; crooked: a thin line with one end dropped — working on it, not enjoying it
+const FINE_MOUTH = { groan: "pressed", resolute: "tight", angry: "seethe", puzzled: "crooked", focused: "thoughtful" };   // tight: the set jaw; seethe: fury held behind the lips; crooked: a thin line with one end dropped — working on it, not enjoying it
 // All feature tables are authored in the ancestral 16-grid and auto-doubled to the
 // 32-grid (pixel-identical rendering) — EXCEPT where the finer grid earns real curves:
 // hand-authored 32-grid overrides below (smile/frown/wavy arcs, curved lids, a true
@@ -104,10 +105,11 @@ const POFF = [0, 2, 3];                                        // 3 pupil statio
 // a reader actually sees at banner size — pupils are for the close-up.
 const LIDS = {
   open:   [10, 15],                                            // the full socket: startled, bright, alert
-  half:   [12, 15],                                            // upper lid lowered — relaxed, warm, wry
-  narrow: [12, 14],                                            // lidded above AND below — concentration
-  squint: [13, 14],                                            // tighter still — scrutiny, effort
-  low:    [13, 15]                                             // heavy upper lid, gaze sitting low — worn, grave
+  half:   [11, 15],                                            // lid eased down — relaxed, warm, wry
+  mid:    [11, 14],                                            // engaged and pointed — determination
+  narrow: [12, 14],                                            // a level, narrowed eye — attention
+  squint: [12, 13],                                            // tighter — concentration
+  low:    [13, 15]                                             // aperture sitting low — worn, grave
 };
 function drawEyes(out, lp, rp, blink) {
   [[8, lp, false], [19, rp, true]].forEach(spec => {
@@ -134,8 +136,31 @@ function drawEyes(out, lp, rp, blink) {
       for (let x = x0 + 1; x < x1; x++) out.push([x, 12, "p"]);
       return;
     }
-    for (let x = x0 + 1; x < x1; x++) { out.push([x, y0, "p"], [x, y1, "p"]); }
-    for (let y = y0 + 1; y < y1; y++) { out.push([x0, y, "p"], [x1, y, "p"]); }
+    // THE SOCKET FOLLOWS THE APERTURE (v0.92.0). The lid used to be painted ON — a full-size
+    // ring with black bars laid across the shut parts — which is why solemn came out in raccoon
+    // shadow and melancholy in Groucho brows: the dark was an overlay, not a shape. A narrowed
+    // eye is a SMALLER EYE. The ring is drawn around whatever the aperture is, the whites fill
+    // it, and nothing is painted over anything.
+    const ring = (t, b) => {
+      for (let x = x0 + 1; x < x1; x++) { out.push([x, t - 1, "p"], [x, b + 1, "p"]); }
+      for (let y = t; y <= b; y++) { out.push([x0, y, "p"], [x1, y, "p"]); }
+    };
+    if (preset === "arch") {                                   // squeezed shut and smiling: the anime ^ ^
+      const cxm = bx + 2;
+      for (let k = 0; k <= 3; k++) {
+        out.push([cxm - k, 11 + k, "p"], [cxm + k, 11 + k, "p"]);
+        out.push([cxm - k, 12 + k, "p"], [cxm + k, 12 + k, "p"]);
+      }
+      return;
+    }
+    if (preset === "steely") {                                 // resolute: the hardest aperture — flat lid, pupil fixed and low
+      ring(12, 13);
+      for (let y = 12; y <= 13; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
+      const soff = mir ? 3 - POFF[1] : POFF[1];
+      out.push([bx + soff, 12, "p"], [bx + soff + 1, 12, "p"], [bx + soff, 13, "p"], [bx + soff + 1, 13, "p"]);
+      return;
+    }
+    if (preset === "glower" || preset === "fury") ring(10, 15);
     if (preset === "glower") {                                 // frustrated: the lid presses low and the pupils sink, burning downward
       for (let x = bx; x <= bx + 4; x++) out.push([x, 11, "p"]);
       for (let y = 12; y <= 15; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
@@ -154,13 +179,6 @@ function drawEyes(out, lp, rp, blink) {
       out.push([bx + foff, 14, "p"], [bx + foff + 1, 14, "p"], [bx + foff, 15, "p"], [bx + foff + 1, 15, "p"]);
       return;
     }
-    if (preset === "steely") {                                 // resolute: the lid lowers hard — narrowed whites, a fixed dot beneath
-      for (let x = bx; x <= bx + 4; x++) out.push([x, 11, "p"]);
-      for (let y = 12; y <= 15; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
-      const soff = mir ? 3 - POFF[1] : POFF[1];
-      out.push([bx + soff, 13, "p"], [bx + soff + 1, 13, "p"], [bx + soff, 14, "p"], [bx + soff + 1, 14, "p"]);
-      return;
-    }
     // THE LID IS THE EXPRESSION (v0.89.0). Every mood but a handful drew the same fully-open
     // socket and moved a two-pixel pupil inside it — and at banner size a two-pixel pupil is
     // invisible, so thirty-odd moods all read as the same two big circles. What actually reads
@@ -169,8 +187,7 @@ function drawEyes(out, lp, rp, blink) {
     // eye legible at 8px instead of merely smaller.
     const parts = String(preset).split("/");
     const pu = parts[0], lid = LIDS[parts[1]] || LIDS.open;
-    for (let y = 10; y < lid[0]; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "p"]);
-    for (let y = lid[1] + 1; y <= 15; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "p"]);
+    ring(lid[0], lid[1]);
     for (let y = lid[0]; y <= lid[1]; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
     if (pu === "heart" || pu === "star") {
       (pu === "heart" ? HEARTR : STARR).forEach(q =>
@@ -256,35 +273,35 @@ const VBROWS = [];
 // chromatophore hue, extras?]. Eyes and mouth are components that draw themselves;
 // fins (posture code) and spots (live layer) are the renderer's components.
 const MOODS = [
-  ["neutral",    "w",                "sm",    "#b89ab0"],
+  ["neutral",    "dot",              "sm",    "#b89ab0"],
   ["content",    "dot/half",         "smile", "#d9a877"],
   ["delighted",  "happy",            "smile", "#e8b04a"],
-  ["focused",    "dot/narrow",       "flat",  "#7d8fb8"],
+  ["focused",    "dot/squint",       "flat",  "#7d8fb8"],
     ["sheepish",   "side/half",        "wavy",  "#d99a8a", X.sweat],
   ["booped",     "wide",             "open",  "#e88aa0", X.boop],
-  ["thinking",   ["dot/half","uptiny/half"], "sm",    "#8f9ac0"],
+  ["thinking",   "dot/mid",          "sm",    "#8f9ac0"],
   ["spark",      "star",             "smile", "#ffd76a"],   // the 💡 is a renderer-drawn prop now
   ["excited",    "star",             "open",  "#ffb84a", X.sparkles],
   ["surprised",  "wide",             "open",  "#b79ad0"],
   ["tender",     "heart",            "smile", "#e8a0b0"],
   ["melancholy", "down/low",         "flat",  "#8f96a8", X.mote],
-  ["anxious",    "dot",              "wavy",  "#7a8296", X.sweat],
+  ["anxious",    "wide",             "wavy",  "#7a8296", X.sweat],
   ["mirth",      "happy/half",       "smile", "#e0b060"],
-  ["laugh",      "cross",            "open",  "#ffd24a"],   // guffaw: the blink frame carries the wide-open mouth; the renderer cycles them
+  ["laugh",      "arch",             "open",  "#ffd24a"],   // guffaw: the blink frame carries the wide-open mouth; the renderer cycles them
   ["groan",      "dot/low",          "frown", "#9a9488"],   // deadpan base; frame 1 squeezes the eyes to slits as the body contracts live
   ["oops",       "wide",             "open",  "#d98a6a", X.sweat],
   ["frustrated", "glower",           "flatdrop", "#a05050", VBROWS],
   ["angry",      "fury",             "flat",  "#c04040"],   // fury lids carry it alone — no brows (the dark lids ARE the brows), seethe mouth in the fine pass
   ["dramatic",   "wide",             "smile", "#b0413e"],   // the Greek mask overlay is drawn in the frame pass below
   ["at_peace",   "closed",           "smile", "#8fae8f", X.flower],
-  ["solemn",     "dot/squint",       "flat",  "#8a8f9a"],
-  ["rhyme",      "w",                "sm",    "#9a8fae"],   // the baked ghost retired in v0.40.0 — rhyme's echo is a live replica now
+  ["solemn",     "closed",           "flat",  "#8a8f9a"],
+  ["rhyme",      "dot",              "sm",    "#9a8fae"],   // the baked ghost retired in v0.40.0 — rhyme's echo is a live replica now
   ["awe",        "uptiny",           "open",  "#5a6a8a"],
   ["vertigo",    "spiral",           "wavy",  "#b79ad0"],
   ["resolute",   "steely",           "sm",    "#e0994e"],   // steely narrowed eyes + tight fine-mouth; headband drawn in the fine pass
   ["puzzled",    ["dot/narrow","uptiny/open"], "tiny",  "#c0b08a", QBROW],
   ["asking",     "uptiny/half",      "sm",    "#9ac0b0"],
-  ["weary",      "down/half",        "flat",  "#8b93a0"],
+  ["weary",      "dot/narrow",       "flat",  "#8b93a0"],
   ["wink",       ["dot","closed"],   "smile", "#e0a877"],
   ["love",       "heart",            "open",  "#e87a90", X.boop],
   ["working",    "side/narrow",      "flat",  "#6f8fa8"]   // v0.68.0: her own cell, so she stops borrowing focused
@@ -369,11 +386,13 @@ MOODS.forEach((mood, i) => {
       const MSPAN = { 6: [12, 19], 7: [9, 22], 8: [7, 24], 9: [6, 25],
         19: [6, 25], 20: [7, 24], 21: [8, 23], 22: [10, 21], 23: [12, 19], 24: [14, 17] };
       const spanAt = y => MSPAN[y] || [5, 26];
+      const GEM = [[15, 8], [16, 8], [15, 9], [16, 9]];        // the brow gem the drawn masks carry
       for (let y = 6; y <= 24; y++) {
         const sp = spanAt(y);
         for (let x = sp[0]; x <= sp[1]; x++)
-          feat.push([x, y, (x === sp[0] || x === sp[1] || y === 6 || y === 24) ? "o" : "W"]);
+          feat.push([x, y, (x === sp[0] || x === sp[1] || y === 6 || y === 24) ? "g" : "W"]);   // gold rim, not grey
       }
+      GEM.forEach(q => feat.push([q[0], q[1], "g"]));
       // (v0.40.2: gentler — the gaping hook-cornered grin read as a reddit rage-face.
       // The smile is a shallow crescent now, the creases retire, the nose shrinks.
       // v0.40.4: the brow-creases retire too, and the grin LIFTS two rows — some tint
@@ -401,6 +420,10 @@ MOODS.forEach((mood, i) => {
       frect(27, 39, 4, 2, COLORS.p);
       frect(30, 40, 4, 2, COLORS.p);
       frect(33, 41, 3, 2, COLORS.p);
+    }
+    if (FINE_MOUTH[mood[0]] === "thoughtful") {  // a short considered line, held slightly to one side
+      frect(30, 40, 7, 2, COLORS.p);
+      frect(31, 42, 5, 1, "#c8b6c2");
     }
     if (FINE_MOUTH[mood[0]] === "crooked") {    // a thin line with one end dropped: consternation, not distress
       frect(28, 40, 6, 2, COLORS.p);
