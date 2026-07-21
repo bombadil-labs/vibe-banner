@@ -1639,7 +1639,11 @@
     var FINP = { r: [4, 1.8, 1.1], f: [5.5, 2.9, 3.0], d: [3, 1.1, 0.45], c: [3.5, 1.0, 0.4], t: [1.6, 0.5, 0.6] };   // [baseW, amp, rate] in 64-cell units
     if (kaoEl && fm && fm.kind === "sprite" && fm.anim && fm.anim.fins) {
       finC = document.createElement("canvas");
-      finC.style.cssText = "position:absolute;left:0;top:0;width:100%;height:118%;pointer-events:none";   // taller than the face box: the longer arms trail into the window below
+      // HEADROOM (v1.7.0): extends 25% above the face box too, not just 18% below — crown
+      // props (awe's text, puzzled's marks) need real sky to clear her head in, not just the
+      // last few pixels above y=0. See the `translate` in frame() for how prop-space keeps
+      // its old meaning: existing props at their old coordinates land exactly where they did.
+      finC.style.cssText = "position:absolute;left:0;top:-25%;width:100%;height:143%;pointer-events:none";
       kaoEl.style.position = "relative";
       kaoEl.appendChild(finC);
       if (echoKao) {                                         // the ghost needs its own fin/arm canvas or it trails a bare body
@@ -1725,7 +1729,7 @@
     var topC = null;
     if (kaoEl && fm && fm.kind === "sprite" && fm.anim && fm.anim.arms) {
       topC = document.createElement("canvas");
-      topC.style.cssText = "position:absolute;left:0;top:0;width:100%;height:118%;pointer-events:none";
+      topC.style.cssText = "position:absolute;left:0;top:-25%;width:100%;height:143%;pointer-events:none";   // same headroom as finC, see note there
       kaoEl.style.position = "relative";
       kaoEl.appendChild(topC);
     }
@@ -2602,18 +2606,25 @@
         if (finC) {
           var fcw = kaoEl.clientWidth, fch = kaoEl.clientHeight;
           if (fcw > 4) {
-            if (finC.width !== fcw) { finC.width = fcw; finC.height = Math.round(fch * 1.18); }   // matches the 118% CSS height — cell y-space runs 0..75
+            if (finC.width !== fcw) { finC.width = fcw; finC.height = Math.round(fch * 1.43); }   // matches the 143% CSS height (25% above, 118% below)
             var fx2 = finC.getContext("2d");
-            fx2.clearRect(0, 0, fcw, fch);
+            fx2.clearRect(0, 0, fcw, fch * 1.43);
             var fx3 = null;                                    // the topmost layer, above the chromatophore wash — worn items only
             if (topC) {
-              if (topC.width !== fcw) { topC.width = fcw; topC.height = Math.round(fch * 1.18); }
+              if (topC.width !== fcw) { topC.width = fcw; topC.height = Math.round(fch * 1.43); }
               fx3 = topC.getContext("2d");
-              fx3.clearRect(0, 0, fcw, fch);
+              fx3.clearRect(0, 0, fcw, fch * 1.43);
             }
             var fcode = fm.anim.fins.charAt(fm.index) || "r";
             var fp2 = FINP[fcode] || FINP.r;
             var fsc = fcw / 64;
+            // HEADROOM OFFSET: the canvas now starts 25% (16 prop-space units) above the face
+            // box, but every existing coordinate in this function was written assuming y=0 IS
+            // the box's top edge. Translating by that offset keeps all of them meaning exactly
+            // what they always meant — only NEW code that deliberately uses negative y reaches
+            // into the new sky above her.
+            fx2.translate(0, 16 * fsc);
+            if (fx3) fx3.translate(0, 16 * fsc);
             // ENERGY IS A MOOD, NOT JUST A POSTURE (v1.3.0): flared already runs hotter than
             // ripple, but excited itself wants to run hotter still — flailing, not just flared.
             // Mirth gets a much smaller lift: joyful, the maintainer's word was explicit that
@@ -2696,26 +2707,11 @@
                             4: { x: 47, y: 44, cx: 46, cy: 49 } }
               };
               var POSE = POSES[MOODS[fm.index]] || null;
-              // WORKING REACHES FOR IT (v0.99.0). The glass stands on its own now, down and to
-              // her left, and the leftmost arm DARTS OUT to tip it when the sand runs out — the
-              // touch is what causes the turn. Holding it made her a creature posing with a
-              // prop; reaching for it makes the glass a thing in the world she has to keep
-              // dealing with. The target lerps out of where the arm naturally hangs, so the dart
-              // grows from the idle instead of cutting to a pose.
-              var wkReach = 0, wkHU = 0;
+              // WORKING POKES AT IT (v1.7.0: the hourglass is gone — the maintainer's call, one
+              // prop was plenty). Just the laptop now: the rightmost arm PECKS at the keyboard,
+              // a quick dip and back, on its own short clock. The other arms sway normally.
               if (MOODS[fm.index] === "working") {
-                var WGP = 9.0;                                          // slower: the wait is the point
-                wkHU = (((t % WGP) + WGP) % WGP) / WGP;
-                wkReach = wkHU < 0.72 ? 0
-                  : wkHU < 0.80 ? ease((wkHU - 0.72) / 0.08)
-                  : wkHU < 0.88 ? 1 : 1 - ease((wkHU - 0.88) / 0.12);
                 POSE = {};
-                if (wkReach > 0.02) POSE[0] = {
-                  x: 22.7 + (14 - 22.7) * wkReach, y: 64 + (63 - 64) * wkReach,
-                  cx: 24 + (16 - 24) * wkReach, cy: 58 + (69 - 58) * wkReach };
-                // THE LAPTOP (v1.3.0), down and to her RIGHT — the hourglass's mirror. The
-                // rightmost arm doesn't hold a pose, it PECKS: a quick dip onto the keys and
-                // back, on its own short clock, independent of the hourglass's long one.
                 var wkPT = t % 1.3;
                 var wkPoke = wkPT < 0.18 ? ease(wkPT / 0.18) : wkPT < 0.30 ? 1 - ease((wkPT - 0.18) / 0.12) : 0;
                 POSE[4] = { x: 51, y: 55.5 + 2.2 * wkPoke, cx: 46, cy: 47 };
@@ -2812,47 +2808,11 @@
               });
               // (no hem gap segments anymore: the arms tile the narrow hem edge-to-edge,
               // and their own side strokes are the grooves — one continuous boundary)
-              // THE HOURGLASS (v0.97.0). working is the loader mood — the one that never settles
-              // — so its prop is the thing that never finishes: the sand runs out, the glass is
-              // turned, the sand runs out again. The turn ACCUMULATES rather than resetting, so
-              // the full bulb genuinely becomes the top one and the loop is honest about being
-              // a loop rather than a texture that snaps back.
+              // THE LAPTOP. working's only prop now (v1.7.0 retired the hourglass — the
+              // maintainer's call, one was plenty). She's not holding it; it's just there,
+              // down and to her right, and the poking arm's own target (POSE[4] above) is
+              // what makes the connection.
               if (MOODS[fm.index] === "working") {
-                var hu = wkHU;
-                var drain = hu < 0.72 ? hu / 0.72 : 1;                 // 0 just-turned, 1 run out
-                var flipU = hu < 0.80 ? 0 : hu < 0.88 ? (hu - 0.80) / 0.08 : 1;   // the turn FOLLOWS the touch
-                var hrot = (Math.floor(t / 9.0) + ease(flipU)) * Math.PI;
-                var hw = 6.5 * fsc, hh = 9.5 * fsc;                    // bigger: it is the other character in the frame
-                fx2.save();
-                fx2.translate(9 * fsc, 63 * fsc); fx2.rotate(hrot);    // standing on its own, down and to her left
-                // the glass: an OUTLINE, not a filled wash (v1.6.0) — the fill at 0.30 alpha
-                // read as a flat solid patch showing through around the sand, not glass texture
-                fx2.strokeStyle = rgba("#c8b6c2", 0.55); fx2.lineWidth = Math.max(0.8, fsc * 0.7); fx2.lineJoin = "round";
-                fx2.beginPath(); fx2.moveTo(-hw, -hh); fx2.lineTo(hw, -hh); fx2.lineTo(0, 0); fx2.closePath(); fx2.stroke();
-                fx2.beginPath(); fx2.moveTo(-hw, hh); fx2.lineTo(hw, hh); fx2.lineTo(0, 0); fx2.closePath(); fx2.stroke();
-                var up = 1 - drain;
-                fx2.fillStyle = rgba("#d9a877", 0.96);                 // sand: a shrinking cone above, a rising trapezoid below
-                if (up > 0.02) { fx2.beginPath(); fx2.moveTo(0, 0); fx2.lineTo(-hw * up, -hh * up); fx2.lineTo(hw * up, -hh * up); fx2.closePath(); fx2.fill(); }
-                if (drain > 0.02) {
-                  fx2.beginPath(); fx2.moveTo(-hw, hh); fx2.lineTo(hw, hh);
-                  fx2.lineTo(hw * (1 - drain), hh * (1 - drain)); fx2.lineTo(-hw * (1 - drain), hh * (1 - drain));
-                  fx2.closePath(); fx2.fill();
-                }
-                if (up > 0.02 && flipU <= 0) {                         // the falling thread, while there is still sand to fall
-                  fx2.strokeStyle = rgba("#d9a877", 0.9); fx2.lineWidth = Math.max(0.8, fsc * 0.9);
-                  fx2.beginPath(); fx2.moveTo(0, 0); fx2.lineTo(0, hh * 0.82); fx2.stroke();
-                }
-                fx2.strokeStyle = rgba("#5a4636", 0.95); fx2.lineWidth = Math.max(1.2, fsc * 1.6);
-                fx2.beginPath();                                       // caps and posts
-                fx2.moveTo(-hw * 1.15, -hh); fx2.lineTo(hw * 1.15, -hh);
-                fx2.moveTo(-hw * 1.15, hh); fx2.lineTo(hw * 1.15, hh);
-                fx2.moveTo(-hw * 1.05, -hh); fx2.lineTo(-hw * 1.05, hh);
-                fx2.moveTo(hw * 1.05, -hh); fx2.lineTo(hw * 1.05, hh);
-                fx2.stroke();
-                fx2.restore();
-                // THE LAPTOP: sitting on its own, down and to her RIGHT — the hourglass's
-                // mirror. She's not holding it; it's just there, and the poking arm's own
-                // target (POSE[4] above) is what makes the connection.
                 fx2.save();
                 fx2.translate(53 * fsc, 62 * fsc);
                 fx2.fillStyle = rgba("#5a6472", 0.95);                // the deck
@@ -2988,16 +2948,16 @@
               } else if (propN === "qmark") {                                        // REALLY perplexed: a proper cluster, held above the crown —
                 for (var qpi = 0; qpi < 5; qpi++) {                                 // the old drift barely cleared her head and read too faint to register
                   var qpr = mulberry32(L.seed + qpi * 173 + 37);
-                  // v1.5.0 fixed the off-canvas mistake (centred too high, too wide a radius,
-                  // pushed the cluster above y=0 where canvas coordinates don't render). v1.6.0:
-                  // tighter and higher still, plus an outline — worst case (straight up, max
-                  // radius, stroke half-width) lands at y≈3.1, comfortably on-canvas.
-                  var qbirth = qpr() * 3.4, qang2 = -1.5708 + (qpr() - 0.5) * 2.2, qrad2 = 6 + qpr() * 5;   // an arc above her, never wrapping down to face level
+                  // v1.7.0: the fin canvas now has real headroom above the face box (see the
+                  // `translate` note in frame()), so this can use NEGATIVE y and genuinely clear
+                  // her head instead of fighting the old y=0 floor. Whole cluster now spans
+                  // roughly y=-9.4 to y=-5.9 — comfortably above, never grazing it.
+                  var qbirth = qpr() * 3.4, qang2 = -1.5708 + (qpr() - 0.5) * 2.2, qrad2 = 6 + qpr() * 4;   // an arc above her, never wrapping down to face level
                   var qage2 = (((t - qbirth) % 3.4) + 3.4) % 3.4;
                   if (qage2 > 2.4) continue;
                   var qu2 = qage2 / 2.4;
                   var qrise2 = qu2 < 0.15 ? 1.6 * (qu2 / 0.15) : 1.6 - 8 * ((qu2 - 0.15) / 0.85);
-                  var qx = 32 * fsc + Math.cos(qang2) * qrad2 * fsc, qy = (8 + qrise2) * fsc + Math.sin(qang2) * qrad2 * 0.55 * fsc;
+                  var qx = 32 * fsc + Math.cos(qang2) * qrad2 * fsc, qy = (-5 + qrise2) * fsc + Math.sin(qang2) * qrad2 * 0.55 * fsc;
                   fx2.globalAlpha = 0.92 * (qu2 < 0.18 ? qu2 / 0.18 : Math.max(0, 1 - (qu2 - 0.18) / 0.82));
                   fx2.font = "700 " + (12.5 * (0.9 + 0.3 * qpr()) * fsc).toFixed(1) + "px ui-sans-serif, sans-serif";
                   fx2.lineJoin = "round"; fx2.miterLimit = 2; fx2.lineWidth = Math.max(0.8, fsc * 0.9);
@@ -3010,13 +2970,13 @@
                 var thFade = thU < 0.15 ? ease(thU / 0.15) : thU < 0.75 ? 1 : thU < 0.95 ? 1 - ease((thU - 0.75) / 0.2) : 0;
                 if (thFade > 0.02) {
                   var thR = mulberry32(L.seed + thCyc * 941 + 17);
-                  // BASELINE, not middle (v1.6.0): with textBaseline "middle" the glyph's own
-                  // height could push its top edge back off-canvas depending on font metrics —
-                  // the same mistake as the old qmark, just camouflaged by a different property.
-                  // "waow..." has no descenders, so baseline is a clean, predictable floor: the
-                  // glyph only extends UP from here, by a known cap-height. Kept high and tight
-                  // (10-13) so the whole word sits clear above her head, never near it.
-                  var thX = (22 + thR() * 20) * fsc, thBase = (10 + thR() * 3) * fsc;
+                  // BASELINE, not middle: with textBaseline "middle" the glyph's own height
+                  // could push its top edge back off-canvas depending on font metrics. "waow..."
+                  // has no descenders, so baseline is a clean, predictable floor: the glyph only
+                  // extends UP from here. v1.7.0: now uses the fin canvas's real headroom above
+                  // the face box (negative y), so the whole word sits genuinely above her head —
+                  // its own bottom edge 3-6 units clear, its top comfortably within the margin.
+                  var thX = (22 + thR() * 20) * fsc, thBase = (-6 + thR() * 3) * fsc;
                   fx2.globalAlpha = thFade * 0.95;
                   fx2.font = "800 " + (10 * fsc).toFixed(1) + "px ui-sans-serif, sans-serif";
                   fx2.textAlign = "center"; fx2.textBaseline = "alphabetic";
