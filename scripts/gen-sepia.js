@@ -73,7 +73,7 @@ const FRILL_OF = {
 // SUB-PIXEL MOUTHS: certain moods trade the chunky block mouth for fine-ink lips drawn
 // in the definition register (like the lashes) — a pressed-thin line reads restraint the
 // 4px grid can't. Table keyed by mood name; add sparingly, the block mouth is the norm.
-const FINE_MOUTH = { groan: "pressed", resolute: "tight", angry: "seethe" };   // tight: the set jaw; seethe: a small line angled down — fury held behind the lips
+const FINE_MOUTH = { groan: "pressed", resolute: "tight", angry: "seethe", puzzled: "crooked" };   // tight: the set jaw; seethe: fury held behind the lips; crooked: a thin line with one end dropped — working on it, not enjoying it
 // All feature tables are authored in the ancestral 16-grid and auto-doubled to the
 // 32-grid (pixel-identical rendering) — EXCEPT where the finer grid earns real curves:
 // hand-authored 32-grid overrides below (smile/frown/wavy arcs, curved lids, a true
@@ -115,6 +115,15 @@ function drawEyes(out, lp, rp, blink) {
     const x0 = bx - 1, x1 = bx + 5, y0 = 9, y1 = 16;           // socket ring bounds; whites bx..bx+4, rows 10-15
     if (preset === "slit") {                                   // groan: eyes narrowed to flat suffering slits — one thick bar, no ring, no whites
       for (let y = 12; y <= 13; y++) for (let x = x0; x <= x1; x++) out.push([x, y, "p"]);
+      return;
+    }
+    // A CLOSED EYE IS SHUT (v0.91.0). "closed" was three pupils sitting along the BOTTOM of a
+    // fully open white socket — so at_peace and the winking eye read as looking down, not shut,
+    // and a wink came out as two open eyes gazing in different directions. It draws the lid
+    // now: one stroke, ends dipping, no whites behind it. Nothing to look out of.
+    if (String(preset).split("/")[0] === "closed") {
+      out.push([x0, 13, "p"], [x1, 13, "p"]);
+      for (let x = x0 + 1; x < x1; x++) out.push([x, 12, "p"]);
       return;
     }
     if (blink) {
@@ -231,6 +240,12 @@ const X = {}; Object.keys(X16).forEach(k => { X[k] = up2(X16[k]); });
 // V-BROWS (v0.36.0): frustration's brows move to the CENTER, pursed into a V between
 // the eyes — the outer dashes were cute but invisible (the maintainer's note). 32-grid,
 // two-cell-thick diagonal strokes meeting over the nose bridge.
+// THE COCKED BROW. Puzzlement is asymmetric or it is nothing: one brow pressed down over the
+// narrowed, skeptical eye, the other lifted clear of the wide one. Symmetric brows read as
+// worry; it is the MISMATCH that reads as a question.
+const QBROW = [];
+[[10,8],[11,8],[12,7],[13,7],[14,7]].forEach(q => { QBROW.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
+[[16,4],[17,4],[18,4],[19,4],[20,4]].forEach(q => { QBROW.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 const VBROWS = [];
 [[10,5],[11,6],[12,6],[13,7],[14,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[21,5],[20,6],[19,6],[18,7],[17,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
@@ -267,10 +282,10 @@ const MOODS = [
   ["awe",        "uptiny",           "open",  "#5a6a8a"],
   ["vertigo",    "spiral",           "wavy",  "#b79ad0"],
   ["resolute",   "steely",           "sm",    "#e0994e"],   // steely narrowed eyes + tight fine-mouth; headband drawn in the fine pass
-  ["puzzled",    ["dot/squint","uptiny/open"], "tiny",  "#c0b08a"],
+  ["puzzled",    ["dot/narrow","uptiny/open"], "tiny",  "#c0b08a", QBROW],
   ["asking",     "uptiny/half",      "sm",    "#9ac0b0"],
   ["weary",      "down/half",        "flat",  "#8b93a0"],
-  ["wink",       ["happy","closed"], "smile", "#e0a877"],
+  ["wink",       ["dot","closed"],   "smile", "#e0a877"],
   ["love",       "heart",            "open",  "#e87a90", X.boop],
   ["working",    "side/narrow",      "flat",  "#6f8fa8"]   // v0.68.0: her own cell, so she stops borrowing focused
 ];
@@ -386,6 +401,10 @@ MOODS.forEach((mood, i) => {
       frect(27, 39, 4, 2, COLORS.p);
       frect(30, 40, 4, 2, COLORS.p);
       frect(33, 41, 3, 2, COLORS.p);
+    }
+    if (FINE_MOUTH[mood[0]] === "crooked") {    // a thin line with one end dropped: consternation, not distress
+      frect(28, 40, 6, 2, COLORS.p);
+      frect(34, 41, 4, 2, COLORS.p);
     }
     if (FINE_MOUTH[mood[0]] === "tight") {      // tight lips: a straight pressed line, no dips — the set jaw
       frect(28, 40, 9, 2, COLORS.p);
