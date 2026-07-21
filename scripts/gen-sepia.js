@@ -112,8 +112,13 @@ const LIDS = {
   low:    [13, 15]                                             // aperture sitting low — worn, grave
 };
 function drawEyes(out, lp, rp, blink) {
-  [[8, lp, false], [19, rp, true]].forEach(spec => {
-    const bx = spec[0], preset = spec[1], mir = spec[2];
+  // blink is per-eye: true/false for both, or [left, right]. A WINK is not a pose — it is one
+  // lid closing on the blink beat while the other stays open. Baking it into the base cell gave
+  // a face with a permanently shut eye whose OTHER eye blinked, which is a deeply strange thing
+  // to watch (the maintainer's word: uncanny). Nothing static should be holding an eye shut.
+  const bl = Array.isArray(blink) ? blink : [blink, blink];
+  [[8, lp, false, bl[0]], [19, rp, true, bl[1]]].forEach(spec => {
+    const bx = spec[0], preset = spec[1], mir = spec[2], shut = spec[3];
     const x0 = bx - 1, x1 = bx + 5, y0 = 9, y1 = 16;           // socket ring bounds; whites bx..bx+4, rows 10-15
     if (preset === "slit") {                                   // groan: eyes narrowed to flat suffering slits — one thick bar, no ring, no whites
       for (let y = 12; y <= 13; y++) for (let x = x0; x <= x1; x++) out.push([x, y, "p"]);
@@ -128,7 +133,7 @@ function drawEyes(out, lp, rp, blink) {
       for (let x = x0 + 1; x < x1; x++) out.push([x, 12, "p"]);
       return;
     }
-    if (blink) {
+    if (shut) {
       // a blink compresses the WHOLE socket, outline included — not a lid framed
       // inside an open ring (the maintainer's catch). One full-width stroke at the
       // eye's midline, ends dipping: the outline squeezed shut.
@@ -160,21 +165,18 @@ function drawEyes(out, lp, rp, blink) {
       out.push([bx + soff, 12, "p"], [bx + soff + 1, 12, "p"], [bx + soff, 13, "p"], [bx + soff + 1, 13, "p"]);
       return;
     }
-    if (preset === "glower" || preset === "fury") ring(10, 15);
-    if (preset === "glower") {                                 // frustrated: the lid presses low and the pupils sink, burning downward
-      for (let x = bx; x <= bx + 4; x++) out.push([x, 11, "p"]);
-      for (let y = 12; y <= 15; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
-      const goff = mir ? 3 - POFF[1] : POFF[1];
-      out.push([bx + goff, 14, "p"], [bx + goff + 1, 14, "p"], [bx + goff, 15, "p"], [bx + goff + 1, 15, "p"]);
-      return;
-    }
-    if (preset === "fury") {                                   // angry: the lids SLASH down toward the nose — a wedge of shadow, the pupil burning low beneath it
-      for (let y = 10; y <= 15; y++) for (let x = bx; x <= bx + 4; x++) out.push([x, y, "W"]);
+    if (preset === "glower" || preset === "fury") {
+      // The last two that shadowed instead of shaping. Both were an open eye with black laid
+      // across it; both are a WEDGE APERTURE now — the opening itself narrows toward the nose,
+      // steeply for fury, less so for glower. The angle IS the anger; no bars anywhere.
+      const deep = preset === "fury" ? 4 : 2, base = 15;
       for (let k = 0; k <= 4; k++) {
-        const lx = mir ? bx + 4 - k : bx + k;
-        const ly = 10 + (k * 3 >> 2);                          // 10,10,11,12,13 — steepest at the inner corner
-        for (let y = 10; y <= ly; y++) out.push([lx, y, "p"]);
+        const col = bx + k, inner = mir ? 4 - k : k;           // inner = 4 at the nose side
+        const top = 11 + Math.round(deep * inner / 4);         // closes as it runs inward
+        for (let y = top; y <= base; y++) out.push([col, y, "W"]);
+        out.push([col, top - 1, "p"], [col, base + 1, "p"]);   // the lid follows the slant
       }
+      for (let y = 11; y <= base; y++) { out.push([x0, y, "p"], [x1, y, "p"]); }
       const foff = mir ? 3 - POFF[1] : POFF[1];
       out.push([bx + foff, 14, "p"], [bx + foff + 1, 14, "p"], [bx + foff, 15, "p"], [bx + foff + 1, 15, "p"]);
       return;
@@ -302,7 +304,7 @@ const MOODS = [
   ["puzzled",    ["dot/narrow","uptiny/open"], "tiny",  "#c0b08a", QBROW],
   ["asking",     "uptiny/half",      "sm",    "#9ac0b0"],
   ["weary",      "dot/narrow",       "flat",  "#8b93a0"],
-  ["wink",       ["dot","closed"],   "smile", "#e0a877"],
+  ["wink",       "dot/narrow",       "smile", "#e0a877"],
   ["love",       "heart",            "open",  "#e87a90", X.boop],
   ["working",    "side/narrow",      "flat",  "#6f8fa8"]   // v0.68.0: her own cell, so she stops borrowing focused
 ];
@@ -365,7 +367,8 @@ MOODS.forEach((mood, i) => {
   // renderer OVER the wandering colour
   for (let frame = 0; frame < 2; frame++) {
     const cx = colX, cy = rowY + (1 + frame) * FRAME_ROWS * CELL;
-    const blink = frame === 1 && mood[0] !== "laugh" && mood[0] !== "groan";   // laugh's frame 1 is the guffaw beat; groan's is the SQUEEZE — neither is a blink
+    let blink = frame === 1 && mood[0] !== "laugh" && mood[0] !== "groan";   // laugh's frame 1 is the guffaw beat; groan's is the SQUEEZE — neither is a blink
+    if (mood[0] === "wink") blink = [false, frame === 1];                    // the wink IS the blink, and only on one side
     const eyeSpec = mood[1], pair = Array.isArray(eyeSpec) ? eyeSpec : [eyeSpec, eyeSpec];
     const feat = [];
     const gpair = mood[0] === "laugh" && frame === 1 ? ["wide", "wide"]   // the guffaw frame goes WIDE-eyed — it doubles as the feeding-thrill face
