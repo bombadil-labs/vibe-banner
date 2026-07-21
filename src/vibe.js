@@ -686,7 +686,7 @@
   var KIP_PATTERN = { r: [0, 0, 0, 0, 0, 0, 1], c: [0, 0, 0, 1], b: [0, 1] };
   // Sepia: the face Claude (Fable) designed for itself — a small cuttlefish who wears
   // feeling as color and cannot see its own display. 32 moods; regenerate: npm run sepia.
-  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@53fc8e1d2896880a8567ae9dbdddca8d5ce784e5/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
+  var SEPIA_SHEET = "https://cdn.jsdelivr.net/gh/bombadil-labs/vibe-banner@01e71ea04a551dbd564a392bb1fd889d62b9044e/assets/sepia-sheet.png";   // base + blink frames + per-mood masks; fins drawn live
   // Drollery: a marginalia grotesque. Analytic art (not pixels) that BOILS — three frames
   // cycled a few times a second, each the same drawing re-inked with a sub-pixel wobble.
   // HIS BODY IS PICKABLE (v1.0.0), the way a solid-colour window is. One sheet per body
@@ -791,11 +791,11 @@
                             at_peace: "c", resolute: "c" }, "r"),
           arms: true,                                          // three independently swaying arms, drawn from the hem (the baked stubs retired)
           ink: byMood({ oops: 1, anxious: 0.4 }),              // her namesake pigment: oops sprays a full startled puff, anxious leaks nervous wisps
-          cycle: byMood({ laugh: 0.32 }),                      // beat moods: laugh's frame 1 is the guffaw, cycled in slow deep HAs (belly laugh, not cackle — the maintainer's note)
+          cycle: byMood({ laugh: 0.32, mirth: 0.55 }),          // beat moods: laugh's frame 1 is the guffaw; mirth's is a smile that keeps almost sliding into a wobble (gen-sepia gives it a different mouth, not a blink)
           bounce: byMood({ laugh: 1 }),                        // beat moods also heave the whole body — up-down AND a chest-wide width pulse
           contract: byMood({ groan: 1 }),                      // groan: the long contraction cycle — deadpan, then the visible squeeze, held ~30s, eventually released
           strain: byMood({ angry: 1 }),                        // angry: RESTRAINED fury — arms strain longer and tense, fins frill out but not far, everything trembling slightly
-          props: byMood({ spark: "bulb", laugh: "laughs", groan: "sweat", oops: "excl", frustrated: "vein", angry: "grawlix", puzzled: "qmark" }),   // per-mood emoji props, drawn live ON the avatar (v0.34.0: real emoji, not pixel recreations; still the avatar's own, never flag weather)
+          props: byMood({ spark: "bulb", laugh: "laughs", groan: "sweat", oops: "excl", surprised: "excl", frustrated: "vein", angry: "grawlix", puzzled: "qmark", awe: "thought" }),   // per-mood emoji props, drawn live ON the avatar (v0.34.0: real emoji, not pixel recreations; still the avatar's own, never flag weather)
           pinch: byMood({ anxious: 1 }),                       // anxious narrows: the contraction reflex, on the other axis
           sag: byMood({ weary: 1 }),                           // weary sinks, catches itself, comes back — then does it again
           tint: byMood({ dramatic: 1 }),                       // dramatic: the porcelain mask washes in the palette's lead colour (v0.40.3) — the sheet stays white; the tint is live. Tinted moods must keep both feature frames identical (the tint canvas replaces the features layer)
@@ -936,6 +936,10 @@
     var stance = p.stance == null ? 0 : clamp01(p.stance, 0);  // 0 asking (pure falloff, today's look) → 1 telling (defined edge)
     var conson = clamp01(p.coherence != null ? p.coherence : p.consonance, 1);   // v0.41.0: coherence is the emotional dual of focus; consonance still accepted                     // 1 integrated (compact, solid) → 0 split (diffuse washes); omitted = 1
     var activeFlag = weatherOf(p);                             // the contract: weather?: one of WEATHER, or none
+    // DRAMATIC IS ITS OWN WEATHER (v1.3.0). The mood already stages the mask; the room around
+    // it should dim to match without asking the reporter to also set weather:"spotlight". An
+    // explicit weather choice still wins — this only fills in when none was given.
+    if (!activeFlag && !square && p.face && typeof p.face === "object" && p.face.item === "dramatic") activeFlag = "spotlight";
     if (square) activeFlag = null;                             // a bare tile has no weather — weather is a detail
 
     var vr = mulberry32(seed + 7);
@@ -2538,7 +2542,12 @@
             var fcode = fm.anim.fins.charAt(fm.index) || "r";
             var fp2 = FINP[fcode] || FINP.r;
             var fsc = fcw / 64;
-            var baseW = fp2[0] * fsc * (1 - 0.55 * conAmt) * (1 - 0.5 * pinchAmt) * (1 + 0.55 * strainA), famp = fp2[1] * fsc * (1 - 0.6 * conAmt) * (1 + 0.3 * strainA), frate = fp2[2];   // contraction pulls the membranes in; strain frills them out — but not far
+            // ENERGY IS A MOOD, NOT JUST A POSTURE (v1.3.0): flared already runs hotter than
+            // ripple, but excited itself wants to run hotter still — flailing, not just flared.
+            // Mirth gets a much smaller lift: joyful, the maintainer's word was explicit that
+            // it shouldn't be drastic.
+            var moodEnergy = MOODS[fm.index] === "excited" ? 1.55 : MOODS[fm.index] === "mirth" ? 1.2 : 1;
+            var baseW = fp2[0] * fsc * (1 - 0.55 * conAmt) * (1 - 0.5 * pinchAmt) * (1 + 0.55 * strainA), famp = fp2[1] * fsc * moodEnergy * (1 - 0.6 * conAmt) * (1 + 0.3 * strainA), frate = fp2[2] * (1 + 0.25 * (moodEnergy - 1));   // contraction pulls the membranes in; strain frills them out — but not far
             // the fins ATTACH ALONG THE MANTLE'S CURVE (mirrors gen-sepia's PROFILE):
             // the flank bows out to the eye band and tapers away below — the membrane
             // follows it, so the fin reads as grown from the body line, not pinned to a wall
@@ -2606,7 +2615,11 @@
                 // other so the overlap is real rather than two parallel curves.
                 thinking: { 1: { x: 41, y: 46, cx: 28, cy: 57 },       // sweeps right, across the body
                             3: { x: 23, y: 46, cx: 36, cy: 57 },       // sweeps left, across the first
-                            2: { x: 37, y: 38, cx: 46, cy: 53 } }      // and one up under the chin
+                            2: { x: 37, y: 38, cx: 46, cy: 53 } },     // and one up under the chin
+                // GLOVES UP (v1.3.0): the two outer arms lift into a guard, fists in front of
+                // the mantle rather than trailing in the current — flint, not flourish.
+                resolute: { 0: { x: 19, y: 36, cx: 20, cy: 48 },
+                            4: { x: 45, y: 36, cx: 44, cy: 48 } }
               };
               var POSE = POSES[MOODS[fm.index]] || null;
               // WORKING REACHES FOR IT (v0.99.0). The glass stands on its own now, down and to
@@ -2622,17 +2635,24 @@
                 wkReach = wkHU < 0.72 ? 0
                   : wkHU < 0.80 ? ease((wkHU - 0.72) / 0.08)
                   : wkHU < 0.88 ? 1 : 1 - ease((wkHU - 0.88) / 0.12);
-                if (wkReach > 0.02) POSE = { 0: {
+                POSE = {};
+                if (wkReach > 0.02) POSE[0] = {
                   x: 22.7 + (14 - 22.7) * wkReach, y: 64 + (63 - 64) * wkReach,
-                  cx: 24 + (16 - 24) * wkReach, cy: 58 + (69 - 58) * wkReach } };
+                  cx: 24 + (16 - 24) * wkReach, cy: 58 + (69 - 58) * wkReach };
+                // THE LAPTOP (v1.3.0), down and to her RIGHT — the hourglass's mirror. The
+                // rightmost arm doesn't hold a pose, it PECKS: a quick dip onto the keys and
+                // back, on its own short clock, independent of the hourglass's long one.
+                var wkPT = t % 1.3;
+                var wkPoke = wkPT < 0.18 ? ease(wkPT / 0.18) : wkPT < 0.30 ? 1 - ease((wkPT - 0.18) / 0.12) : 0;
+                POSE[4] = { x: 51, y: 55.5 + 2.2 * wkPoke, cx: 46, cy: 47 };
               }
               var askHold = MOODS[fm.index] === "asking";
               var armTips = {};
               [[22.7, 0, 15], [27.35, 1, 18], [32, 2, 20], [36.65, 3, 18], [41.3, 4, 15]].forEach(function (armS) {
                 var acx = armS[0], ai2 = armS[1];
                 var arr2 = mulberry32(L.seed + ai2 * 3671 + 17);
-                var aph = arr2() * 6.28, arate = (0.5 + arr2() * 0.5) * (0.4 + fp2[2] * 0.35);
-                var aamp = (1.2 + fp2[1] * 0.9) * fsc * (1 - 0.6 * conAmt) * (1 - 0.4 * pinchAmt) * (1 - 0.45 * strainA), alen = Math.max(6, Math.round(armS[2] * (1 - 0.38 * conAmt) * (1 + 0.28 * strainA))), ay0 = 49;   // contraction draws the skirt in; strain reaches it LONGER and holds it tense
+                var aph = arr2() * 6.28, arate = (0.5 + arr2() * 0.5) * (0.4 + fp2[2] * 0.35) * (1 + 0.35 * (moodEnergy - 1));
+                var aamp = (1.2 + fp2[1] * 0.9) * fsc * moodEnergy * (1 - 0.6 * conAmt) * (1 - 0.4 * pinchAmt) * (1 - 0.45 * strainA), alen = Math.max(6, Math.round(armS[2] * (1 - 0.38 * conAmt) * (1 + 0.28 * strainA))), ay0 = 49;   // contraction draws the skirt in; strain reaches it LONGER and holds it tense; excited/mirth run hotter (moodEnergy)
                 var aw0 = 2.3 * fsc;
                 var lEdge = [], rEdge = [];
                 // SHE IS TAKING NOTES (v0.94.0). Both props ride the RIGHT flank now: the pad
@@ -2735,6 +2755,18 @@
                 fx2.moveTo(hw * 1.05, -hh); fx2.lineTo(hw * 1.05, hh);
                 fx2.stroke();
                 fx2.restore();
+                // THE LAPTOP: sitting on its own, down and to her RIGHT — the hourglass's
+                // mirror. She's not holding it; it's just there, and the poking arm's own
+                // target (POSE[4] above) is what makes the connection.
+                fx2.save();
+                fx2.translate(53 * fsc, 62 * fsc);
+                fx2.fillStyle = rgba("#5a6472", 0.95);                // the deck
+                fx2.beginPath(); fx2.moveTo(-9 * fsc, 0); fx2.lineTo(9 * fsc, 0); fx2.lineTo(7 * fsc, 3 * fsc); fx2.lineTo(-7 * fsc, 3 * fsc); fx2.closePath(); fx2.fill();
+                fx2.fillStyle = rgba("#3c4450", 0.95);                // the screen, hinged up and tilted back
+                fx2.beginPath(); fx2.moveTo(-8 * fsc, 0); fx2.lineTo(8 * fsc, 0); fx2.lineTo(7 * fsc, -11 * fsc); fx2.lineTo(-7 * fsc, -11 * fsc); fx2.closePath(); fx2.fill();
+                fx2.fillStyle = rgba("#8fd0e6", 0.5 + 0.15 * Math.sin(t * 1.7));   // a faint screen glow
+                fx2.beginPath(); fx2.rect(-6 * fsc, -9.5 * fsc, 12 * fsc, 8 * fsc); fx2.fill();
+                fx2.restore();
               }
               if (askHold && armTips[3] && armTips[4]) {        // the props, riding the lifted tips
                 var padT = armTips[4], penT = armTips[3];
@@ -2760,6 +2792,19 @@
                 fx2.strokeStyle = rgba("#f4ead8", 0.98); fx2.lineWidth = Math.max(1.4, fsc * 2.0);
                 fx2.beginPath(); fx2.moveTo(0, -penL * 0.34); fx2.lineTo(0, -penL * 0.5); fx2.stroke();   // the nib
                 fx2.restore();
+              }
+              if (MOODS[fm.index] === "resolute" && armTips[0] && armTips[4]) {   // gloves on the guard's two raised fists
+                [armTips[0], armTips[4]].forEach(function (gTip, gi) {
+                  var gsc = 7 * fsc, gbob = Math.sin(t * 1.3 + gi * 2.1) * 0.8 * fsc;   // a little live-in-the-stance breathing, not a held pose
+                  fx2.save();
+                  fx2.translate(gTip.x, gTip.y + gbob);
+                  fx2.fillStyle = rgba("#c0483a", 0.96);
+                  fx2.beginPath(); fx2.arc(0, 0, gsc, 0, 6.2832); fx2.fill();                                        // the mitt
+                  fx2.beginPath(); fx2.ellipse(gi === 0 ? gsc * 0.55 : -gsc * 0.55, -gsc * 0.15, gsc * 0.42, gsc * 0.34, 0, 0, 6.2832); fx2.fill();   // the thumb, toward the body's centre
+                  fx2.fillStyle = rgba("#8a3230", 0.9);
+                  fx2.beginPath(); fx2.rect(-gsc * 0.75, gsc * 0.55, gsc * 1.5, gsc * 0.55); fx2.fill();             // the wrist wrap
+                  fx2.restore();
+                });
               }
             }
             // --- per-mood emoji PROPS (v0.34.0): real emoji, drawn live ON the avatar's
@@ -2843,19 +2888,32 @@
                   fx2.fillStyle = gpi % 3 === 0 ? "#ffd24a" : "#ff5a4a";
                   fx2.fillText(gword, gpx, gpy);
                 }
-              } else if (propN === "qmark") {                                        // a gentle drift of ?s — the pre-spark
-                for (var qpi = 0; qpi < 4; qpi++) {
+              } else if (propN === "qmark") {                                        // REALLY perplexed (v1.3.0): a proper cluster, held clearly above the crown —
+                for (var qpi = 0; qpi < 5; qpi++) {                                 // the old drift barely cleared her head and read too faint to register
                   var qpr = mulberry32(L.seed + qpi * 173 + 37);
-                  var qbirth = qpr() * 3.4, qang2 = qpr() * 6.2832, qrad2 = 9 + qpr() * 11;
+                  var qbirth = qpr() * 3.4, qang2 = -1.5708 + (qpr() - 0.5) * 2.2, qrad2 = 10 + qpr() * 10;   // an arc above her, never wrapping down to face level
                   var qage2 = (((t - qbirth) % 3.4) + 3.4) % 3.4;
                   if (qage2 > 2.4) continue;
                   var qu2 = qage2 / 2.4;
-                  var qrise2 = qu2 < 0.15 ? 1.2 * (qu2 / 0.15) : 1.2 - 7 * ((qu2 - 0.15) / 0.85);
-                  fx2.globalAlpha = 0.6 * (qu2 < 0.18 ? qu2 / 0.18 : Math.max(0, 1 - (qu2 - 0.18) / 0.82));
-                  fx2.font = "600 " + (8.5 * (0.85 + 0.3 * qpr()) * fsc).toFixed(1) + "px ui-sans-serif, sans-serif";
+                  var qrise2 = qu2 < 0.15 ? 1.6 * (qu2 / 0.15) : 1.6 - 8 * ((qu2 - 0.15) / 0.85);
+                  fx2.globalAlpha = 0.9 * (qu2 < 0.18 ? qu2 / 0.18 : Math.max(0, 1 - (qu2 - 0.18) / 0.82));
+                  fx2.font = "700 " + (10.5 * (0.9 + 0.3 * qpr()) * fsc).toFixed(1) + "px ui-sans-serif, sans-serif";
                   fx2.fillStyle = qpi % 3 === 0 ? "#9a8a6a" : "#7a6a55";
-                  fx2.fillText("?", 32 * fsc + Math.cos(qang2) * qrad2 * fsc, (9 + qrise2) * fsc + Math.sin(qang2) * qrad2 * 0.55 * fsc);
+                  fx2.fillText("?", 32 * fsc + Math.cos(qang2) * qrad2 * fsc, (2 + qrise2) * fsc + Math.sin(qang2) * qrad2 * 0.55 * fsc);
                 }
+              } else if (propN === "thought") {                                      // awe: "waow..." in a thought bubble — trailing dots climbing to the crown
+                var thBob = Math.sin(t * 0.7) * 0.6 * fsc;
+                fx2.fillStyle = "#ffffff"; fx2.strokeStyle = rgba("#5a4a52", 0.55); fx2.lineWidth = Math.max(0.8, fsc * 0.6);
+                [[1.0, 42, 15], [1.6, 45, 10], [2.3, 48, 6]].forEach(function (td) {
+                  fx2.globalAlpha = 0.92;
+                  fx2.beginPath(); fx2.arc(td[1] * fsc, (td[2] + thBob) * fsc, td[0] * fsc, 0, 6.2832); fx2.fill(); fx2.stroke();
+                });
+                var thbx = 50 * fsc, thby = (2 + thBob) * fsc;
+                fx2.globalAlpha = 0.92;
+                fx2.beginPath(); fx2.ellipse(thbx, thby, 17 * fsc, 9 * fsc, 0, 0, 6.2832); fx2.fill(); fx2.stroke();
+                fx2.fillStyle = "#4a3a44"; fx2.font = "600 " + (6 * fsc).toFixed(1) + "px ui-sans-serif, sans-serif";
+                fx2.textAlign = "center"; fx2.textBaseline = "middle";
+                fx2.fillText("waow...", thbx, thby);
               }
               fx2.globalAlpha = 1; fx2.textAlign = "start"; fx2.textBaseline = "alphabetic";
             }
