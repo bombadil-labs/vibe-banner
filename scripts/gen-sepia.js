@@ -265,6 +265,13 @@ const X = {}; Object.keys(X16).forEach(k => { X[k] = up2(X16[k]); });
 const QBROW = [];
 [[10,8],[11,8],[12,7],[13,7],[14,7]].forEach(q => { QBROW.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[16,4],[17,4],[18,4],[19,4],[20,4]].forEach(q => { QBROW.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
+// WORRY BROWS. Anger's V drops the inner ends; worry LIFTS them, and that single inversion
+// is the most legible anxious signal a face has. Without it, wide eyes and a wavy mouth just
+// read as a fond little creature — the maintainer's word for the old anxious was "chibi
+// affectionate", which was exactly right and exactly wrong for the mood.
+const WBROWS = [];
+[[10,8],[11,7],[12,7],[13,6],[14,5]].forEach(q => { WBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
+[[21,8],[20,7],[19,7],[18,6],[17,5]].forEach(q => { WBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
 const VBROWS = [];
 [[10,5],[11,6],[12,6],[13,7],[14,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] + 1, q[1], "o"]); });
 [[21,5],[20,6],[19,6],[18,7],[17,8]].forEach(q => { VBROWS.push([q[0], q[1], "o"], [q[0] - 1, q[1], "o"]); });
@@ -287,7 +294,7 @@ const MOODS = [
   ["surprised",  "wide",             "open",  "#b79ad0"],
   ["tender",     "heart",            "smile", "#e8a0b0"],
   ["melancholy", "down/low",         "flat",  "#8f96a8", X.mote],
-  ["anxious",    "wide",             "wavy",  "#7a8296", X.sweat],
+  ["anxious",    "dot",              "wavy",  "#7a8296", WBROWS.concat(X.sweat)],
   ["mirth",      "happy/half",       "smile", "#e0b060"],
   ["laugh",      "arch",             "open",  "#ffd24a"],   // guffaw: the blink frame carries the wide-open mouth; the renderer cycles them
   ["groan",      "dot/low",          "frown", "#9a9488"],   // deadpan base; frame 1 squeezes the eyes to slits as the body contracts live
